@@ -7,13 +7,11 @@ import CreatePostPage from './pages/CreatePostPage';
 import RegisterPage from './pages/RegisterPage';
 
 function App() {
-  
+
   return (
     // 🔑 배경색 변경, 폰트 적용
     <div className="min-h-screen flex flex-col items-center bg-gray-100 font-sans"> 
-      
       <Header />
-
       {/* Main Content: 최대 너비를 가진 블로그 영역 */}
       <main className="w-full max-w-3xl flex-1 p-4 md:p-6 lg:p-8 mt-4"> {/* 🔑 패딩 추가 */}
         <Routes>
