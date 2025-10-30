@@ -27,21 +27,6 @@ interface ProjectCardProps {
   onClick?: () => void
 }
 
-const getLanguageStatusLabel = (status?: string) => {
-  switch (status) {
-    case 'pending':
-      return '대기 중'
-    case 'processing':
-      return '처리 중'
-    case 'review':
-      return '검토 중'
-    case 'completed':
-      return '완료'
-    default:
-      return '진행 중'
-  }
-}
-
 const getProjectStatusLabel = (status: string) => {
   switch (status) {
     case 'uploading':

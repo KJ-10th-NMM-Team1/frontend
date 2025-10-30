@@ -26,6 +26,13 @@ export default defineConfig([
     },
     rules: {
       'prettier/prettier': 'error',
+      'react-refresh/only-export-components': [
+        'error',
+        {
+          allowConstantExport: true,
+          allowExportNames: ['useSidebar', 'buttonVariants', 'toggleVariants', 'navigationMenuTriggerStyle', 'useFormField'],
+        },
+      ],
     },
   },
   eslintConfigPrettier,

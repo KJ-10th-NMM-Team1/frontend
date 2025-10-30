@@ -77,6 +77,11 @@ export function AdvancedTranslationEditor({
 }: AdvancedTranslationEditorProps) {
   const [editedTranslations, setEditedTranslations] = useState<Translation[]>(translations)
   const [selectedTab, setSelectedTab] = useState<'edit' | 'voice' | 'output'>('edit')
+  const handleTabChange = (value: string) => {
+    if (value === 'edit' || value === 'voice' || value === 'output') {
+      setSelectedTab(value)
+    }
+  }
   const translationGroups = useMemo(() => {
     const groups: {
       key: string
@@ -234,10 +239,11 @@ export function AdvancedTranslationEditor({
   }
 
   const handleRetranslate = (id: string) => {
-    // 재번역 로직 (시뮬레이션)
-    toast.info('재번역 중...')
+    const target = editedTranslations.find((translation) => translation.id === id)
+    const label = target?.original ? `"${target.original}"` : '선택된 문장'
+    toast.info(`${label} 재번역 중...`)
     setTimeout(() => {
-      toast.success('재번역이 완료되었습니다')
+      toast.success(`${label} 재번역이 완료되었습니다`)
     }, 1500)
   }
 
@@ -304,11 +310,7 @@ export function AdvancedTranslationEditor({
 
       {/* 메인 컨텐츠 */}
       <main className="max-w-7xl mx-auto px-6 py-6">
-        <Tabs
-          value={selectedTab}
-          onValueChange={(v) => setSelectedTab(v as any)}
-          className="space-y-6"
-        >
+        <Tabs value={selectedTab} onValueChange={handleTabChange} className="space-y-6">
           <TabsList>
             <TabsTrigger value="edit">번역 편집</TabsTrigger>
             {isDubbing && <TabsTrigger value="voice">보이스 설정</TabsTrigger>}
