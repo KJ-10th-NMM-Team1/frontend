@@ -3,27 +3,10 @@ import { Badge } from './ui/badge'
 import { Progress } from './ui/progress'
 import { Video, Clock, Globe, MoreVertical } from 'lucide-react'
 import { Button } from './ui/button'
-
-interface Language {
-  code: string
-  name: string
-  subtitle: boolean
-  dubbing: boolean
-  progress?: number
-  status?: 'pending' | 'processing' | 'review' | 'completed'
-  translator?: string
-}
+import type { Project } from '../types'
 
 interface ProjectCardProps {
-  project: {
-    id: string
-    name: string
-    languages: Language[]
-    status: 'uploading' | 'processing' | 'completed' | 'failed'
-    uploadProgress?: number
-    createdAt: string
-    thumbnail?: string
-  }
+  project: Project
   onClick?: () => void
 }
 

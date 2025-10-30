@@ -18,45 +18,16 @@ import {
   MonitorPlay,
   Loader2,
 } from 'lucide-react'
-import { toast } from 'sonner@2.0.3'
+import { toast } from 'sonner'
 import { VoiceSelector } from './VoiceSelector'
+import type {
+  Translation,
+  CorrectionSuggestion,
+  TermCorrection,
+  TranslationIssueType,
+} from '../types'
 
-interface IssueType {
-  type: 'term' | 'length' | 'number' | 'tone'
-  severity: 'warning' | 'error'
-  message: string
-  suggestion?: string
-}
-
-interface CorrectionSuggestion {
-  id: string
-  text: string
-  reason: string
-}
-
-interface TermCorrection {
-  id: string
-  original: string
-  replacement: string
-  reason?: string
-}
-
-interface Translation {
-  id: string
-  timestamp: string
-  original: string
-  translated: string
-  confidence: number
-  issues: IssueType[]
-  speaker?: string
-  segmentDurationSeconds?: number
-  originalSpeechSeconds?: number
-  translatedSpeechSeconds?: number
-  correctionSuggestions?: CorrectionSuggestion[]
-  termCorrections?: TermCorrection[]
-}
-
-interface AdvancedTranslationEditorProps {
+export interface AdvancedTranslationEditorProps {
   language: string
   translations: Translation[]
   onSave: (translations: Translation[]) => void
@@ -253,7 +224,7 @@ export function AdvancedTranslationEditor({
     onBack()
   }
 
-  const getIssueIcon = (type: string) => {
+  const getIssueIcon = (type: TranslationIssueType) => {
     switch (type) {
       case 'term':
         return <MessageSquare className="w-4 h-4" />
@@ -264,7 +235,7 @@ export function AdvancedTranslationEditor({
     }
   }
 
-  const getIssueLabel = (type: string) => {
+  const getIssueLabel = (type: TranslationIssueType) => {
     switch (type) {
       case 'term':
         return '용어'

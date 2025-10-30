@@ -12,24 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Label } from './ui/label'
 import { Switch } from './ui/switch'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog'
-
-interface Language {
-  code: string
-  name: string
-  subtitle: boolean
-  dubbing: boolean
-  translator?: string
-  translationReviewed?: boolean
-  voiceConfig?: Record<string, { voiceId?: string; preserveTone: boolean }>
-}
-
-interface Project {
-  id: string
-  name: string
-  languages: Language[]
-  status: string
-  createdAt: string
-}
+import type { Language, Project, STTSegment, Translation } from '../types'
+import type { STTEditorProps } from './STTEditor'
+import type { AdvancedTranslationEditorProps } from './AdvancedTranslationEditor'
 
 interface PipelineStageData {
   id: string
@@ -67,9 +52,9 @@ export function ProcessingDashboard({
     () => languages.find((lang) => lang.code === selectedLanguageCode) ?? languages[0],
     [languages, selectedLanguageCode]
   )
-  const [currentView, setCurrentView] = useState<'dashboard' | 'stt' | 'translation' | 'outputs'>(
-    'dashboard'
-  )
+  const [currentView, setCurrentView] = useState<
+    'dashboard' | 'stt' | 'translation' | 'outputs' | 'voiceMapping'
+  >('dashboard')
   const [isPaused, setIsPaused] = useState(false)
   const [voiceMappingLanguageCode, setVoiceMappingLanguageCode] = useState<string | null>(null)
   const [voiceMappingDraft, setVoiceMappingDraft] = useState<
@@ -253,7 +238,7 @@ export function ProcessingDashboard({
     }
   }, [languages, selectedLanguageCode])
 
-  const mockSTTSegments = [
+  const mockSTTSegments: STTSegment[] = [
     {
       id: '1',
       startTime: '00:00:00',
@@ -296,7 +281,7 @@ export function ProcessingDashboard({
     },
   ]
 
-  const mockTranslations = [
+  const mockTranslations: Translation[] = [
     {
       id: '1',
       timestamp: '00:00:00 - 00:00:05',
@@ -408,8 +393,8 @@ export function ProcessingDashboard({
     },
   ]
 
-  const [sttSegments, setSTTSegments] = useState(mockSTTSegments)
-  const [translations, setTranslations] = useState(mockTranslations)
+  const [sttSegments, setSTTSegments] = useState<STTSegment[]>(mockSTTSegments)
+  const [translations, setTranslations] = useState<Translation[]>(mockTranslations)
   const aiRefinementInsights = [
     '길이 초과 구간을 평균 12% 단축했습니다',
     "workflow 용어를 '작업 흐름'으로 통일했습니다",
@@ -538,7 +523,7 @@ export function ProcessingDashboard({
     }
   }, [stages])
 
-  const handleSaveSTT = (editedSegments: typeof sttSegments) => {
+  const handleSaveSTT: STTEditorProps['onSave'] = (editedSegments) => {
     setSTTSegments(editedSegments)
     // STT 단계를 완료로 변경
     setStages((prev) =>
@@ -547,7 +532,7 @@ export function ProcessingDashboard({
     setCurrentView('dashboard')
   }
 
-  const handleSaveTranslations = (editedTranslations: typeof translations) => {
+  const handleSaveTranslations: AdvancedTranslationEditorProps['onSave'] = (editedTranslations) => {
     setTranslations(editedTranslations)
     // RAG 교정 단계를 완료로 변경
     setStages((prev) =>

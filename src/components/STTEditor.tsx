@@ -5,16 +5,8 @@ import { Badge } from './ui/badge'
 import { Input } from './ui/input'
 import { Card, CardContent } from './ui/card'
 import { ArrowLeft, Play, AlertCircle, CheckCircle2 } from 'lucide-react'
-import { toast } from 'sonner@2.0.3'
-
-interface STTSegment {
-  id: string
-  startTime: string
-  endTime: string
-  text: string
-  speaker?: string
-  confidence: number
-}
+import { toast } from 'sonner'
+import type { STTSegment } from '../types'
 
 interface GroupedSegment {
   key: string
@@ -24,7 +16,7 @@ interface GroupedSegment {
   averageConfidence: number
 }
 
-interface STTEditorProps {
+export interface STTEditorProps {
   segments: STTSegment[]
   onSave: (segments: STTSegment[]) => void
   onBack: () => void

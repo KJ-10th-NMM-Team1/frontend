@@ -33,6 +33,6 @@ echo "Copying package.json files from $ARCHIVE_ROOT..."
 # 5. 프로덕션(운영)용 의존성만 설치 (devDependencies 제외)
 #    (GitHub Actions에서 이미 'npm ci'와 'npm run build'를 실행했음)
 echo "Installing production dependencies (npm install --production)..."
-npm install --production
-pip3 -r requ
+# npm install --production
+npm ci
 echo "Life Cycle - BeforeInstall: Dependency installation complete."

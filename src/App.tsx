@@ -17,26 +17,7 @@ import {
 import { TranslatorEditorShell } from './components/TranslatorEditorShell'
 import { Plus, Video } from 'lucide-react'
 import { Toaster } from './components/ui/sonner'
-
-interface Language {
-  code: string
-  name: string
-  subtitle: boolean
-  dubbing: boolean
-  progress?: number
-  status?: 'pending' | 'processing' | 'review' | 'completed'
-  translator?: string
-}
-
-interface Project {
-  id: string
-  name: string
-  languages: Language[]
-  status: 'uploading' | 'processing' | 'completed' | 'failed'
-  uploadProgress?: number
-  createdAt: string
-  thumbnail?: string
-}
+import type { Language, Project } from './types'
 
 export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false)
