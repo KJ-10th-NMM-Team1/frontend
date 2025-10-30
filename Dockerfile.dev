@@ -1,14 +1,26 @@
 FROM node:20-slim
 
+ENV TZ=Asia/Seoul \
+    NODE_ENV=development
+
 WORKDIR /app
 
-COPY package*.json ./
+# 필수 패키지 + 인증서 + 시간대
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends git procps iproute2 net-tools lsof \
-  && rm -rf /var/lib/apt/lists/*
+ && apt-get install -y --no-install-recommends \
+      ca-certificates curl tzdata git procps iproute2 net-tools lsof dnsutils \
+ && update-ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
+# 의존성 설치
+COPY package*.json ./
 RUN npm ci
 
+# 앱 복사
 COPY . .
 
+# (Vite를 컨테이너에서 직접 띄울 경우)
 EXPOSE 5173
-CMD ["tail", "-f", "/dev/null"]
+# Vite: 호스트 바인딩 필수(--host), 포트 고정(--port)
+
+CMD ["tail","-f","/dev/null"]
