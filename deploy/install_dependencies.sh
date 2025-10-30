@@ -37,6 +37,6 @@ cp "$ARCHIVE_ROOT/package-lock.json" .  # (package-lock.json이 있다면)
 # 5. 프로덕션(운영)용 의존성만 설치 (devDependencies 제외)
 #    (GitHub Actions에서 이미 'npm ci'와 'npm run build'를 실행했음)
 echo "Installing production dependencies (npm install --production)..."
-npm install --production
-
+# npm install --production
+npm ci
 echo "Dependency installation complete."
