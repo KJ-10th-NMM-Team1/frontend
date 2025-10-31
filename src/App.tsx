@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { CreateProjectModal } from './components/CreateProjectModal'
 import { ProjectCard } from './components/ProjectCard'
 import { ProcessingDashboard } from './components/ProcessingDashboard'
 import { Button } from './components/ui/button'
@@ -17,10 +16,11 @@ import {
 import { TranslatorEditorShell } from './components/TranslatorEditorShell'
 import { Plus, Video } from 'lucide-react'
 import { Toaster } from './components/ui/sonner'
-import type { Language, Project } from './types'
+import type { Project } from './types'
+import { CreateProjectModal } from './features/projects/components/CreateProjectModal'
+import { useCreateProjectModal } from './features/projects/hooks/useCreateProjectModal'
 
 export default function App() {
-  const [isModalOpen, setIsModalOpen] = useState(false)
   const [viewMode, setViewMode] = useState<'owner' | 'translator'>('owner')
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [projects, setProjects] = useState<Project[]>([
@@ -51,32 +51,8 @@ export default function App() {
       uploadProgress: 100,
       createdAt: '2025-10-24 14:30',
     },
-    {
-      id: '2',
-      name: 'tutorial_video.mp4',
-      languages: [
-        {
-          code: 'ko',
-          name: '한국어',
-          subtitle: true,
-          dubbing: true,
-          progress: 72,
-          status: 'processing',
-        },
-        {
-          code: 'zh',
-          name: '中文',
-          subtitle: true,
-          dubbing: true,
-          progress: 45,
-          status: 'review',
-        },
-      ],
-      status: 'processing',
-      uploadProgress: 67,
-      createdAt: '2025-10-26 09:15',
-    },
   ])
+
   const translatorNames = useMemo(() => {
     const names = new Set<string>()
     projects.forEach((project) => {
@@ -91,6 +67,7 @@ export default function App() {
   const [selectedTranslator, setSelectedTranslator] = useState<string>(
     () => translatorNames[0] ?? ''
   )
+
   useEffect(() => {
     if (translatorNames.length === 0) {
       setSelectedTranslator('')
@@ -98,6 +75,7 @@ export default function App() {
       setSelectedTranslator(translatorNames[0])
     }
   }, [translatorNames, selectedTranslator])
+
   const translatorAssignments = useMemo<TranslatorAssignment[]>(
     () =>
       projects.flatMap((project) =>
@@ -127,81 +105,11 @@ export default function App() {
     }
   }, [activeTranslatorAssignment, selectedTranslator])
 
-  const handleCreateProject = (projectData: {
-    name: string
-    languages: Language[]
-    uploadProgress: number
-  }) => {
-    const newProject: Project = {
-      id: Date.now().toString(),
-      name: projectData.name,
-      languages: projectData.languages,
-      status: 'uploading',
-      uploadProgress: projectData.uploadProgress,
-      createdAt: new Date()
-        .toLocaleString('ko-KR', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-        })
-        .replace(/\. /g, '-')
-        .replace('.', ''),
-    }
-
-    setProjects([newProject, ...projects])
-
-    // 업로드 완료 후 처리 단계로 전환 시뮬레이션
-    setTimeout(() => {
-      setProjects((prev) =>
-        prev.map((p) =>
-          p.id === newProject.id ? { ...p, status: 'processing', uploadProgress: 0 } : p
-        )
-      )
-
-      // 처리 진행률 시뮬레이션
-      let progress = 0
-      const processingInterval = setInterval(() => {
-        progress += 15
-        if (progress >= 100) {
-          clearInterval(processingInterval)
-          setProjects((prev) =>
-            prev.map((p) =>
-              p.id === newProject.id
-                ? {
-                    ...p,
-                    status: 'completed',
-                    uploadProgress: 100,
-                    languages: p.languages.map((lang) => ({
-                      ...lang,
-                      progress: 100,
-                      status: 'completed',
-                    })),
-                  }
-                : p
-            )
-          )
-        } else {
-          setProjects((prev) =>
-            prev.map((p) =>
-              p.id === newProject.id
-                ? {
-                    ...p,
-                    uploadProgress: progress,
-                    languages: p.languages.map((lang) => ({
-                      ...lang,
-                      progress: progress,
-                      status: 'processing',
-                    })),
-                  }
-                : p
-            )
-          )
-        }
-      }, 1000)
-    }, 2000)
-  }
+  const createProjectModal = useCreateProjectModal({
+    async onSubmit() {
+      // TODO: S3 업로드 등 실제 처리를 여기에 작성
+    },
+  })
 
   const handleProjectUpdate = (updated: Project) => {
     setProjects((prev) => prev.map((project) => (project.id === updated.id ? updated : project)))
@@ -266,7 +174,7 @@ export default function App() {
                 번역가 모드
               </Button>
               {viewMode === 'owner' && (
-                <Button onClick={() => setIsModalOpen(true)} className="gap-2 ">
+                <Button onClick={createProjectModal.open} className="gap-2 ">
                   <Plus />새 프로젝트
                 </Button>
               )}
@@ -318,9 +226,6 @@ export default function App() {
               <p className="text-sm text-gray-500 mb-6">
                 첫 번째 프로젝트를 생성하여 영상 더빙을 시작하세요
               </p>
-              <Button onClick={() => setIsModalOpen(true)} className="gap-2">
-                <Plus className="w-4 h-4" />새 프로젝트 만들기
-              </Button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -344,9 +249,10 @@ export default function App() {
       </main>
 
       <CreateProjectModal
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        onCreateProject={handleCreateProject}
+        isOpen={createProjectModal.isOpen}
+        onClose={createProjectModal.close}
+        form={createProjectModal.form}
+        onSubmit={createProjectModal.submit}
       />
       <Toaster />
     </div>
