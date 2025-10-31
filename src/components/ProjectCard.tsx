@@ -95,7 +95,7 @@ export function ProjectCard({ project, onClick }: ProjectCardProps) {
             <Globe className="w-3 h-3" />
             <span>타겟 언어 진행도</span>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 grid-cols-1">
             {project.languages.map((lang) => {
               const progressValue = clampProgress(lang.progress)
               return (
