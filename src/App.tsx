@@ -266,8 +266,8 @@ export default function App() {
                 번역가 모드
               </Button>
               {viewMode === 'owner' && (
-                <Button onClick={() => setIsModalOpen(true)} className="gap-2">
-                  <Plus className="w-4 h-4" />새 프로젝트
+                <Button onClick={() => setIsModalOpen(true)} className="gap-2 ">
+                  <Plus />새 프로젝트
                 </Button>
               )}
             </div>
