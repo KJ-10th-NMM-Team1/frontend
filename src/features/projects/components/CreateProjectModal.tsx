@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
 import type { useCreateProjectForm } from '../hooks/useCreateProjectForm'
 import {
   ModalBody,
@@ -45,8 +44,7 @@ export function CreateProjectModal({ isOpen, onClose, form, onSubmit }: CreatePr
           <ModalHeaderSection title="새 프로젝트 업로드" description="영상 파일을 업로드하세요." />
 
           <ModalBody>
-            <div className="space-y-2">
-              <Label htmlFor="create-project-video">영상 파일</Label>
+            <div className="py-3">
               <div className="border-2 border-dashed rounded-lg p-8 text-center">
                 {!videoFile ? (
                   <label className="flex cursor-pointer flex-col items-center gap-2 text-sm text-muted-foreground">
