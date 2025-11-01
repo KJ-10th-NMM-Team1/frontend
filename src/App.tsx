@@ -20,6 +20,7 @@ import type { Project } from './types'
 import { CreateProjectModal } from './features/projects/components/CreateProjectModal'
 import { useCreateProjectModal } from './features/projects/hooks/useCreateProjectModal'
 import { finishUpload, getPresignedUrl, uploadFile } from './features/projects/services/upload'
+import { toast } from 'sonner'
 
 export default function App() {
   const [viewMode, setViewMode] = useState<'owner' | 'translator'>('owner')
@@ -123,6 +124,8 @@ export default function App() {
 
       await uploadFile(upload_url, formData)
       await finishUpload({ object_key, project_id })
+
+      toast.success('프로젝트 업로드 완료')
     },
   })
 
