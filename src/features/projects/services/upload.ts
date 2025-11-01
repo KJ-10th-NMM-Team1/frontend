@@ -10,7 +10,8 @@ import type { Project } from '@/types'
 export const getPresignedUrl = async (p: CreateProjectPayload) => {
   const res = await fetch(getApiUrl('/api/storage/prepare-upload'), {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', credentials: 'include' },
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify({
       filename: p.videoFile.name,
       content_type: p.videoFile.type,
