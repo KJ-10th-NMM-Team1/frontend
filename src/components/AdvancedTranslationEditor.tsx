@@ -206,12 +206,12 @@ export function AdvancedTranslationEditor({
       setIsPreviewProcessing(false)
       toast.error('미리보기 생성 실패')
     } catch (e: unknown) {
-      patchPreviewOn(translation.id, { status: 'failed' });
-      setIsPreviewProcessing(false);
+      patchPreviewOn(translation.id, { status: '`failed' })
+      setIsPreviewProcessing(false)
       if (e instanceof Error) {
-        toast.error(e.message ?? '미리보기 생성 오류');
+        toast.error(e.message ?? '미리보기 생성 오류')
       } else {
-        toast.error('미리보기 생성 오류');
+        toast.error('미리보기 생성 오류')
       }
     }
   }
