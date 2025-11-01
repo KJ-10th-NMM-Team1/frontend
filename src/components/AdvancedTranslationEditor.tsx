@@ -26,8 +26,11 @@ import type {
   TermCorrection,
   TranslationIssueType,
 } from '../types'
+import { createSegmentPreview, getSegmentPreview } from '../api/editor'
 
 export interface AdvancedTranslationEditorProps {
+  projectID: string
+  languageCode: string
   language: string
   translations: Translation[]
   onSave: (translations: Translation[]) => void
@@ -38,6 +41,8 @@ export interface AdvancedTranslationEditorProps {
 }
 
 export function AdvancedTranslationEditor({
+  projectID,
+  languageCode,
   language,
   translations,
   onSave,
@@ -88,6 +93,7 @@ export function AdvancedTranslationEditor({
   const [previewTranslation, setPreviewTranslation] = useState<Translation | null>(null)
   const [isPreviewProcessing, setIsPreviewProcessing] = useState(false)
   const previewTimerRef = useRef<number>()
+  const previewPollerRef = useRef<number>()
 
   const parseTimestampDuration = (timestamp: string) => {
     const [start, end] = timestamp.split(' - ')
@@ -118,24 +124,111 @@ export function AdvancedTranslationEditor({
     return 'bg-red-500'
   }
 
-  const handlePreview = (translation: Translation) => {
+  // 특정 translation의 preview필드 부분 업데이트
+  const patchPreviewOn = (id: string, patch: Partial<NonNullable<Translation['preview']>>) => {
+    setEditedTranslations(prev =>
+      prev.map(t => {
+        if (t.id !== id) return t
+        return { ...t, preview: { ...(t.preview ?? { status: 'pending' }), ...patch } }
+      })
+    )
+    setPreviewTranslation(prev => {
+      if (!prev || prev.id !== id) return prev
+      return { ...prev, preview: { ...(prev.preview ?? { status: 'pending' }), ...patch } }
+    })
+  }
+
+  const beginPreviewPolling = (id: string, previewID: string) => {
+    // 안전장치: 기존 폴링 중지
+    if (previewPollerRef.current) window.clearInterval(previewPollerRef.current)
+    previewPollerRef.current = window.setInterval(async () => {
+      try {
+        const res = await getSegmentPreview(previewID)
+        if (res.status === 'completed') {
+          window.clearInterval(previewPollerRef.current!)
+          patchPreviewOn(id, {
+            status: 'completed',
+            videoUrl: res.videoUrl,
+            audioUrl: res.audioUrl,
+            updatedAt: res.updatedAt,
+          })
+          setIsPreviewProcessing(false)
+        } else if (res.status === 'failed') {
+          window.clearInterval(previewPollerRef.current!)
+          patchPreviewOn(id, { status: 'failed' })
+          setIsPreviewProcessing(false)
+          toast.error('미리보기 생성 실패')
+        }
+        // processing 이면 계속 폴링
+      } catch (e: any) {
+        window.clearInterval(previewPollerRef.current!)
+        setIsPreviewProcessing(false)
+        toast.error(e?.message ?? '미리보기 조회 실패')
+      }
+    }, 800)
+  }
+
+  const handlePreview = async (translation: Translation) => {
+    // Dialog 열고 로딩 진입
     setPreviewTranslation(translation)
     setIsPreviewOpen(true)
     setIsPreviewProcessing(true)
 
-    if (previewTimerRef.current) {
-      window.clearTimeout(previewTimerRef.current)
-    }
-
-    previewTimerRef.current = window.setTimeout(() => {
+    const segId = translation.segmentId ?? translation.id
+    try {
+      const res = await createSegmentPreview(projectID, languageCode, segId, {
+        text: translation.translated,
+      })
+      // 즉시 완료 (Mock)
+      if (res.status === 'completed') {
+        patchPreviewOn(translation.id, {
+          status: 'completed',
+          jobId: res.previewId,
+          videoUrl: res.videoUrl,
+          audioUrl: res.audioUrl,
+          updatedAt: res.updatedAt,
+        })
+        setIsPreviewProcessing(false)
+        return
+      }
+      // 처리 중이면 폴링 시작
+      if (res.status === 'processing' && res.previewId) {
+        patchPreviewOn(translation.id, { status: 'processing', jobId: res.previewId })
+        beginPreviewPolling(translation.id, res.previewId)
+        return
+      }
+      // 그 외 상태는 실패 처리
+      patchPreviewOn(translation.id, { status: 'failed' })
       setIsPreviewProcessing(false)
-    }, 1200)
+      toast.error('미리보기 생성 실패')
+    } catch (e: any) {
+      patchPreviewOn(translation.id, { status: 'failed' })
+      setIsPreviewProcessing(false)
+      toast.error(e?.message ?? '미리보기 생성 요청 실패')
+    }
   }
+
+  // const handlePreview = (translation: Translation) => {
+  //   setPreviewTranslation(translation)
+  //   setIsPreviewOpen(true)
+  //   setIsPreviewProcessing(true)
+
+  //   if (previewTimerRef.current) {
+  //     window.clearTimeout(previewTimerRef.current)
+  //   }
+
+  //   previewTimerRef.current = window.setTimeout(() => {
+  //     setIsPreviewProcessing(false)
+  //   }, 1200)
+  // }
 
   const handlePreviewOpenChange = (open: boolean) => {
     if (!open) {
       if (previewTimerRef.current) {
         window.clearTimeout(previewTimerRef.current)
+      }
+      if (previewPollerRef.current) {
+        window.clearInterval(previewPollerRef.current)
       }
       setIsPreviewProcessing(false)
       setPreviewTranslation(null)
@@ -147,6 +240,9 @@ export function AdvancedTranslationEditor({
     return () => {
       if (previewTimerRef.current) {
         window.clearTimeout(previewTimerRef.current)
+      }
+      if (previewPollerRef.current) {
+        window.clearInterval(previewPollerRef.current)
       }
     }
   }, [])
@@ -741,7 +837,10 @@ export function AdvancedTranslationEditor({
                   poster="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1280&q=60"
                 >
                   <source
-                    src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
+                    src={
+                      previewTranslation.preview?.videoUrl ??
+                      'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4'
+                    }
                     type="video/mp4"
                   />
                   브라우저가 video 태그를 지원하지 않습니다.
@@ -756,7 +855,10 @@ export function AdvancedTranslationEditor({
                 <audio
                   controls
                   className="min-w-[200px]"
-                  src="https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3"
+                  src={
+                    previewTranslation.preview?.audioUrl ??
+                    'https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3'
+                  }
                 >
                   브라우저가 audio 태그를 지원하지 않습니다.
                 </audio>
