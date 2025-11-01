@@ -384,14 +384,14 @@ export function AdvancedTranslationEditor({
             <div className="lg:col-span-3">
               <div className="space-y-4">
                 {translationGroups.map((group) => {
-                  const groupIssues = group.translations.reduce(
-                    (acc, item) => acc + item.issues.length,
-                    0
-                  )
+                  // const groupIssues = group.translations.reduce(
+                  //   (acc, item) => acc + item.issues.length,
+                  //   0
+                  // )
                   return (
                     <Card
                       key={group.key}
-                      className={`${groupIssues > 0 ? 'border-orange-300 bg-orange-50/30' : ''}`}
+                      // className={`${groupIssues > 0 ? 'border-orange-300 bg-orange-50/30' : ''}`}
                     >
                       <CardContent className="p-4 space-y-4">
                         <div className="flex items-center gap-3">

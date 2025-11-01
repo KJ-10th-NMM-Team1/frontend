@@ -1,113 +1,132 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Button } from './ui/button'
 import { AdvancedTranslationEditor } from './AdvancedTranslationEditor'
 import type { TranslatorAssignment } from './TranslatorAssignments'
 import { ArrowLeft } from 'lucide-react'
 
 interface TranslationEntry {
-  id: string
-  timestamp: string
-  original: string
-  translated: string
-  confidence: number
-  issues: {
-    type: 'term' | 'length' | 'number' | 'tone'
-    severity: 'warning' | 'error'
-    message: string
-    suggestion?: string
-  }[]
-  speaker?: string
-  segmentDurationSeconds?: number
-  originalSpeechSeconds?: number
-  translatedSpeechSeconds?: number
-  correctionSuggestions?: {
-    id: string
-    text: string
-    reason: string
-  }[]
-  termCorrections?: {
-    id: string
-    original: string
-    replacement: string
-    reason?: string
+  _id: string
+  segment_id: string
+  segment_text: string
+  score: number
+  start_point: number
+  end_point: number
+  editor_id: string
+  translate_context: string
+  sub_langth: number
+  issues?: {
+    issue_id: string
+    issue_context?: string | null // service.py에서 $lookup으로 추가한 필드
   }[]
 }
-
-const SAMPLE_TRANSLATIONS: TranslationEntry[] = [
-  {
-    id: '1',
-    timestamp: '00:00:00 - 00:00:05',
-    original: 'Welcome to our product demonstration.',
-    translated: '제품 설명회에 오신 것을 환영합니다.',
-    confidence: 0.92,
-    issues: [],
-    speaker: 'A',
-    segmentDurationSeconds: 5,
-    originalSpeechSeconds: 4.3,
-    translatedSpeechSeconds: 4.7,
-  },
-  {
-    id: '2',
-    timestamp: '00:00:06 - 00:00:12',
-    original: "Today, we'll walk you through the key features.",
-    translated: '오늘은 핵심 기능을 함께 살펴보겠습니다.',
-    confidence: 0.88,
-    issues: [
-      {
-        type: 'length',
-        severity: 'warning',
-        message: '원문보다 15% 길어요.',
-        suggestion: '오늘은 주요 기능을 함께 살펴보겠습니다.',
-      },
-    ],
-    speaker: 'A',
-    segmentDurationSeconds: 6,
-    originalSpeechSeconds: 5.2,
-    translatedSpeechSeconds: 6.1,
-    correctionSuggestions: [
-      {
-        id: '2-alt-1',
-        text: '오늘은 주요 기능을 함께 살펴보겠습니다.',
-        reason: '길이 축소',
-      },
-    ],
-  },
-  {
-    id: '3',
-    timestamp: '00:00:13 - 00:00:18',
-    original: 'This solution keeps every team aligned and efficient.',
-    translated: '이 솔루션은 모든 팀이 정렬되어 효율적으로 움직이도록 도와줍니다.',
-    confidence: 0.9,
-    issues: [
-      {
-        type: 'term',
-        severity: 'warning',
-        message: "'aligned' 용어는 '정렬' 대신 '협업'으로 번역 권장.",
-        suggestion: '이 솔루션은 모든 팀이 협업하며 효율적으로 움직이도록 도와줍니다.',
-      },
-    ],
-    speaker: 'B',
-    segmentDurationSeconds: 5,
-    originalSpeechSeconds: 4.5,
-    translatedSpeechSeconds: 4.8,
-    termCorrections: [
-      {
-        id: '3-term-1',
-        original: 'aligned',
-        replacement: '협업',
-        reason: '고객사 용어집 기준',
-      },
-    ],
-  },
-]
-
 interface TranslatorEditorShellProps {
   assignment: TranslatorAssignment
   onBack: () => void
 }
 
+const formatTime = (seconds: number): string => {
+  if (isNaN(seconds) || seconds < 0) seconds = 0
+  const h = Math.floor(seconds / 3600)
+    .toString()
+    .padStart(2, '0')
+  const m = Math.floor((seconds % 3600) / 60)
+    .toString()
+    .padStart(2, '0')
+  const s = Math.floor(seconds % 60)
+    .toString()
+    .padStart(2, '0')
+  return `${h}:${m}:${s}`
+}
+
+const mapApiIssues = (apiIssues: SegmentData['issues'] | undefined): TranslationIssue[] => {
+  // 1. API 응답에 issues 배열이 없으면 빈 배열 반환
+  if (!apiIssues) {
+    return []
+  }
+
+  // 2. API issues 배열을 순회하며 Editor가 사용하는 TranslationIssue[] 형태로 변환
+  return apiIssues.map((issue) => {
+    // 3. API의 issue_context를 message로 사용
+    const message = issue.issue_context || '알 수 없는 이슈'
+
+    // 4. issue_context 내용에 따라 type과 severity 추론
+    //    (이 로직은 백엔드 응답에 따라 더 정교하게 수정될 수 있습니다)
+    let type: TranslationIssueType = 'term' // 기본값
+    let severity: 'warning' | 'error' = 'warning' // 기본값
+
+    if (message.includes('길이') || message.includes('length')) {
+      type = 'length'
+      severity = 'error' // 길이 문제는 'error'로 가정
+    } else if (message.includes('용어') || message.includes('term')) {
+      type = 'term'
+    } else if (message.includes('톤') || message.includes('tone')) {
+      type = 'tone'
+    }
+
+    // 5. Editor가 사용하는 TranslationIssue 객체 반환
+    return {
+      type,
+      severity,
+      message,
+      // 'suggestion' 필드는 API 데이터에 없으므로 undefined가 됩니다.
+      // (AdvancedTranslationEditor가 suggestion: undefined 를 처리함)
+    }
+  })
+}
+
 export function TranslatorEditorShell({ assignment, onBack }: TranslatorEditorShellProps) {
-  const [translations, setTranslations] = useState<TranslationEntry[]>(SAMPLE_TRANSLATIONS)
+  const [translations, setTranslations] = useState<TranslationEntry[]>([])
+  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const editorTranslations = useMemo((): Translation[] => {
+    // 1. API에서 받은 'segments' 배열을 순회(map)합니다.
+    return translations.map((segment) => {
+      // 2. 'segment'(SegmentData)의 필드를
+      //    'Translation' 인터페이스의 필드로 1:1 매핑합니다.
+      return {
+        //  [Editor 필드]   : [API 원본 필드]
+        id: segment.segment_id,
+        timestamp: `${formatTime(segment.start_point)} - ${formatTime(segment.end_point)}`,
+        original: segment.segment_text || '',
+        translated: segment.translate_context || '',
+        confidence: segment.score || 0,
+        issues: mapApiIssues(segment.issues), // (issues는 별도 함수로 한 번 더 변환)
+
+        // (기타 필드들...)
+        segmentDurationSeconds: segment.end_point - segment.start_point,
+        speaker: undefined,
+        correctionSuggestions: [],
+        termCorrections: [],
+      }
+    })
+  }, [translations])
+
+  useEffect(() => {
+    const apiUrl = 'http://localhost:8000/api/segment/'
+
+    const fetchData = async () => {
+      try {
+        const response = await fetch(apiUrl)
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        const data: TranslationEntry[] = await response.json()
+        setTranslations(data)
+      } catch (e) {
+        // 5. (중요) 네트워크 오류 또는 위에서 throw한 오류 처리
+        if (e instanceof Error) {
+          setError(e.message)
+        } else {
+          setError('데이터를 가져오는 중 알 수 없는 오류가 발생했습니다.')
+        }
+      } finally {
+        // 6. (중요) 성공하든 실패하든 로딩 상태를 false로 변경합니다.
+        setIsLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
 
   const pageTitle = useMemo(
     () => `${assignment.projectName} · ${assignment.languageName}`,
@@ -134,7 +153,7 @@ export function TranslatorEditorShell({ assignment, onBack }: TranslatorEditorSh
 
       <AdvancedTranslationEditor
         language={assignment.languageName}
-        translations={translations}
+        translations={editorTranslations}
         onSave={(updated) => {
           setTranslations(updated)
           onBack()
@@ -146,3 +165,6 @@ export function TranslatorEditorShell({ assignment, onBack }: TranslatorEditorSh
     </div>
   )
 }
+// function useEffect(arg0: () => void, arg1: never[]) {
+//   throw new Error('Function not implemented.')
+// }
