@@ -160,7 +160,7 @@ export default function App() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 py-4 space-y-3">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex  gap-3 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
                 <Video className="w-6 h-6 text-white" />
