@@ -14,3 +14,15 @@ export interface CreateProjectFormValues {
 export interface CreateProjectPayload {
   videoFile: File
 }
+
+export interface CreateProjectResponse {
+  project_id: string
+  upload_url: string
+  fields: Record<string, string>
+  object_key: string
+}
+
+export interface FinUploadPayload {
+  project_id: string
+  object_key: string
+}

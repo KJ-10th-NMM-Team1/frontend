@@ -19,6 +19,7 @@ import { Toaster } from './components/ui/sonner'
 import type { Project } from './types'
 import { CreateProjectModal } from './features/projects/components/CreateProjectModal'
 import { useCreateProjectModal } from './features/projects/hooks/useCreateProjectModal'
+import { finishUpload, getPresignedUrl, uploadFile } from './features/projects/services/upload'
 
 export default function App() {
   const [viewMode, setViewMode] = useState<'owner' | 'translator'>('owner')
@@ -105,16 +106,25 @@ export default function App() {
     }
   }, [activeTranslatorAssignment, selectedTranslator])
 
-  const createProjectModal = useCreateProjectModal({
-    async onSubmit() {
-      // TODO: S3 업로드 등 실제 처리를 여기에 작성
-    },
-  })
-
   const handleProjectUpdate = (updated: Project) => {
     setProjects((prev) => prev.map((project) => (project.id === updated.id ? updated : project)))
     setSelectedProject(updated)
   }
+
+  const createProjectModal = useCreateProjectModal({
+    onSubmit: async (p) => {
+      const { upload_url, fields, object_key, project_id } = await getPresignedUrl(p)
+
+      const formData = new FormData()
+      Object.entries(fields).forEach(([key, value]) => {
+        formData.append(key, value)
+      })
+      formData.append('file', p.videoFile)
+
+      await uploadFile(upload_url, formData)
+      await finishUpload({ object_key, project_id })
+    },
+  })
 
   if (activeTranslatorAssignment) {
     return (
