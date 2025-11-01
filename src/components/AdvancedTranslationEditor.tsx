@@ -160,10 +160,14 @@ export function AdvancedTranslationEditor({
           toast.error('미리보기 생성 실패')
         }
         // processing 이면 계속 폴링
-      } catch (e: any) {
+      } catch (e: unknown) {
         window.clearInterval(previewPollerRef.current!)
         setIsPreviewProcessing(false)
-        toast.error(e?.message ?? '미리보기 조회 실패')
+        if (e instanceof Error) {
+          toast.error(e?.message ?? '미리보기 조회 실패')
+        } else {
+          totalIssues.errot('미리보기 조회 실패')
+        }
       }
     }, 800)
   }
@@ -201,10 +205,14 @@ export function AdvancedTranslationEditor({
       patchPreviewOn(translation.id, { status: 'failed' })
       setIsPreviewProcessing(false)
       toast.error('미리보기 생성 실패')
-    } catch (e: any) {
-      patchPreviewOn(translation.id, { status: 'failed' })
-      setIsPreviewProcessing(false)
-      toast.error(e?.message ?? '미리보기 생성 요청 실패')
+    } catch (e: unknown) {
+      patchPreviewOn(translation.id, { status: 'failed' });
+      setIsPreviewProcessing(false);
+      if (e instanceof Error) {
+        toast.error(e.message ?? '미리보기 생성 오류');
+      } else {
+        toast.error('미리보기 생성 오류');
+      }
     }
   }
 
