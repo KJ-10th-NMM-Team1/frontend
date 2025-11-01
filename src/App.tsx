@@ -114,18 +114,23 @@ export default function App() {
 
   const createProjectModal = useCreateProjectModal({
     onSubmit: async (p) => {
-      const { upload_url, fields, object_key, project_id } = await getPresignedUrl(p)
+      try {
+        const { upload_url, fields, object_key, project_id } = await getPresignedUrl(p)
 
-      const formData = new FormData()
-      Object.entries(fields).forEach(([key, value]) => {
-        formData.append(key, value)
-      })
-      formData.append('file', p.videoFile)
+        const formData = new FormData()
+        Object.entries(fields).forEach(([key, value]) => {
+          formData.append(key, value)
+        })
+        formData.append('file', p.videoFile)
 
-      await uploadFile(upload_url, formData)
-      await finishUpload({ object_key, project_id })
+        await uploadFile(upload_url, formData)
+        await finishUpload({ object_key, project_id })
 
-      toast.success('프로젝트 업로드 완료')
+        toast.success('프로젝트 업로드 완료')
+      } catch (error) {
+        toast.error('업로드 중 오류가 발생했습니다.')
+        throw error // 모달 상태를 유지하거나 에러 처리를 계속하려면 필요에 따라 재던지기
+      }
     },
   })
 
