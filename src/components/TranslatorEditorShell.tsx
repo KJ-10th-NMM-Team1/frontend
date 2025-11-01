@@ -119,6 +119,7 @@ export function TranslatorEditorShell({ assignment, onBack }: TranslatorEditorSh
         } else {
           setError('데이터를 가져오는 중 알 수 없는 오류가 발생했습니다.')
         }
+        console.log(error)
       } finally {
         // 6. (중요) 성공하든 실패하든 로딩 상태를 false로 변경합니다.
         setIsLoading(false)
