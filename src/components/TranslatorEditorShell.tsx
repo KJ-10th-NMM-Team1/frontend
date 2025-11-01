@@ -76,7 +76,6 @@ const mapApiIssues = (apiIssues: SegmentData['issues'] | undefined): Translation
 
 export function TranslatorEditorShell({ assignment, onBack }: TranslatorEditorShellProps) {
   const [translations, setTranslations] = useState<TranslationEntry[]>([])
-  const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
 
   const editorTranslations = useMemo((): Translation[] => {
