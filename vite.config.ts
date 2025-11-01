@@ -7,8 +7,7 @@ export default ({ mode }) => {
   // .env(.development)에서 읽어옵니다. (선택)
   // 예: VITE_BACKEND_ORIGIN=http://localhost:8000
   const env = loadEnv(mode, process.cwd(), '')
-  const backendOrigin =
-    env.VITE_BACKEND_ORIGIN || 'http://host.docker.internal:8000'
+  const backendOrigin = env.VITE_BACKEND_ORIGIN || 'http://host.docker.internal:8000'
 
   return defineConfig({
     plugins: [react(), tailwindcss()],
@@ -61,11 +60,11 @@ export default ({ mode }) => {
       outDir: 'build',
     },
     server: {
-      host: true,           // 0.0.0.0
+      host: true, // 0.0.0.0
       port: 5173,
       strictPort: true,
       hmr: {
-        host: 'localhost',  // 브라우저에서 접속할 호스트
+        host: 'localhost', // 브라우저에서 접속할 호스트
         port: 5173,
         // clientPort: 5173, // HMR 이슈 있을 때만 활성화
       },

@@ -126,13 +126,13 @@ export function AdvancedTranslationEditor({
 
   // 특정 translation의 preview필드 부분 업데이트
   const patchPreviewOn = (id: string, patch: Partial<NonNullable<Translation['preview']>>) => {
-    setEditedTranslations(prev =>
-      prev.map(t => {
+    setEditedTranslations((prev) =>
+      prev.map((t) => {
         if (t.id !== id) return t
         return { ...t, preview: { ...(t.preview ?? { status: 'pending' }), ...patch } }
       })
     )
-    setPreviewTranslation(prev => {
+    setPreviewTranslation((prev) => {
       if (!prev || prev.id !== id) return prev
       return { ...prev, preview: { ...(prev.preview ?? { status: 'pending' }), ...patch } }
     })

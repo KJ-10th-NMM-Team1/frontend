@@ -6,7 +6,13 @@ export async function createSegmentPreview(
   languageCode: string,
   segmentId: string,
   body: { text: string }
-): Promise<{ previewId?: string; status: PreviewStatus; videoUrl?: string; audioUrl?: string; updatedAt?: string }> {
+): Promise<{
+  previewId?: string
+  status: PreviewStatus
+  videoUrl?: string
+  audioUrl?: string
+  updatedAt?: string
+}> {
   const res = await fetch(
     `/api/editor/projects/${encodeURIComponent(projectId)}/languages/${encodeURIComponent(languageCode)}/segments/${encodeURIComponent(segmentId)}/preview`,
     {

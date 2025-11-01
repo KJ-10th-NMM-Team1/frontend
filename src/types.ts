@@ -77,7 +77,7 @@ export interface Translation {
   translatedSpeechSeconds?: number
   correctionSuggestions?: CorrectionSuggestion[]
   termCorrections?: TermCorrection[]
-  
+
   // 백엔드 세그먼트 PK (없으면 기존 id를 임시로 사용)
   segmentId?: string
   // 미리보기 상태/결과
