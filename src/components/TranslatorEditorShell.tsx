@@ -76,6 +76,7 @@ const mapApiIssues = (apiIssues: SegmentData['issues'] | undefined): Translation
 
 export function TranslatorEditorShell({ assignment, onBack }: TranslatorEditorShellProps) {
   const [translations, setTranslations] = useState<TranslationEntry[]>([])
+  const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
 
   const editorTranslations = useMemo((): Translation[] => {
@@ -113,16 +114,11 @@ export function TranslatorEditorShell({ assignment, onBack }: TranslatorEditorSh
         const data: TranslationEntry[] = await response.json()
         setTranslations(data)
       } catch (e) {
-        // 5. (중요) 네트워크 오류 또는 위에서 throw한 오류 처리
-        if (e instanceof Error) {
-          setError(e.message)
-        } else {
-          setError('데이터를 가져오는 중 알 수 없는 오류가 발생했습니다.')
-        }
+        setError(e.message)
         console.log(error)
       } finally {
-        // 6. (중요) 성공하든 실패하든 로딩 상태를 false로 변경합니다.
         setIsLoading(false)
+        console.log(isLoading)
       }
     }
     fetchData()
