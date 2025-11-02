@@ -46,8 +46,8 @@ export function ProjectCard({ project, onClick }: ProjectCardProps) {
   return (
     <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={onClick}>
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-3 flex-1">
+        <div className="flex items-start justify-between overflow-hidden">
+          <div className="flex items-start gap-3 flex-1 overflow-hidden">
             <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
               {project.thumbnail ? (
                 <img
@@ -95,7 +95,7 @@ export function ProjectCard({ project, onClick }: ProjectCardProps) {
             <Globe className="w-3 h-3" />
             <span>타겟 언어 진행도</span>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 grid-cols-1">
             {project.languages.map((lang) => {
               const progressValue = clampProgress(lang.progress)
               return (
