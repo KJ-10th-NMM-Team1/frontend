@@ -77,6 +77,7 @@ const mapApiIssues = (apiIssues: SegmentData['issues'] | undefined): Translation
 export function TranslatorEditorShell({ assignment, onBack }: TranslatorEditorShellProps) {
   const [translations, setTranslations] = useState<TranslationEntry[]>([])
   const [error, setError] = useState<string | null>(null)
+  // const [loading, setIsLoading] = useState(true)
 
   const editorTranslations = useMemo((): Translation[] => {
     // 1. API에서 받은 'segments' 배열을 순회(map)합니다.
@@ -122,7 +123,8 @@ export function TranslatorEditorShell({ assignment, onBack }: TranslatorEditorSh
         console.log(error)
       } finally {
         // 6. (중요) 성공하든 실패하든 로딩 상태를 false로 변경합니다.
-        setIsLoading(false)
+        // console.log(loading)
+        // setIsLoading(false)
       }
     }
     fetchData()
