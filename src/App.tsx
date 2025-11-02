@@ -45,22 +45,6 @@ export default function App() {
     })
   }, [loadProjects])
 
-  useEffect(() => {
-    const apiUrl = 'http://localhost:8000/api/segment/'
-    const fetchData = async () => {
-      try {
-        const response = await fetch(apiUrl)
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-        const data: TranslationEntry[] = await response.json()
-      } catch (e) {
-      } finally {
-      }
-    }
-    fetchData()
-  }, [])
-
   const translatorNames = useMemo(() => {
     const names = new Set<string>()
     projects.forEach((project) => {

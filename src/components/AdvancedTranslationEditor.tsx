@@ -119,7 +119,8 @@ export function AdvancedTranslationEditor({
   }
 
   const getGaugeColor = (progress: number) => {
-    if (progress <= 80) return 'bg-emerald-500'
+    if (progress <= 80) return 
+    'bg-emerald-500'
     if (progress <= 100) return 'bg-amber-500'
     return 'bg-red-500'
   }
