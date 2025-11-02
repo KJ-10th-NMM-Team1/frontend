@@ -27,6 +27,10 @@ import type {
   TranslationIssueType,
 } from '../types'
 import { createSegmentPreview, getSegmentPreview } from '../api/editor'
+import { Suggestion } from './editor/LangSuggest'
+import { TermCorrectionCard } from './editor/LangCorrection'
+import { IussueCard } from './editor/IussueCard'
+import { StatisticsCard } from './editor/StatisticsCard'
 
 export interface AdvancedTranslationEditorProps {
   projectID: string
@@ -64,6 +68,7 @@ export function AdvancedTranslationEditor({
       timestamp: string
       translations: Translation[]
     }[] = []
+
     const indexMap = new Map<string, number>()
 
     translations.forEach((item) => {
@@ -119,8 +124,8 @@ export function AdvancedTranslationEditor({
   }
 
   const getGaugeColor = (progress: number) => {
-    if (progress <= 80) return 
-    'bg-emerald-500'
+    if (progress <= 80) return
+    ;('bg-emerald-500')
     if (progress <= 100) return 'bg-amber-500'
     return 'bg-red-500'
   }
@@ -437,58 +442,14 @@ export function AdvancedTranslationEditor({
                   </div>
                 </CardContent>
               </Card>
-
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">자동 감지 이슈</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="flex items-center justify-between p-2 bg-blue-50 rounded">
-                    <div className="flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4 text-blue-600" />
-                      <span className="text-sm">용어 불일치</span>
-                    </div>
-                    <Badge variant="secondary">{issueStats.term}</Badge>
-                  </div>
-                  <div className="flex items-center justify-between p-2 bg-orange-50 rounded">
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-orange-600" />
-                      <span className="text-sm">길이 초과</span>
-                    </div>
-                    <Badge variant="secondary">{issueStats.length}</Badge>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">통계</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">총 문장</span>
-                    <span>{editedTranslations.length}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">낮은 신뢰도</span>
-                    <span className="text-yellow-600">
-                      {editedTranslations.filter((t) => t.confidence < 0.8).length}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">이슈 있음</span>
-                    <span className="text-orange-600">
-                      {editedTranslations.filter((t) => t.issues.length > 0).length}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
+              <IussueCard issueStats={issueStats} />
+              <StatisticsCard editedTranslations={editedTranslations} />
             </div>
 
             {/* 오른쪽: 번역 리스트 */}
             <div className="lg:col-span-3">
               <div className="space-y-4">
-                {translationGroups.map((group) => {
+                {translationGroups.map((group, gidx) => {
                   // const groupIssues = group.translations.reduce(
                   //   (acc, item) => acc + item.issues.length,
                   //   0
@@ -508,13 +469,11 @@ export function AdvancedTranslationEditor({
                               동시 화자 {group.translations.length}명
                             </Badge>
                           )}
-                          <span className="text-xs text-gray-400">
-                            세그먼트 {group.translations.length}개
-                          </span>
+                          <span className="text-xs text-gray-400">{gidx + 1}번째 세그먼트</span>
                         </div>
 
                         <div className="space-y-3">
-                          {group.translations.map((translation, idx) => {
+                          {group.translations.map((translation) => {
                             const segmentDuration = getSegmentDuration(translation)
                             const safeSegmentDuration = segmentDuration || 1
                             const originalSpeech =
@@ -582,7 +541,7 @@ export function AdvancedTranslationEditor({
                                       variant="outline"
                                       className="text-xs bg-gray-100 text-gray-700"
                                     >
-                                      세그먼트 {idx + 1}
+                                      세그먼트 {gidx + 1}
                                     </Badge>
                                     {translation.speaker && (
                                       <Badge variant="outline" className="text-xs">
@@ -621,7 +580,6 @@ export function AdvancedTranslationEditor({
                                     </Button>
                                   </div>
                                 </div>
-
                                 {translation.issues.length > 0 && (
                                   <div className="flex flex-wrap gap-1.5">
                                     {translation.issues.map((issue, issueIdx) => (
@@ -642,7 +600,6 @@ export function AdvancedTranslationEditor({
                                     ))}
                                   </div>
                                 )}
-
                                 {segmentDuration > 0 && (
                                   <div className="space-y-2 text-xs">
                                     <div className="flex items-center gap-3 text-gray-500">
@@ -699,14 +656,12 @@ export function AdvancedTranslationEditor({
                                     </div>
                                   </div>
                                 )}
-
                                 <div>
                                   <label className="text-xs text-gray-500 mb-1 block">원문</label>
                                   <div className="bg-gray-50 p-3 rounded text-sm">
                                     {translation.original}
                                   </div>
                                 </div>
-
                                 <div>
                                   <label className="text-xs text-gray-500 mb-1 block">번역</label>
                                   <Textarea
@@ -717,76 +672,11 @@ export function AdvancedTranslationEditor({
                                     className="min-h-[80px] resize-none"
                                   />
                                 </div>
-
-                                {termCorrections.length > 0 && (
-                                  <div className="rounded-lg border border-purple-200 bg-purple-50/70 p-3 space-y-2">
-                                    <div className="flex items-center gap-2 text-sm font-medium text-purple-700">
-                                      <MessageSquare className="w-4 h-4" />
-                                      용어 교정
-                                    </div>
-                                    {termCorrections.map((correction) => (
-                                      <div
-                                        key={correction.id}
-                                        className="flex items-start justify-between gap-3"
-                                      >
-                                        <div className="space-y-1">
-                                          <p className="text-xs font-medium text-purple-600">
-                                            {correction.reason ?? '용어 통일'}
-                                          </p>
-                                          <p className="text-sm text-purple-900">
-                                            <span className="line-through decoration-purple-400 decoration-2 mr-1">
-                                              {correction.original}
-                                            </span>
-                                            →
-                                            <span className="ml-1 font-medium">
-                                              {correction.replacement}
-                                            </span>
-                                          </p>
-                                        </div>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          className="h-7"
-                                          onClick={() =>
-                                            handleApplyTermCorrection(translation.id, correction)
-                                          }
-                                        >
-                                          적용
-                                        </Button>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-
-                                {combinedSuggestions.length > 0 && (
-                                  <div className="rounded-lg border border-blue-200 bg-blue-50/70 p-3 space-y-2">
-                                    <div className="flex items-center gap-2 text-sm font-medium text-blue-700">
-                                      <Lightbulb className="w-4 h-4" />
-                                      교정 후보
-                                    </div>
-                                    {combinedSuggestions.map((suggestion) => (
-                                      <div
-                                        key={suggestion.id}
-                                        className="flex items-start justify-between gap-3"
-                                      >
-                                        <div className="space-y-1">
-                                          <p className="text-xs font-medium text-blue-600">
-                                            {suggestion.reason}
-                                          </p>
-                                          <p className="text-sm text-blue-900">{suggestion.text}</p>
-                                        </div>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          className="h-7"
-                                          onClick={suggestion.onApply}
-                                        >
-                                          적용
-                                        </Button>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
+                                <TermCorrectionCard
+                                  termCorrections={correctionSuggestions}
+                                  onApply={handleApplyTermCorrection}
+                                />
+                                <Suggestion combinedSuggestions={combinedSuggestions} />
                               </div>
                             )
                           })}

@@ -71,21 +71,20 @@ export default function App() {
   const translatorAssignments = useMemo<TranslatorAssignment[]>(
     () =>
       projects.flatMap((project) =>
-        project.languages
-          .filter((lang) => lang.translator === selectedTranslator)
-          .map((lang) => ({
-            projectId: project.id,
-            projectName: project.name,
-            languageCode: lang.code,
-            languageName: lang.name,
-            status: lang.status,
-            progress: lang.progress,
-            translator: lang.translator ?? '',
-            isDubbing: lang.dubbing,
-          }))
+        project.languages.map((lang) => ({
+          projectId: project.id,
+          projectName: project.name,
+          languageCode: lang.code,
+          languageName: lang.name,
+          status: lang.status,
+          progress: lang.progress,
+          translator: lang.translator ?? '',
+          isDubbing: lang.dubbing,
+        }))
       ),
-    [projects, selectedTranslator]
+    [projects]
   )
+
   const [activeTranslatorAssignment, setActiveTranslatorAssignment] =
     useState<TranslatorAssignment | null>(null)
   useEffect(() => {
