@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button } from './ui/button'
+import { useSSE } from '../hooks/useSSE'
 import { Badge } from './ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
-import { PipelineStage, type StageStatus } from './PipelineStage'
+import { PipelineStage } from './PipelineStage'
+import { ProcessingStageCard } from './ProcessingStageCard'
 import { STTEditor } from './STTEditor'
 import { AdvancedTranslationEditor } from './AdvancedTranslationEditor'
 import { VoiceSelector } from './VoiceSelector'
@@ -12,18 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Label } from './ui/label'
 import { Switch } from './ui/switch'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog'
-import type { Language, Project, STTSegment, Translation } from '../types'
+import type { Language, Project, STTSegment, Translation, ProjectPipeline, PipelineStage as PipelineStageType } from '../types'
 import type { STTEditorProps } from './STTEditor'
 import type { AdvancedTranslationEditorProps } from './AdvancedTranslationEditor'
-
-interface PipelineStageData {
-  id: string
-  title: string
-  description: string
-  status: StageStatus
-  progress: number
-  estimatedTime?: string
-}
 
 interface ProcessingDashboardProps {
   project: Project
@@ -63,95 +56,70 @@ export function ProcessingDashboard({
   const [isRagModalOpen, setIsRagModalOpen] = useState(false)
   const [assignmentDraft, setAssignmentDraft] = useState<Record<string, string>>({})
   const [reviewDraft, setReviewDraft] = useState<Record<string, boolean>>({})
-  const [stages, setStages] = useState<PipelineStageData[]>([
-    {
-      id: 'upload',
+  // 프론트엔드 기본 단계 정보
+  const DEFAULT_STAGES = {
+    upload: {
       title: '1. 영상 업로드',
-      description: '원본 영상 파일을 서버에 업로드합니다',
-      status: 'completed',
-      progress: 100,
+      description: '원본 영상 파일을 서버에 업로드합니다'
     },
-    {
-      id: 'stt',
+    stt: {
       title: '2. STT (Speech to Text)',
       description: '음성을 텍스트로 변환하고 타임스탬프를 생성합니다',
-      status: 'completed',
-      progress: 100,
+      estimatedTime: '3-5분'
     },
-    {
-      id: 'mt',
+    mt: {
       title: '3. MT (Machine Translation)',
       description: '추출된 텍스트를 타겟 언어로 번역합니다',
-      status: 'completed',
-      progress: 100,
-      estimatedTime: '2분',
+      estimatedTime: '2분'
     },
-    {
-      id: 'rag',
+    rag: {
       title: '4. RAG/LLM 교정',
       description: 'AI 교정 결과를 검토하고 화자별 목소리를 매핑하세요',
-      status: 'review',
-      progress: 100,
-      estimatedTime: '3분',
+      estimatedTime: '3분'
     },
-    {
-      id: 'tts',
+    tts: {
       title: '5. TTS (Text to Speech)',
       description: '번역된 텍스트를 음성으로 변환합니다',
-      status: 'pending',
-      progress: 0,
-      estimatedTime: '5분',
+      estimatedTime: '5분'
     },
-    {
-      id: 'packaging',
+    packaging: {
       title: '6. 패키징',
       description: '더빙된 음성과 자막을 영상에 합성합니다',
-      status: 'pending',
-      progress: 0,
-      estimatedTime: '2분',
+      estimatedTime: '2분'
     },
-    {
-      id: 'outputs',
+    outputs: {
       title: '7. 산출물 점검 및 Publish',
-      description: '완료된 산출물을 검수하고 배포 설정을 확정합니다',
-      status: 'pending',
-      progress: 0,
-    },
-  ])
+      description: '완료된 산출물을 검수하고 배포 설정을 확정합니다'
+    }
+  } as const
+
+  const { data: pipelineData, isConnected, error } = useSSE<ProjectPipeline>(
+    `/api/pipeline/${project.id}/stream`
+  )
+  console.log(' SSE error:', error)
+
+  // 기본 단계들을 항상 표시하고, 백엔드 데이터가 있으면 병합
+  const stages = Object.entries(DEFAULT_STAGES).map(([id, defaultStage]) => {
+    const backendStage = pipelineData?.stages.find(stage => stage.id === id)
+
+    return {
+      id,
+      ...defaultStage,
+      status: backendStage?.status || 'pending',
+      progress: backendStage?.progress || 0,
+      ...backendStage
+    }
+  })
+
+  const overallProgress = pipelineData?.overall_progress || 0
 
   const updateVoiceStageStatus = useCallback(
     (nextLanguages: Language[]) => {
-      const allReviewed = nextLanguages.every((lang) => lang.translationReviewed)
-      const allVoicesReady = nextLanguages.every((lang) => {
-        if (!lang.dubbing) return true
-        return lang.voiceConfig && Object.keys(lang.voiceConfig).length > 0
-      })
-
-      setStages((prev) =>
-        prev.map((stage) => {
-          if (stage.id === 'rag') {
-            if (allReviewed && allVoicesReady) {
-              return { ...stage, status: 'completed', progress: 100 }
-            }
-            return {
-              ...stage,
-              status: 'review',
-              progress: allReviewed ? 100 : 80,
-            }
-          }
-          if (stage.id === 'tts') {
-            if (allReviewed && allVoicesReady) {
-              return stage.status === 'processing'
-                ? stage
-                : { ...stage, status: 'processing', progress: stage.progress ?? 10 }
-            }
-            return { ...stage, status: 'pending', progress: 0 }
-          }
-          return stage
-        })
-      )
+      // TODO: 서버에 파이프라인 상태 업데이트 요청 보내기
+      // 현재는 SSE로 서버에서 상태를 받아오므로 로컬 상태 변경 불필요
+      console.log('Voice stage status updated:', nextLanguages)
     },
-    [setStages]
+    []
   )
 
   const handleVoiceMappingDraftChange = useCallback(
@@ -190,9 +158,9 @@ export function ProcessingDashboard({
     const nextLanguages = languages.map((lang) =>
       lang.code === voiceMappingLanguageCode
         ? {
-            ...lang,
-            voiceConfig: { ...voiceMappingDraft },
-          }
+          ...lang,
+          voiceConfig: { ...voiceMappingDraft },
+        }
         : lang
     )
 
@@ -443,9 +411,8 @@ export function ProcessingDashboard({
     return {
       code: lang.code,
       name: lang.name,
-      summary: `${lang.name} 버전 산출물이 완성되었습니다. 자막 ${
-        lang.subtitle ? '포함' : '미포함'
-      }, 더빙 ${lang.dubbing ? '활성' : '제외'} 상태예요.`,
+      summary: `${lang.name} 버전 산출물이 완성되었습니다. 자막 ${lang.subtitle ? '포함' : '미포함'
+        }, 더빙 ${lang.dubbing ? '활성' : '제외'} 상태예요.`,
       assets,
       preview: {
         videoSrc: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
@@ -463,81 +430,17 @@ export function ProcessingDashboard({
     buildOutputBundle(lang, index)
   )
 
-  // 파이프라인 자동 진행 시뮬레이션
-  useEffect(() => {
-    if (isPaused) return
-
-    const reviewStageExists = stages.some((s) => s.status === 'review')
-    if (reviewStageExists) {
-      // 검토 단계에서 대기 중
-      return
-    }
-
-    const processingStage = stages.find((s) => s.status === 'processing')
-    if (!processingStage) {
-      // 다음 pending 단계 찾기
-      const pendingStageIndex = stages.findIndex(
-        (s) => s.status === 'pending' && s.id !== 'outputs'
-      )
-      if (pendingStageIndex !== -1) {
-        setStages((prev) =>
-          prev.map((stage, idx) =>
-            idx === pendingStageIndex ? { ...stage, status: 'processing', progress: 0 } : stage
-          )
-        )
-      }
-      return
-    }
-
-    // 진행률 업데이트
-    const interval = setInterval(() => {
-      setStages((prev) =>
-        prev.map((stage) => {
-          if (stage.status === 'processing') {
-            const newProgress = Math.min(stage.progress + 10, 100)
-            if (newProgress >= 100) {
-              return { ...stage, status: 'completed', progress: 100 }
-            }
-            return { ...stage, progress: newProgress }
-          }
-          return stage
-        })
-      )
-    }, 500)
-
-    return () => clearInterval(interval)
-  }, [stages, isPaused])
-
-  useEffect(() => {
-    const packagingStage = stages.find((s) => s.id === 'packaging')
-    const outputsStage = stages.find((s) => s.id === 'outputs')
-
-    if (packagingStage?.status === 'completed' && outputsStage?.status === 'pending') {
-      setStages((prev) =>
-        prev.map((stage) =>
-          stage.id === 'outputs' && stage.status === 'pending'
-            ? { ...stage, status: 'review' }
-            : stage
-        )
-      )
-    }
-  }, [stages])
+  // SSE로 실시간 파이프라인 상태를 받아오므로 로컬 시뮬레이션 제거
 
   const handleSaveSTT: STTEditorProps['onSave'] = (editedSegments) => {
     setSTTSegments(editedSegments)
-    // STT 단계를 완료로 변경
-    setStages((prev) =>
-      prev.map((stage) => (stage.id === 'stt' ? { ...stage, status: 'completed' } : stage))
-    )
+    // TODO: 서버에 STT 완료 상태 전송
     setCurrentView('dashboard')
   }
 
   const handleSaveTranslations: AdvancedTranslationEditorProps['onSave'] = (editedTranslations) => {
     setTranslations(editedTranslations)
-    // RAG 교정 단계를 완료로 변경
-    setStages((prev) =>
-      prev.map((stage) => (stage.id === 'rag' ? { ...stage, status: 'completed' } : stage))
-    )
+    // TODO: 서버에 번역 완료 상태 전송
     setCurrentView('dashboard')
   }
 
@@ -546,22 +449,13 @@ export function ProcessingDashboard({
       ...prev,
       [result.languageCode]: result,
     }))
-
-    setStages((prev) =>
-      prev.map((stage) => {
-        if (stage.id === 'outputs') {
-          return { ...stage, status: 'completed', progress: 100 }
-        }
-        return stage
-      })
-    )
+    // TODO: 서버에 출력 완료 상태 전송
   }
 
   const currentStageIndex = stages.findIndex(
     (s) => s.status === 'processing' || s.status === 'review'
   )
-  const overallProgress =
-    (stages.filter((s) => s.status === 'completed').length / stages.length) * 100
+  // overallProgress는 이미 pipelineData에서 받아오므로 삭제
 
   const voiceMappingLanguage = useMemo(() => {
     if (!voiceMappingLanguageCode) return undefined
@@ -840,18 +734,24 @@ export function ProcessingDashboard({
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {stages.map((stage) => (
-                    <PipelineStage
+                    <ProcessingStageCard
                       key={stage.id}
+                      id={stage.id}
                       title={stage.title}
                       description={stage.description}
-                      status={stage.status}
+                      status={stage.status as any}
                       progress={stage.progress}
                       estimatedTime={stage.estimatedTime}
-                      showEditButton={
+                      onAction={
                         stage.id === 'stt' || stage.id === 'rag' || stage.id === 'outputs'
+                          ? () => handleStageEdit(stage.id)
+                          : undefined
                       }
-                      editLabel={stage.id === 'rag' ? '번역가 지정' : undefined}
-                      onEdit={() => handleStageEdit(stage.id)}
+                      actionLabel={
+                        stage.id === 'rag' ? '번역가 지정' :
+                          stage.id === 'stt' ? 'STT 편집' :
+                            stage.id === 'outputs' ? '산출물 확인' : undefined
+                      }
                     />
                   ))}
                 </CardContent>
@@ -868,11 +768,10 @@ export function ProcessingDashboard({
                   {languages.map((lang) => (
                     <div
                       key={lang.code}
-                      className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                        selectedLanguage?.code === lang.code
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                      className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${selectedLanguage?.code === lang.code
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                        }`}
                       onClick={() => setSelectedLanguageCode(lang.code)}
                     >
                       <div className="flex items-center gap-2 mb-2">
@@ -900,22 +799,20 @@ export function ProcessingDashboard({
                       <div className="mt-1 flex flex-wrap gap-1">
                         <Badge
                           variant="outline"
-                          className={`text-[10px] leading-tight px-1.5 py-0.5 ${
-                            lang.translationReviewed
-                              ? 'border-green-200 text-green-600'
-                              : 'border-yellow-200 text-yellow-600'
-                          }`}
+                          className={`text-[10px] leading-tight px-1.5 py-0.5 ${lang.translationReviewed
+                            ? 'border-green-200 text-green-600'
+                            : 'border-yellow-200 text-yellow-600'
+                            }`}
                         >
                           {lang.translationReviewed ? '검토 완료' : '검토 필요'}
                         </Badge>
                         {lang.dubbing && (
                           <Badge
                             variant="outline"
-                            className={`text-[10px] leading-tight px-1.5 py-0.5 ${
-                              lang.voiceConfig && Object.keys(lang.voiceConfig).length > 0
-                                ? 'border-blue-200 text-blue-600'
-                                : 'border-gray-200 text-gray-500'
-                            }`}
+                            className={`text-[10px] leading-tight px-1.5 py-0.5 ${lang.voiceConfig && Object.keys(lang.voiceConfig).length > 0
+                              ? 'border-blue-200 text-blue-600'
+                              : 'border-gray-200 text-gray-500'
+                              }`}
                           >
                             {lang.voiceConfig && Object.keys(lang.voiceConfig).length > 0
                               ? '목소리 매핑 완료'
@@ -1042,9 +939,8 @@ export function ProcessingDashboard({
                     <div className="flex items-center gap-2">
                       <Badge
                         variant="secondary"
-                        className={`text-xs ${
-                          reviewed ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                        }`}
+                        className={`text-xs ${reviewed ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                          }`}
                       >
                         {reviewed ? '검토 완료' : '검토 필요'}
                       </Badge>

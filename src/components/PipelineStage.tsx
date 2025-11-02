@@ -3,13 +3,12 @@ import { Progress } from './ui/progress'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
 import { CheckCircle2, Circle, Clock, AlertCircle, Edit } from 'lucide-react'
-
-export type StageStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'review'
+import type { PipelineStatus } from '../types'
 
 interface PipelineStageProps {
   title: string
   description: string
-  status: StageStatus
+  status: PipelineStatus
   progress?: number
   onEdit?: () => void
   showEditButton?: boolean
@@ -94,9 +93,9 @@ export function PipelineStage({
                 <Edit className="w-3 h-3" />
                 {editLabel ?? '편집'}
               </Button>
-            )}
+            )} 
           </div>
-
+            
           {status === 'processing' && (
             <div className="space-y-2">
               <div className="flex justify-between text-sm">

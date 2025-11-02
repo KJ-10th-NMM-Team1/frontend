@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 
-// url -> SSE 엔드 포인터, data -> 서버에서 받은 데이터
+// url -> SSE 엔드 포인터, T -> 서버에서 받을 데이터의 타입
 export function useSSE<T>(url: string) {
   const [data, setData] = useState<T | null>(null)
   const [isConnected, setIsConnected] = useState(false)
@@ -15,6 +15,7 @@ export function useSSE<T>(url: string) {
       eventSourceRef.current.close()
     }
     try {
+      console.log('SSE connecting to:', url)
       const eventSource = new EventSource(url)
       eventSourceRef.current = eventSource
 
@@ -27,10 +28,17 @@ export function useSSE<T>(url: string) {
       // 메시지 받기
       eventSource.onmessage = (event) => {
         try {
-          const parseData = JSON.parse(event.data)
-          setData(parseData)
+          // SSE data: 접두사 제거 및 HTML 엔티티 디코딩
+          let decodedData = event.data
+
+          // 문자열이 유효한 JSON인지 확인
+          if (decodedData.trim().startsWith('{') && decodedData.trim().endsWith('}')) {
+            const parseData = JSON.parse(decodedData)
+            setData(parseData)
+          } else {
+          }
         } catch (err) {
-          console.error('Failed to parse SSE message', err)
+          console.error('Failed to parse SSE message', err, 'Raw data:', event.data)
         }
       }
       // 연결 오류
