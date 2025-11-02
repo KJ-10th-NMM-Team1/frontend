@@ -64,6 +64,23 @@ export interface TermCorrection {
   reason?: string
 }
 
+// export interface Translation {
+//   _id: string
+//   segment_id: string
+//   segment_text: string
+//   score: number
+//   start_point: number
+//   end_point: number
+//   editor_id: string
+//   translate_context: string
+//   sub_langth: number
+//   issues?: {
+//     issue_id: string
+//     editor_id: string | null
+//     issue_context?: string | null // service.py에서 $lookup으로 추가한 필드
+//   }[]
+// }
+
 export interface Translation {
   id: string
   timestamp: string
