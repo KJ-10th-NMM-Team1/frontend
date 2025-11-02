@@ -39,18 +39,12 @@ const formatTime = (seconds: number): string => {
 }
 
 const mapApiIssues = (apiIssues: SegmentData['issues'] | undefined): TranslationIssue[] => {
-  // 1. API 응답에 issues 배열이 없으면 빈 배열 반환
   if (!apiIssues) {
     return []
   }
 
-  // 2. API issues 배열을 순회하며 Editor가 사용하는 TranslationIssue[] 형태로 변환
   return apiIssues.map((issue) => {
-    // 3. API의 issue_context를 message로 사용
     const message = issue.issue_context || '알 수 없는 이슈'
-
-    // 4. issue_context 내용에 따라 type과 severity 추론
-    //    (이 로직은 백엔드 응답에 따라 더 정교하게 수정될 수 있습니다)
     let type: TranslationIssueType = 'term' // 기본값
     let severity: 'warning' | 'error' = 'warning' // 기본값
 
@@ -63,37 +57,28 @@ const mapApiIssues = (apiIssues: SegmentData['issues'] | undefined): Translation
       type = 'tone'
     }
 
-    // 5. Editor가 사용하는 TranslationIssue 객체 반환
     return {
       type,
       severity,
       message,
-      // 'suggestion' 필드는 API 데이터에 없으므로 undefined가 됩니다.
-      // (AdvancedTranslationEditor가 suggestion: undefined 를 처리함)
     }
   })
 }
 
 export function TranslatorEditorShell({ assignment, onBack }: TranslatorEditorShellProps) {
   const [translations, setTranslations] = useState<TranslationEntry[]>([])
-  const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState<boolean>(true)
 
   const editorTranslations = useMemo((): Translation[] => {
-    // 1. API에서 받은 'segments' 배열을 순회(map)합니다.
     return translations.map((segment) => {
-      // 2. 'segment'(SegmentData)의 필드를
-      //    'Translation' 인터페이스의 필드로 1:1 매핑합니다.
       return {
-        //  [Editor 필드]   : [API 원본 필드]
         id: segment.segment_id,
         timestamp: `${formatTime(segment.start_point)} - ${formatTime(segment.end_point)}`,
         original: segment.segment_text || '',
         translated: segment.translate_context || '',
         confidence: segment.score || 0,
-        issues: mapApiIssues(segment.issues), // (issues는 별도 함수로 한 번 더 변환)
-
-        // (기타 필드들...)
+        issues: mapApiIssues(segment.issues),
         segmentDurationSeconds: segment.end_point - segment.start_point,
         speaker: undefined,
         correctionSuggestions: [],
