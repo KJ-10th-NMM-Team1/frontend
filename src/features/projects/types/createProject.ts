@@ -26,3 +26,9 @@ export interface FinUploadPayload {
   project_id: string
   object_key: string
 }
+
+export interface FinishUploadResponse {
+  project_id: string
+  job_id: string
+  status: 'queued'
+}

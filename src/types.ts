@@ -106,4 +106,8 @@ export interface Project {
   deadline?: string
   reviewerId?: string
   ownerId?: string
+  jobId?: string
+  jobStatus?: 'queued' | 'in_progress' | 'done' | 'failed'
+  jobResultKey?: string
+  jobMetadata?: Record<string, unknown>
 }
