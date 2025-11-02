@@ -111,3 +111,23 @@ export interface Project {
   jobResultKey?: string
   jobMetadata?: Record<string, unknown>
 }
+
+export type PipelineStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'review'
+
+// 개별 파이프라인
+export interface PipelineStage {
+  id: string
+  status: PipelineStatus
+  progress: number
+  started_at?: string
+  completed_at?: string
+  error?: string
+}
+
+// 전체 파이프라인 (여러 단계들을 포함)
+export interface ProjectPipeline {
+  project_id: string
+  stages: PipelineStage[]
+  current_stage: string
+  overall_progress: number
+}
