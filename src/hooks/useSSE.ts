@@ -8,7 +8,6 @@ export function useSSE<T>(url: string) {
   const eventSourceRef = useRef<EventSource | null>(null)
   const reconnectTimeoutRef = useRef<number | null>(null)
 
-
   // cleanup 함수
   const disconnect = () => {
     if (eventSourceRef.current) {
