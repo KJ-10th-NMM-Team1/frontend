@@ -59,42 +59,43 @@ export function ProcessingDashboard({
   const DEFAULT_STAGES = {
     upload: {
       title: '1. 영상 업로드',
-      description: '원본 영상 파일을 서버에 업로드합니다'
+      description: '원본 영상 파일을 서버에 업로드합니다',
     },
     stt: {
       title: '2. STT (Speech to Text)',
       description: '음성을 텍스트로 변환하고 타임스탬프를 생성합니다',
-      estimatedTime: '3-5분'
+      estimatedTime: '3-5분',
     },
     mt: {
       title: '3. MT (Machine Translation)',
       description: '추출된 텍스트를 타겟 언어로 번역합니다',
-      estimatedTime: '2분'
+      estimatedTime: '2분',
     },
     rag: {
       title: '4. RAG/LLM 교정',
       description: 'AI 교정 결과를 검토하고 화자별 목소리를 매핑하세요',
-      estimatedTime: '3분'
+      estimatedTime: '3분',
     },
     tts: {
       title: '5. TTS (Text to Speech)',
       description: '번역된 텍스트를 음성으로 변환합니다',
-      estimatedTime: '5분'
+      estimatedTime: '5분',
     },
     packaging: {
       title: '6. 패키징',
       description: '더빙된 음성과 자막을 영상에 합성합니다',
-      estimatedTime: '2분'
+      estimatedTime: '2분',
     },
     outputs: {
       title: '7. 산출물 점검 및 Publish',
-      description: '완료된 산출물을 검수하고 배포 설정을 확정합니다'
+      description: '완료된 산출물을 검수하고 배포 설정을 확정합니다',
     }
   } as const
 
   const { data: pipelineData, isConnected, error } = useSSE<ProjectPipeline>(
     `/api/pipeline/${project.id}/stream`
   )
+  console.log('isConnected: 'isConnected)
   console.log(' SSE error:', error)
 
   // 기본 단계들을 항상 표시하고, 백엔드 데이터가 있으면 병합
