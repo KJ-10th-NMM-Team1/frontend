@@ -33,19 +33,19 @@ export function useSSE<T>(url: string) {
         console.log('SSE connecting to:', url)
         const eventSource = new EventSource(url)
         eventSourceRef.current = eventSource
-      
+
         // 연결 성공
         eventSource.onopen = () => {
           setIsConnected(true)
           setError(null)
         }
-      
+
         // 메시지 받기
         eventSource.onmessage = (event) => {
           try {
             // SSE data: 접두사 제거 및 HTML 엔티티 디코딩
             const decodedData = event.data
-          
+
             // 문자열이 유효한 JSON인지 확인
             if (decodedData.trim().startsWith('{') && decodedData.trim().endsWith('}')) {
               const parseData = JSON.parse(decodedData)
@@ -61,7 +61,7 @@ export function useSSE<T>(url: string) {
         eventSource.onerror = () => {
           setIsConnected(false)
           setError('Connection error')
-        
+
           // 3초 후 자동 재연결
           if (reconnectTimeoutRef.current) {
             clearTimeout(reconnectTimeoutRef.current)
