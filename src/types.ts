@@ -92,7 +92,7 @@ export interface Translation {
   }
 }
 
-export type ProjectStatus = 'uploading' | 'processing' | 'completed' | 'failed'
+export type ProjectStatus = 'upload_done' | 'stt' | 'mt' | 'tts' | 'pack' | 'publish' | 'done'
 
 export interface Project {
   id: string

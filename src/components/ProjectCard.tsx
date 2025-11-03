@@ -12,14 +12,20 @@ interface ProjectCardProps {
 
 const getProjectStatusLabel = (status: string) => {
   switch (status) {
-    case 'uploading':
-      return '업로드 중'
-    case 'processing':
-      return '처리 중'
-    case 'completed':
+    case 'upload_done':
+      return '업로드'
+    case 'stt':
+      return 'STT'
+    case 'mt':
+      return '번역완료'
+    case 'tts':
+      return '음성합성'
+    case 'pack':
+      return '패키지'
+    case 'publish':
+      return '배포'
+    case 'done':
       return '완료'
-    case 'failed':
-      return '실패'
     default:
       return status
   }
@@ -27,16 +33,22 @@ const getProjectStatusLabel = (status: string) => {
 
 const getProjectStatusStyle = (status: string) => {
   switch (status) {
-    case 'uploading':
+    case 'upload_done':
       return 'bg-blue-100 text-blue-700'
-    case 'processing':
+    case 'stt':
       return 'bg-yellow-100 text-yellow-700'
-    case 'completed':
+    case 'mt':
+      return 'bg-blue-100 text-blue-700'
+    case 'tts':
+      return 'bg-yellow-100 text-yellow-700'
+    case 'pack':
+      return 'bg-blue-100 text-blue-700'
+    case 'publish':
+      return 'bg-yellow-100 text-yellow-700'
+    case 'done':
       return 'bg-green-100 text-green-700'
-    case 'failed':
-      return 'bg-red-100 text-red-700'
     default:
-      return 'bg-gray-100 text-gray-700'
+      return status
   }
 }
 
@@ -79,13 +91,13 @@ export function ProjectCard({ project, onClick }: ProjectCardProps) {
             <span className={`text-xs px-2 py-1 rounded ${getProjectStatusStyle(project.status)}`}>
               {getProjectStatusLabel(project.status)}
             </span>
-            {(project.status === 'uploading' || project.status === 'processing') && (
+            {(project.status === 'upload_done' || project.status === 'processing') && (
               <span className="text-xs text-gray-500">
                 {clampProgress(project.uploadProgress).toFixed(0)}%
               </span>
             )}
           </div>
-          {(project.status === 'uploading' || project.status === 'processing') && (
+          {(project.status === 'upload_done' || project.status === 'processing') && (
             <Progress value={clampProgress(project.uploadProgress)} />
           )}
         </div>

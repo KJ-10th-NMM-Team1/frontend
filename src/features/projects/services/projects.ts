@@ -18,6 +18,7 @@ interface RawProject {
   video_source?: string | null
   created_at?: string
   updated_at?: string
+  progress?: number
   job_id?: string
   job_status?: string
   segments?: RawSegment[]
@@ -55,10 +56,13 @@ interface RawSegment {
 }
 
 const projectStatusMap: Record<string, ProjectStatus> = {
-  upload_ready: 'uploading',
-  uploaded: 'processing',
-  done: 'completed',
-  failed: 'failed',
+  upload_done: 'upload_done',
+  stt: 'stt',
+  mt: 'mt',
+  tts: 'tts',
+  pack: 'pack',
+  publish: 'publish',
+  done: 'done',
 }
 
 const languageStatusMap: Record<string, LanguageStatus> = {
@@ -168,7 +172,7 @@ const mapProject = (raw: RawProject): Project => {
     name: derivedName,
     languages,
     status,
-    uploadProgress: status === 'completed' ? 100 : status === 'processing' ? 50 : 0,
+    uploadProgress: raw.progress,
     createdAt: formatDateTime(raw.created_at),
     segmentAssetsPrefix: raw.segment_assets_prefix,
     segments: undefined,

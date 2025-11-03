@@ -13,3 +13,9 @@
 
 ## package.json 수정 시
  - 터미널에 npm install --package-lock-only 입력하여 package-lock.json 도 함께 갱신
+
+ ```shell
+$ docker-compose down -v --rmi all # 볼륨, 네트워크 이미지 전부 삭제 명령어
+$ docker-compose up -d # 도커 설치 명령어
+$ docker exec -it frontend bash # 프론트엔드 컨테이너 들어가기(종료는 exit, Ctrl + D)
+ ```

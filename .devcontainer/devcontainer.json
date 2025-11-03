@@ -5,7 +5,7 @@
   ],
   "service": "frontend",
   "workspaceFolder": "/app",
-  "overrideCommand": false,
+  "overrideCommand": true,
   "postCreateCommand": "npm ci",
   "forwardPorts": [5173],
   "settings": {

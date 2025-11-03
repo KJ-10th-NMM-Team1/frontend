@@ -9,13 +9,11 @@ import { AdvancedTranslationEditor } from './AdvancedTranslationEditor'
 import { VoiceSelector } from './VoiceSelector'
 import { OutputsReview, type LanguageOutput, type PublishResult } from './OutputsReview'
 import { ArrowLeft, Video, Globe, Play, Pause } from 'lucide-react'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
-import { Label } from './ui/label'
-import { Switch } from './ui/switch'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog'
 import type { Language, Project, STTSegment, Translation, ProjectPipeline } from '../types'
 import type { STTEditorProps } from './STTEditor'
 import type { AdvancedTranslationEditorProps } from './AdvancedTranslationEditor'
+import { useModal } from '../hooks/useModal'
+import { TranslatorAssignmentDialog } from '@/features/translators/components/TranslatorAssignmentDialog'
 
 interface ProcessingDashboardProps {
   project: Project
@@ -24,8 +22,6 @@ interface ProcessingDashboardProps {
 }
 
 const TRANSLATOR_OPTIONS = ['김소라', '이준혁', '박민지', 'Sophia Lee', 'Alex Kim']
-
-const UNASSIGNED_TRANSLATOR_VALUE = '__UNASSIGNED__'
 
 export function ProcessingDashboard({
   project,
@@ -52,9 +48,35 @@ export function ProcessingDashboard({
   const [voiceMappingDraft, setVoiceMappingDraft] = useState<
     Record<string, { voiceId?: string; preserveTone: boolean }>
   >({})
-  const [isRagModalOpen, setIsRagModalOpen] = useState(false)
+
+  const ragModal = useModal({
+    reset: () => {
+      setAssignmentDraft(buildAssignmentDraft(languages))
+      setReviewDraft(buildReviewDraft(languages))
+    },
+  })
+
   const [assignmentDraft, setAssignmentDraft] = useState<Record<string, string>>({})
   const [reviewDraft, setReviewDraft] = useState<Record<string, boolean>>({})
+
+  const buildAssignmentDraft = useCallback(
+    (langs: Language[]) =>
+      langs.reduce<Record<string, string>>((acc, lang) => {
+        if (lang.translator) acc[lang.code] = lang.translator
+        return acc
+      }, {}),
+    []
+  )
+
+  const buildReviewDraft = useCallback(
+    (langs: Language[]) =>
+      langs.reduce<Record<string, boolean>>((acc, lang) => {
+        acc[lang.code] = lang.translationReviewed ?? false
+        return acc
+      }, {}),
+    []
+  )
+
   // 프론트엔드 기본 단계 정보
   const DEFAULT_STAGES = {
     upload: {
@@ -475,7 +497,7 @@ export function ProcessingDashboard({
 
       setAssignmentDraft(initialAssignments)
       setReviewDraft(initialReviews)
-      setIsRagModalOpen(true)
+      ragModal.open()
       return
     }
     if (stageId === 'stt') {
@@ -491,7 +513,7 @@ export function ProcessingDashboard({
 
   const handleRagModalSave = () => {
     if (languages.length === 0) {
-      setIsRagModalOpen(false)
+      ragModal.close()
       return
     }
 
@@ -513,7 +535,7 @@ export function ProcessingDashboard({
       onUpdateProject({ ...project, languages: nextLanguages })
     }
 
-    setIsRagModalOpen(false)
+    ragModal.close()
   }
 
   const handleRagModalCancel = () => {
@@ -529,7 +551,7 @@ export function ProcessingDashboard({
         return acc
       }, {})
     )
-    setIsRagModalOpen(false)
+    ragModal.close()
   }
 
   if (currentView === 'voiceMapping') {
@@ -899,129 +921,32 @@ export function ProcessingDashboard({
           </div>
         </main>
       </div>
-
-      <Dialog
-        open={isRagModalOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            handleRagModalCancel()
-          }
-        }}
-      >
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>번역가 지정 · 번역 검토</DialogTitle>
-            <p className="text-xs text-gray-500">
-              RAG/LLM 교정 이후 담당 번역가를 지정하고 검토 상태를 업데이트하세요.
-            </p>
-          </DialogHeader>
-          <div className="space-y-4">
-            {languages.map((lang) => {
-              const translatorValue = assignmentDraft[lang.code] ?? UNASSIGNED_TRANSLATOR_VALUE
-              const reviewed = reviewDraft[lang.code] ?? false
-              const translatorOptions =
-                lang.translator && !TRANSLATOR_OPTIONS.includes(lang.translator)
-                  ? [lang.translator, ...TRANSLATOR_OPTIONS]
-                  : TRANSLATOR_OPTIONS
-
-              return (
-                <div
-                  key={lang.code}
-                  className="rounded-lg border border-gray-200 bg-white p-4 space-y-4"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="text-xs">
-                        {lang.name}
-                      </Badge>
-                      <div className="flex gap-1 text-[11px] text-gray-500">
-                        {lang.subtitle && (
-                          <span className="rounded-full bg-blue-50 px-2 py-0.5 text-blue-600">
-                            자막
-                          </span>
-                        )}
-                        {lang.dubbing && (
-                          <span className="rounded-full bg-green-50 px-2 py-0.5 text-green-600">
-                            더빙
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant="secondary"
-                        className={`text-xs ${
-                          reviewed ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                        }`}
-                      >
-                        {reviewed ? '검토 완료' : '검토 필요'}
-                      </Badge>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs text-gray-500">번역가</Label>
-                    <Select
-                      value={translatorValue}
-                      onValueChange={(value) =>
-                        setAssignmentDraft((prev) => {
-                          const next = { ...prev }
-                          if (value === UNASSIGNED_TRANSLATOR_VALUE) {
-                            delete next[lang.code]
-                          } else {
-                            next[lang.code] = value
-                          }
-                          return next
-                        })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="번역가 선택" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={UNASSIGNED_TRANSLATOR_VALUE}>미지정</SelectItem>
-                        {translatorOptions.map((translator) => (
-                          <SelectItem key={translator} value={translator}>
-                            {translator}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2">
-                    <div>
-                      <p className="text-sm font-medium">번역 검토 완료</p>
-                      <p className="text-xs text-gray-500">인간 검토가 마무리되면 활성화하세요</p>
-                    </div>
-                    <Switch
-                      checked={reviewed}
-                      onCheckedChange={(checked) =>
-                        setReviewDraft((prev) => ({
-                          ...prev,
-                          [lang.code]: checked,
-                        }))
-                      }
-                    />
-                  </div>
-
-                  {lang.dubbing && (
-                    <div className="rounded-lg border border-dashed px-3 py-3 text-xs text-gray-500">
-                      더빙 언어는 번역 검토 후 별도 화면에서 목소리를 매핑하세요.
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-          <DialogFooter className="flex justify-end gap-2">
-            <Button variant="outline" onClick={handleRagModalCancel}>
-              취소
-            </Button>
-            <Button onClick={handleRagModalSave}>저장</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <TranslatorAssignmentDialog
+        open={ragModal.isOpen}
+        languages={languages}
+        translatorOptions={TRANSLATOR_OPTIONS}
+        assignmentDraft={assignmentDraft}
+        reviewDraft={reviewDraft}
+        onChangeAssignment={(languageCode, translator) =>
+          setAssignmentDraft((prev) => {
+            const next = { ...prev }
+            if (!translator) {
+              delete next[languageCode]
+            } else {
+              next[languageCode] = translator
+            }
+            return next
+          })
+        }
+        onChangeReview={(languageCode, reviewed) =>
+          setReviewDraft((prev) => ({
+            ...prev,
+            [languageCode]: reviewed,
+          }))
+        }
+        onClose={handleRagModalCancel}
+        onConfirm={handleRagModalSave}
+      />
     </>
   )
 }
