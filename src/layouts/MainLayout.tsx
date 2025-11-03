@@ -22,7 +22,7 @@ export default function MainLayout() {
               </div>
               <div className="flex gap-2">
                 <NavLink
-                  to="/owner"
+                  to="/"
                   className={({ isActive }) => `${baseBtn} ${isActive ? activeBtn : inactiveBtn}`}
                 >
                   배급자 모드
@@ -38,7 +38,6 @@ export default function MainLayout() {
           </div>
         </div>
       </header>
-
       <main className="mx-auto w-full max-w-7xl px-6 py-8">
         <Outlet />
       </main>
