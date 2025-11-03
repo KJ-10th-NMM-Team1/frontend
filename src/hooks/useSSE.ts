@@ -29,13 +29,14 @@ export function useSSE<T>(url: string) {
       eventSource.onmessage = (event) => {
         try {
           // SSE data: 접두사 제거 및 HTML 엔티티 디코딩
-          let decodedData = event.data
+          const decodedData = event.data
 
           // 문자열이 유효한 JSON인지 확인
           if (decodedData.trim().startsWith('{') && decodedData.trim().endsWith('}')) {
             const parseData = JSON.parse(decodedData)
             setData(parseData)
           } else {
+            // JSON이 아닌 데이터는 무시
           }
         } catch (err) {
           console.error('Failed to parse SSE message', err, 'Raw data:', event.data)
@@ -55,7 +56,7 @@ export function useSSE<T>(url: string) {
         }, 3000)
       }
     } catch (err) {
-      setError('Failed to create EventSource')
+      setError('Failed to create EventSource', err)
     }
   }
 
