@@ -668,6 +668,8 @@ export function ProcessingDashboard({
   if (currentView === 'translation') {
     return (
       <AdvancedTranslationEditor
+        projectID={project.id}
+        languageCode={selectedLanguage?.code ?? selectedLanguageCode}
         language={selectedLanguage?.name ?? ''}
         translations={translations}
         onSave={handleSaveTranslations}

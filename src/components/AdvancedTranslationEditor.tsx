@@ -178,6 +178,10 @@ export function AdvancedTranslationEditor({
   }
 
   const handlePreview = async (translation: Translation) => {
+    if (!projectID || !languageCode) {
+      toast.error('프로젝트 정보를 확인할 수 없어 미리보기를 생성하지 못했습니다.')
+      return
+    }
     // Dialog 열고 로딩 진입
     setPreviewTranslation(translation)
     setIsPreviewOpen(true)
@@ -211,7 +215,7 @@ export function AdvancedTranslationEditor({
       setIsPreviewProcessing(false)
       toast.error('미리보기 생성 실패')
     } catch (e: unknown) {
-      patchPreviewOn(translation.id, { status: '`failed' })
+      patchPreviewOn(translation.id, { status: 'failed' })
       setIsPreviewProcessing(false)
       if (e instanceof Error) {
         toast.error(e.message ?? '미리보기 생성 오류')
