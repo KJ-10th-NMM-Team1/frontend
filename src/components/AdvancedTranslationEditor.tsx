@@ -3,7 +3,7 @@ import { Button } from './ui/button'
 import { Textarea } from './ui/textarea'
 import { Badge } from './ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
+import { Card, CardContent } from './ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog'
 import {
   CheckCircle2,
@@ -15,7 +15,6 @@ import {
   RotateCcw,
   Lightbulb,
   ArrowLeft,
-  MonitorPlay,
   Loader2,
 } from 'lucide-react'
 import { toast } from 'sonner'

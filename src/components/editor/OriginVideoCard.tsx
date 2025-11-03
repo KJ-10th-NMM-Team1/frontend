@@ -3,11 +3,6 @@ import { Badge } from '../ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { MonitorPlay } from 'lucide-react'
 
-interface SuggestionItem {
-  thumbnail: string
-  source: string
-}
-
 export const OriginVideoCard = () => {
   return (
     <Card>
