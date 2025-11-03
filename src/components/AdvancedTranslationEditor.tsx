@@ -31,6 +31,7 @@ import { Suggestion } from './editor/LangSuggest'
 import { TermCorrectionCard } from './editor/LangCorrection'
 import { IussueCard } from './editor/IussueCard'
 import { StatisticsCard } from './editor/StatisticsCard'
+import { OriginVideoCard } from './editor/OriginVideoCard'
 
 export interface AdvancedTranslationEditorProps {
   projectID: string
@@ -62,19 +63,25 @@ export function AdvancedTranslationEditor({
       setSelectedTab(value)
     }
   }
+
+  useEffect(() => {
+    setEditedTranslations(translations)
+  }, [translations])
+
   const translationGroups = useMemo(() => {
     const groups: {
       key: string
       timestamp: string
       translations: Translation[]
     }[] = []
-
     const indexMap = new Map<string, number>()
 
-    translations.forEach((item) => {
+    // prop(translations) 대신 state(editedTranslations)를 순회합니다.
+    editedTranslations.forEach((item) => {
       const timeKey = item.timestamp
       if (indexMap.has(timeKey)) {
         const idx = indexMap.get(timeKey)!
+        // 이미 수정된 'item'을 'translations' 배열에 바로 push합니다.
         groups[idx].translations.push(item)
       } else {
         const idx = groups.length
@@ -82,18 +89,17 @@ export function AdvancedTranslationEditor({
         groups.push({
           key: item.timestamp + idx.toString(),
           timestamp: item.timestamp,
+          // 이미 수정된 'item'을 'translations' 배열에 바로 넣습니다.
           translations: [item],
         })
       }
     })
 
-    return groups.map((group) => ({
-      ...group,
-      translations: group.translations.map(
-        (item) => editedTranslations.find((t) => t.id === item.id) ?? item
-      ),
-    }))
-  }, [editedTranslations, translations])
+    // state를 기준으로 그룹을 만들었으므로,
+    // 이전에 중복으로 있던 map 로직(103~107행)은 필요 없으므로 제거합니다.
+    return groups
+  }, [editedTranslations])
+
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [previewTranslation, setPreviewTranslation] = useState<Translation | null>(null)
   const [isPreviewProcessing, setIsPreviewProcessing] = useState(false)
@@ -221,20 +227,6 @@ export function AdvancedTranslationEditor({
     }
   }
 
-  // const handlePreview = (translation: Translation) => {
-  //   setPreviewTranslation(translation)
-  //   setIsPreviewOpen(true)
-  //   setIsPreviewProcessing(true)
-
-  //   if (previewTimerRef.current) {
-  //     window.clearTimeout(previewTimerRef.current)
-  //   }
-
-  //   previewTimerRef.current = window.setTimeout(() => {
-  //     setIsPreviewProcessing(false)
-  //   }, 1200)
-  // }
-
   const handlePreviewOpenChange = (open: boolean) => {
     if (!open) {
       if (previewTimerRef.current) {
@@ -259,6 +251,42 @@ export function AdvancedTranslationEditor({
       }
     }
   }, [])
+
+  useEffect(() => {
+    // 1.5초(1500ms) 후에 실행될 타이머를 설정합니다.
+    const api = `http://localhost:8000/api/${projectID}/history`
+
+    const autosaveTimer = setTimeout(async () => {
+      try {
+        // 실제 백엔드 API 엔드포인트로 수정해야 합니다.
+        const response = await fetch(api, {
+          method: 'PUT', // 또는 PUT, PATCH
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ request: editedTranslations }),
+        })
+
+        if (!response.ok) {
+          throw new Error('서버 응답 오류')
+        }
+
+        // (선택 사항) 성공 토스트
+        // toast.success('임시저장 완료')
+      } catch (error) {
+        console.error('임시저장 오류:', error)
+        toast.error('임시저장에 실패했습니다.')
+      }
+    }, 1500) // 1.5초 딜레이
+
+    // [중요] 1.5초가 지나기 전에 유저가 다시 타이핑하면
+    // (즉, 'editedTranslations'가 다시 변경되면)
+    // 이 cleanup 함수가 *이전 타이머를 취소*시킵니다.
+    return () => {
+      clearTimeout(autosaveTimer)
+    }
+    // 'onSave' 함수는 props이므로 의존성에 추가해주는 것이 좋습니다.
+  }, [editedTranslations, projectID])
 
   // 이슈 통계
   const issueStats = {
@@ -399,48 +427,7 @@ export function AdvancedTranslationEditor({
           <TabsContent value="edit" className="grid grid-cols-1 lg:grid-cols-4 gap-6 m-0">
             {/* 왼쪽: 영상 미리보기 + 이슈 요약 */}
             <div className="lg:col-span-1 space-y-4">
-              <Card className="lg:sticky lg:top-24">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <MonitorPlay className="w-4 h-4 text-blue-500" />
-                    원본 영상
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-900">
-                    <video
-                      className="w-full h-full object-cover"
-                      controls
-                      poster="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1280&q=60"
-                    >
-                      <source
-                        src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"
-                        type="video/mp4"
-                      />
-                      브라우저가 video 태그를 지원하지 않습니다.
-                    </video>
-                  </div>
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>00:01:12 / 05:23</span>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-[11px]">
-                        1080p
-                      </Badge>
-                      <Badge variant="outline" className="text-[11px]">
-                        자막 ON
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1">
-                      현재 구간 반복
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1">
-                      전체 화면
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <OriginVideoCard />
               <IussueCard issueStats={issueStats} />
               <StatisticsCard editedTranslations={editedTranslations} />
             </div>

@@ -73,7 +73,7 @@ export function TranslatorEditorShell({ assignment, onBack }: TranslatorEditorSh
   const editorTranslations = useMemo((): Translation[] => {
     return translations.map((segment) => {
       return {
-        id: segment.segment_id,
+        id: segment._id,
         timestamp: `${formatTime(segment.start_point)} - ${formatTime(segment.end_point)}`,
         original: segment.segment_text || '',
         translated: segment.translate_context || '',

@@ -39,5 +39,3 @@ export const Suggestion = ({ combinedSuggestions }: SuggestionProps) => {
     </div>
   )
 }
-
-export default Suggestion
