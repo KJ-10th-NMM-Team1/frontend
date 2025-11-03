@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Label } from './ui/label'
 import { Switch } from './ui/switch'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog'
-import type { Language, Project, STTSegment, Translation, ProjectPipeline, PipelineStage as PipelineStageType } from '../types'
+import type { Language, Project, STTSegment, Translation, ProjectPipeline } from '../types'
 import type { STTEditorProps } from './STTEditor'
 import type { AdvancedTranslationEditorProps } from './AdvancedTranslationEditor'
 
