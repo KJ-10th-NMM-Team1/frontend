@@ -94,6 +94,7 @@ export function TranslationEditor({
         <ScrollArea className="flex-1 pr-4">
           <div className="space-y-4">
             {editedTranslations.map((translation) => {
+              // TODO: 어떻게해야하냐
               const segmentDuration = getSegmentDuration(translation)
               const safeSegmentDuration = segmentDuration || 1
               const originalSpeech = translation.originalSpeechSeconds ?? segmentDuration

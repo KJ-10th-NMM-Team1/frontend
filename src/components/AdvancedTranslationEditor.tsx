@@ -31,6 +31,7 @@ import { TermCorrectionCard } from './editor/LangCorrection'
 import { IussueCard } from './editor/IussueCard'
 import { StatisticsCard } from './editor/StatisticsCard'
 import { OriginVideoCard } from './editor/OriginVideoCard'
+import { getApiUrl } from '@/config'
 
 export interface AdvancedTranslationEditorProps {
   projectID: string
@@ -252,13 +253,9 @@ export function AdvancedTranslationEditor({
   }, [])
 
   useEffect(() => {
-    // 1.5초(1500ms) 후에 실행될 타이머를 설정합니다.
-    const api = `http://localhost:8000/api/${projectID}/history`
-
     const autosaveTimer = setTimeout(async () => {
       try {
-        // 실제 백엔드 API 엔드포인트로 수정해야 합니다.
-        const response = await fetch(api, {
+        const response = await fetch(getApiUrl(`api/segment/${projectID}/history`), {
           method: 'PUT', // 또는 PUT, PATCH
           headers: {
             'Content-Type': 'application/json',
@@ -269,22 +266,14 @@ export function AdvancedTranslationEditor({
         if (!response.ok) {
           throw new Error('서버 응답 오류')
         }
-
-        // (선택 사항) 성공 토스트
-        // toast.success('임시저장 완료')
       } catch (error) {
         console.error('임시저장 오류:', error)
         toast.error('임시저장에 실패했습니다.')
       }
-    }, 1500) // 1.5초 딜레이
-
-    // [중요] 1.5초가 지나기 전에 유저가 다시 타이핑하면
-    // (즉, 'editedTranslations'가 다시 변경되면)
-    // 이 cleanup 함수가 *이전 타이머를 취소*시킵니다.
+    }, 1500)
     return () => {
       clearTimeout(autosaveTimer)
     }
-    // 'onSave' 함수는 props이므로 의존성에 추가해주는 것이 좋습니다.
   }, [editedTranslations, projectID])
 
   // 이슈 통계
@@ -354,10 +343,25 @@ export function AdvancedTranslationEditor({
     }, 1500)
   }
 
-  const handleSave = () => {
-    onSave(editedTranslations)
-    toast.success('번역이 저장되었습니다')
-    onBack()
+  const handleSave = async () => {
+    try {
+      const response = await fetch(getApiUrl(`api/projects/${projectID}/save`), {
+        method: 'POST', // 또는 PUT
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ translations: editedTranslations }),
+      })
+
+      if (!response.ok) {
+        throw new Error('최종 저장에 실패했습니다.')
+      }
+
+      onSave(editedTranslations)
+      toast.success('번역이 저장되었습니다')
+      onBack()
+    } catch (error) {
+      console.error('최종 저장 오류:', error)
+      toast.error(error instanceof Error ? error.message : '저장에 실패했습니다.')
+    }
   }
 
   const getIssueIcon = (type: TranslationIssueType) => {

@@ -3,6 +3,7 @@ import { Button } from './ui/button'
 import { AdvancedTranslationEditor } from './AdvancedTranslationEditor'
 import type { TranslatorAssignment } from './TranslatorAssignments'
 import { ArrowLeft } from 'lucide-react'
+import { getApiUrl } from '@/config'
 
 interface TranslationEntry {
   _id: string
@@ -88,11 +89,9 @@ export function TranslatorEditorShell({ assignment, onBack }: TranslatorEditorSh
   }, [translations])
 
   useEffect(() => {
-    const apiUrl = 'http://localhost:8000/api/segment/'
-
     const fetchData = async () => {
       try {
-        const response = await fetch(apiUrl)
+        const response = await fetch(getApiUrl('/api/segment'))
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
         }
