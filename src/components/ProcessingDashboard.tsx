@@ -738,7 +738,7 @@ export function ProcessingDashboard({
                       key={stage.id}
                       title={stage.title}
                       description={stage.description}
-                      status={stage.status as any}
+                      status={stage.status as PipelineStatus}
                       progress={stage.progress}
                       estimatedTime={stage.estimatedTime}
                       onEdit={
