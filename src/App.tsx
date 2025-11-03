@@ -24,7 +24,7 @@ import { toast } from 'sonner'
 import { fetchProjects } from './features/projects/services/projects'
 
 export default function App() {
-  const [viewMode, setViewMode] = useState<'owner' | 'translator'>('owner')
+  const [viewMode, setViewMode] = useState<'owner' | 'translator' | 'login'>('login')
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [projects, setProjects] = useState<Project[]>([])
 
