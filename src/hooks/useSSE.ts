@@ -57,6 +57,22 @@ export function useSSE<T>(url: string) {
             console.error('Failed to parse SSE message', err, 'Raw data:', event.data)
           }
         }
+
+        eventSource.addEventListener('stage', (event) => {
+          try {
+            const decodedData = (event as MessageEvent).data
+            if (decodedData.trim().startsWith('{') && decodedData.trim().endsWith('}')) {
+              setData(JSON.parse(decodedData))
+            }
+          } catch (err) {
+            console.error(
+              'Failed to parse stage event',
+              err,
+              'Raw data:',
+              (event as MessageEvent).data
+            )
+          }
+        })
         // 연결 오류
         eventSource.onerror = () => {
           setIsConnected(false)
@@ -71,7 +87,7 @@ export function useSSE<T>(url: string) {
           }, 3000)
         }
       } catch (err) {
-        setError('Failed to create EventSource', err)
+        setError(`Failed to create EventSource ${err}`)
       }
     }
     connect()
