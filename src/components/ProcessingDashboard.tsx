@@ -4,7 +4,6 @@ import { useSSE } from '../hooks/useSSE'
 import { Badge } from './ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { PipelineStage } from './PipelineStage'
-import { ProcessingStageCard } from './ProcessingStageCard'
 import { STTEditor } from './STTEditor'
 import { AdvancedTranslationEditor } from './AdvancedTranslationEditor'
 import { VoiceSelector } from './VoiceSelector'
@@ -734,20 +733,20 @@ export function ProcessingDashboard({
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {stages.map((stage) => (
-                    <ProcessingStageCard
+                    <PipelineStage
                       key={stage.id}
-                      id={stage.id}
                       title={stage.title}
                       description={stage.description}
                       status={stage.status as any}
                       progress={stage.progress}
                       estimatedTime={stage.estimatedTime}
-                      onAction={
+                      onEdit={
                         stage.id === 'stt' || stage.id === 'rag' || stage.id === 'outputs'
                           ? () => handleStageEdit(stage.id)
                           : undefined
                       }
-                      actionLabel={
+                      showEditButton={stage.id === 'stt' || stage.id === 'rag' || stage.id === 'outputs'}
+                      editLabel={
                         stage.id === 'rag' ? '번역가 지정' :
                           stage.id === 'stt' ? 'STT 편집' :
                             stage.id === 'outputs' ? '산출물 확인' : undefined
