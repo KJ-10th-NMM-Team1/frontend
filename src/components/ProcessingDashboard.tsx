@@ -89,38 +89,37 @@ export function ProcessingDashboard({
     outputs: {
       title: '7. 산출물 점검 및 Publish',
       description: '완료된 산출물을 검수하고 배포 설정을 확정합니다',
-    }
+    },
   } as const
 
-  const { data: pipelineData, isConnected, error } = useSSE<ProjectPipeline>(
-    `/api/pipeline/${project.id}/stream`
-  )
+  const {
+    data: pipelineData,
+    isConnected,
+    error,
+  } = useSSE<ProjectPipeline>(`/api/pipeline/${project.id}/stream`)
   console.log('isConnected: ', isConnected)
   console.log(' SSE error:', error)
 
   // 기본 단계들을 항상 표시하고, 백엔드 데이터가 있으면 병합
   const stages = Object.entries(DEFAULT_STAGES).map(([id, defaultStage]) => {
-    const backendStage = pipelineData?.stages.find(stage => stage.id === id)
+    const backendStage = pipelineData?.stages.find((stage) => stage.id === id)
 
     return {
       id,
       ...defaultStage,
       status: backendStage?.status || 'pending',
       progress: backendStage?.progress || 0,
-      ...backendStage
+      ...backendStage,
     }
   })
 
   const overallProgress = pipelineData?.overall_progress || 0
 
-  const updateVoiceStageStatus = useCallback(
-    (nextLanguages: Language[]) => {
-      // TODO: 서버에 파이프라인 상태 업데이트 요청 보내기
-      // 현재는 SSE로 서버에서 상태를 받아오므로 로컬 상태 변경 불필요
-      console.log('Voice stage status updated:', nextLanguages)
-    },
-    []
-  )
+  const updateVoiceStageStatus = useCallback((nextLanguages: Language[]) => {
+    // TODO: 서버에 파이프라인 상태 업데이트 요청 보내기
+    // 현재는 SSE로 서버에서 상태를 받아오므로 로컬 상태 변경 불필요
+    console.log('Voice stage status updated:', nextLanguages)
+  }, [])
 
   const handleVoiceMappingDraftChange = useCallback(
     (speaker: string, config: { voiceId?: string; preserveTone: boolean }) => {
@@ -158,9 +157,9 @@ export function ProcessingDashboard({
     const nextLanguages = languages.map((lang) =>
       lang.code === voiceMappingLanguageCode
         ? {
-          ...lang,
-          voiceConfig: { ...voiceMappingDraft },
-        }
+            ...lang,
+            voiceConfig: { ...voiceMappingDraft },
+          }
         : lang
     )
 
@@ -411,8 +410,9 @@ export function ProcessingDashboard({
     return {
       code: lang.code,
       name: lang.name,
-      summary: `${lang.name} 버전 산출물이 완성되었습니다. 자막 ${lang.subtitle ? '포함' : '미포함'
-        }, 더빙 ${lang.dubbing ? '활성' : '제외'} 상태예요.`,
+      summary: `${lang.name} 버전 산출물이 완성되었습니다. 자막 ${
+        lang.subtitle ? '포함' : '미포함'
+      }, 더빙 ${lang.dubbing ? '활성' : '제외'} 상태예요.`,
       assets,
       preview: {
         videoSrc: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
@@ -746,11 +746,17 @@ export function ProcessingDashboard({
                           ? () => handleStageEdit(stage.id)
                           : undefined
                       }
-                      showEditButton={stage.id === 'stt' || stage.id === 'rag' || stage.id === 'outputs'}
+                      showEditButton={
+                        stage.id === 'stt' || stage.id === 'rag' || stage.id === 'outputs'
+                      }
                       editLabel={
-                        stage.id === 'rag' ? '번역가 지정' :
-                          stage.id === 'stt' ? 'STT 편집' :
-                            stage.id === 'outputs' ? '산출물 확인' : undefined
+                        stage.id === 'rag'
+                          ? '번역가 지정'
+                          : stage.id === 'stt'
+                            ? 'STT 편집'
+                            : stage.id === 'outputs'
+                              ? '산출물 확인'
+                              : undefined
                       }
                     />
                   ))}
@@ -768,10 +774,11 @@ export function ProcessingDashboard({
                   {languages.map((lang) => (
                     <div
                       key={lang.code}
-                      className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${selectedLanguage?.code === lang.code
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                        }`}
+                      className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                        selectedLanguage?.code === lang.code
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
                       onClick={() => setSelectedLanguageCode(lang.code)}
                     >
                       <div className="flex items-center gap-2 mb-2">
@@ -799,20 +806,22 @@ export function ProcessingDashboard({
                       <div className="mt-1 flex flex-wrap gap-1">
                         <Badge
                           variant="outline"
-                          className={`text-[10px] leading-tight px-1.5 py-0.5 ${lang.translationReviewed
-                            ? 'border-green-200 text-green-600'
-                            : 'border-yellow-200 text-yellow-600'
-                            }`}
+                          className={`text-[10px] leading-tight px-1.5 py-0.5 ${
+                            lang.translationReviewed
+                              ? 'border-green-200 text-green-600'
+                              : 'border-yellow-200 text-yellow-600'
+                          }`}
                         >
                           {lang.translationReviewed ? '검토 완료' : '검토 필요'}
                         </Badge>
                         {lang.dubbing && (
                           <Badge
                             variant="outline"
-                            className={`text-[10px] leading-tight px-1.5 py-0.5 ${lang.voiceConfig && Object.keys(lang.voiceConfig).length > 0
-                              ? 'border-blue-200 text-blue-600'
-                              : 'border-gray-200 text-gray-500'
-                              }`}
+                            className={`text-[10px] leading-tight px-1.5 py-0.5 ${
+                              lang.voiceConfig && Object.keys(lang.voiceConfig).length > 0
+                                ? 'border-blue-200 text-blue-600'
+                                : 'border-gray-200 text-gray-500'
+                            }`}
                           >
                             {lang.voiceConfig && Object.keys(lang.voiceConfig).length > 0
                               ? '목소리 매핑 완료'
@@ -939,8 +948,9 @@ export function ProcessingDashboard({
                     <div className="flex items-center gap-2">
                       <Badge
                         variant="secondary"
-                        className={`text-xs ${reviewed ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                          }`}
+                        className={`text-xs ${
+                          reviewed ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                        }`}
                       >
                         {reviewed ? '검토 완료' : '검토 필요'}
                       </Badge>
