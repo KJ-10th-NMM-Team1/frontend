@@ -1,19 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button } from './ui/button'
-import { useSSE } from '../hooks/useSSE'
 import { Badge } from './ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
-import { PipelineStage } from './PipelineStage'
 import { STTEditor } from './STTEditor'
 import { AdvancedTranslationEditor } from './AdvancedTranslationEditor'
 import { VoiceSelector } from './VoiceSelector'
 import { OutputsReview, type LanguageOutput, type PublishResult } from './OutputsReview'
-import { ArrowLeft, Video, Globe, Play, Pause } from 'lucide-react'
-import type { Language, Project, STTSegment, Translation, ProjectPipeline } from '../types'
+import { ArrowLeft, Video, Globe } from 'lucide-react'
+import type { Language, Project, STTSegment, Translation } from '../types'
 import type { STTEditorProps } from './STTEditor'
 import type { AdvancedTranslationEditorProps } from './AdvancedTranslationEditor'
 import { useModal } from '../hooks/useModal'
 import { TranslatorAssignmentDialog } from '@/features/translators/components/TranslatorAssignmentDialog'
+import PipelineContainer from '@/features/pipelines/components/PipelinesContainer'
+import type { PipelineSummary } from '@/features/pipelines/types'
 
 interface ProcessingDashboardProps {
   project: Project
@@ -43,7 +43,7 @@ export function ProcessingDashboard({
   const [currentView, setCurrentView] = useState<
     'dashboard' | 'stt' | 'translation' | 'outputs' | 'voiceMapping'
   >('dashboard')
-  const [isPaused, setIsPaused] = useState(false)
+  // const [isPaused, setIsPaused] = useState(false)
   const [voiceMappingLanguageCode, setVoiceMappingLanguageCode] = useState<string | null>(null)
   const [voiceMappingDraft, setVoiceMappingDraft] = useState<
     Record<string, { voiceId?: string; preserveTone: boolean }>
@@ -77,65 +77,38 @@ export function ProcessingDashboard({
     []
   )
 
-  // 프론트엔드 기본 단계 정보
-  const DEFAULT_STAGES = {
-    upload: {
-      title: '1. 영상 업로드',
-      description: '원본 영상 파일을 서버에 업로드합니다',
-    },
-    stt: {
-      title: '2. STT (Speech to Text)',
-      description: '음성을 텍스트로 변환하고 타임스탬프를 생성합니다',
-      estimatedTime: '3-5분',
-    },
-    mt: {
-      title: '3. MT (Machine Translation)',
-      description: '추출된 텍스트를 타겟 언어로 번역합니다',
-      estimatedTime: '2분',
-    },
-    rag: {
-      title: '4. RAG/LLM 교정',
-      description: 'AI 교정 결과를 검토하고 화자별 목소리를 매핑하세요',
-      estimatedTime: '3분',
-    },
-    tts: {
-      title: '5. TTS (Text to Speech)',
-      description: '번역된 텍스트를 음성으로 변환합니다',
-      estimatedTime: '5분',
-    },
-    packaging: {
-      title: '6. 패키징',
-      description: '더빙된 음성과 자막을 영상에 합성합니다',
-      estimatedTime: '2분',
-    },
-    outputs: {
-      title: '7. 산출물 점검 및 Publish',
-      description: '완료된 산출물을 검수하고 배포 설정을 확정합니다',
-    },
-  } as const
+  // const {
+  //   data: pipelineData,
+  //   isConnected,
+  //   error,
+  // } = useSSE<ProjectPipeline>(`/api/pipeline/${project.id}/events`)
+  // console.log('isConnected: ', isConnected)
+  // console.log(' SSE error:', error)
 
-  const {
-    data: pipelineData,
-    isConnected,
-    error,
-  } = useSSE<ProjectPipeline>(`/api/pipeline/${project.id}/stream`)
-  console.log('isConnected: ', isConnected)
-  console.log(' SSE error:', error)
+  // useEffect(() => {
+  //   if (pipelineData) {
+  //     setPipelineState(pipelineData)
+  //   }
+  // }, [pipelineData])
 
   // 기본 단계들을 항상 표시하고, 백엔드 데이터가 있으면 병합
-  const stages = Object.entries(DEFAULT_STAGES).map(([id, defaultStage]) => {
-    const backendStage = pipelineData?.stages.find((stage) => stage.id === id)
+  // const stages = useMemo(
+  //   () =>
+  //     Object.entries(DEFAULT_STAGES).map(([id, defaultStage]) => {
+  //       const backendStage = pipelineData?.stages.find((stage) => stage.id === id)
 
-    return {
-      id,
-      ...defaultStage,
-      status: backendStage?.status || 'pending',
-      progress: backendStage?.progress || 0,
-      ...backendStage,
-    }
-  })
+  //       return {
+  //         id,
+  //         ...defaultStage,
+  //         status: backendStage?.status || 'pending',
+  //         progress: backendStage?.progress || 0,
+  //         ...backendStage,
+  //       }
+  //     }),
+  //   [pipelineData]
+  // )
 
-  const overallProgress = pipelineData?.overall_progress || 0
+  // const overallProgress = pipelineData?.overall_progress || 0
 
   const updateVoiceStageStatus = useCallback((nextLanguages: Language[]) => {
     // TODO: 서버에 파이프라인 상태 업데이트 요청 보내기
@@ -474,9 +447,9 @@ export function ProcessingDashboard({
     // TODO: 서버에 출력 완료 상태 전송
   }
 
-  const currentStageIndex = stages.findIndex(
-    (s) => s.status === 'processing' || s.status === 'review'
-  )
+  // const currentStageIndex = stages.findIndex(
+  //   (s) => s.status === 'processing' || s.status === 'review'
+  // )
   // overallProgress는 이미 pipelineData에서 받아오므로 삭제
 
   const voiceMappingLanguage = useMemo(() => {
@@ -553,6 +526,18 @@ export function ProcessingDashboard({
     )
     ragModal.close()
   }
+
+  const [overallProgress, setOverallProgress] = useState<number>(0)
+  const [pipelineSummary, setPipelineSummary] = useState<PipelineSummary>({
+    total: 0,
+    completed: 0,
+    processing: 0,
+    pending: 0,
+    failed: 0,
+    review: 0,
+    currentStageId: undefined,
+    currentStageTitle: undefined,
+  })
 
   if (currentView === 'voiceMapping') {
     if (!voiceMappingLanguageCode || !voiceMappingLanguage) {
@@ -720,7 +705,7 @@ export function ProcessingDashboard({
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              {/* <div className="flex items-center gap-3">
                 <Button
                   variant="outline"
                   size="sm"
@@ -739,7 +724,7 @@ export function ProcessingDashboard({
                     </>
                   )}
                 </Button>
-              </div>
+              </div> */}
             </div>
           </div>
         </header>
@@ -756,8 +741,15 @@ export function ProcessingDashboard({
                     <Badge variant="secondary">{Math.round(overallProgress)}% 완료</Badge>
                   </div>
                 </CardHeader>
+
                 <CardContent className="space-y-4">
-                  {stages.map((stage) => (
+                  <PipelineContainer
+                    project={project}
+                    onOverallProgressChange={setOverallProgress}
+                    onSummaryChange={setPipelineSummary}
+                  />
+
+                  {/* {stages.map((stage) => (
                     <PipelineStage
                       key={stage.id}
                       title={stage.title}
@@ -783,7 +775,7 @@ export function ProcessingDashboard({
                               : undefined
                       }
                     />
-                  ))}
+                  ))} */}
                 </CardContent>
               </Card>
             </div>
@@ -900,19 +892,19 @@ export function ProcessingDashboard({
                     <span>{Math.round(overallProgress)}%</span>
                   </div>
                   <div className="space-y-2">
-                    <div className="flex justify-between text-xs text-gray-500">
-                      <span>완료: {stages.filter((s) => s.status === 'completed').length}개</span>
-                      <span>
-                        처리 중: {stages.filter((s) => s.status === 'processing').length}개
-                      </span>
-                      <span>대기: {stages.filter((s) => s.status === 'pending').length}개</span>
-                    </div>
+                    {pipelineSummary.total > 0 && (
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>완료: {pipelineSummary.completed}개</span>
+                        <span>처리 중: {pipelineSummary.processing}개</span>
+                        <span>대기: {pipelineSummary.pending}개</span>
+                      </div>
+                    )}
                   </div>
 
-                  {currentStageIndex !== -1 && (
+                  {pipelineSummary.currentStageTitle && (
                     <div className="mt-4 p-3 bg-blue-50 rounded-lg">
                       <p className="text-xs text-blue-600 mb-1">현재 단계</p>
-                      <p className="text-sm">{stages[currentStageIndex].title}</p>
+                      <p className="text-sm">{pipelineSummary.currentStageTitle}</p>
                     </div>
                   )}
                 </CardContent>

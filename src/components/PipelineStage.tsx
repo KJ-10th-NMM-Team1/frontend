@@ -1,5 +1,4 @@
 import { Card } from './ui/card'
-import { Progress } from './ui/progress'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
 import { CheckCircle2, Circle, Clock, AlertCircle, Edit } from 'lucide-react'
@@ -7,7 +6,7 @@ import type { PipelineStatus } from '../types'
 
 interface PipelineStageProps {
   title: string
-  description: string
+  description?: string
   status: PipelineStatus
   progress?: number
   onEdit?: () => void
@@ -23,7 +22,6 @@ export function PipelineStage({
   progress = 0,
   onEdit,
   showEditButton = false,
-  estimatedTime,
   editLabel,
 }: PipelineStageProps) {
   const getStatusIcon = () => {
@@ -74,7 +72,7 @@ export function PipelineStage({
   return (
     <Card className="p-5">
       <div className="flex items-start gap-4">
-        <div className="flex-shrink-0 mt-1">{getStatusIcon()}</div>
+        <div className="shrink-0 mt-1">{getStatusIcon()}</div>
 
         <div className="flex-1 space-y-3">
           <div className="flex items-start justify-between">
@@ -98,13 +96,18 @@ export function PipelineStage({
 
           {status === 'processing' && (
             <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">{progress}% 완료</span>
-                {estimatedTime && <span className="text-gray-400">예상 {estimatedTime}</span>}
+              <div className="text-sm text-gray-500">
+                작업이 진행 중입니다...
+                {/* 백엔드에서 세부 진행률과 예상 시간이 제공되면 표시 */}
+                {/* {estimatedTime && <span className="ml-1 text-gray-400">예상 {estimatedTime}</span>} */}
               </div>
-              <Progress value={progress} />
+              <div className="h-2 w-full overflow-hidden rounded bg-muted">
+                <div className="h-full w-full rounded bg-blue-500/60 animate-pulse" />
+              </div>
             </div>
           )}
+
+          {status === 'pending' && <div className="text-sm text-gray-400">작업 대기 중입니다</div>}
 
           {status === 'completed' && (
             <div className="text-sm text-green-600">✓ 처리가 완료되었습니다</div>
