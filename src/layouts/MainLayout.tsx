@@ -1,11 +1,23 @@
+import { useState } from 'react'
 import { Video } from 'lucide-react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 
 export default function MainLayout() {
+  const navigate = useNavigate()
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => !!localStorage.getItem('authToken'))
   const baseBtn =
     'rounded-md px-4 py-2 text-sm font-medium transition-colors border border-transparent'
   const activeBtn = 'bg-blue-600 text-white'
   const inactiveBtn = 'bg-white text-gray-700 hover:bg-gray-100 border-gray-200'
+
+  const handleLogout = () => {
+    // 1. localStorage에서 토큰 삭제
+    localStorage.removeItem('authToken')
+    // 2. React state를 변경하여 컴포넌트 리렌더링 (가장 중요!)
+    setIsLoggedIn(false)
+    // 3. 로그인 페이지로 이동
+    navigate('/login')
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
@@ -33,6 +45,22 @@ export default function MainLayout() {
                 >
                   번역가 모드
                 </NavLink>
+                {isLoggedIn ? (
+                  <NavLink
+                    to="/logout"
+                    onClick={handleLogout}
+                    className={({ isActive }) => `${baseBtn} ${isActive ? activeBtn : inactiveBtn}`}
+                  >
+                    로그아웃
+                  </NavLink>
+                ) : (
+                  <NavLink
+                    to="/login"
+                    className={({ isActive }) => `${baseBtn} ${isActive ? activeBtn : inactiveBtn}`}
+                  >
+                    로그인
+                  </NavLink>
+                )}
               </div>
             </div>
           </div>

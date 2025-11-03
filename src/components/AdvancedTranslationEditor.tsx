@@ -27,6 +27,7 @@ import type {
   TranslationIssueType,
 } from '../types'
 import { createSegmentPreview, getSegmentPreview } from '../api/editor'
+import { fetchJobStatus, requestSegmentRetranslate } from '../features/projects/services/jobs'
 import { Suggestion } from './editor/LangSuggest'
 import { TermCorrectionCard } from './editor/LangCorrection'
 import { IussueCard } from './editor/IussueCard'
@@ -99,6 +100,8 @@ export function AdvancedTranslationEditor({
   const [isPreviewProcessing, setIsPreviewProcessing] = useState(false)
   const previewTimerRef = useRef<number>()
   const previewPollerRef = useRef<number>()
+  const retranslatePollersRef = useRef<Map<string, number>>(new Map())
+  const editedTranslationsRef = useRef(editedTranslations)
 
   const parseTimestampDuration = (timestamp: string) => {
     const [start, end] = timestamp.split(' - ')
@@ -177,6 +180,62 @@ export function AdvancedTranslationEditor({
     }, 800)
   }
 
+  const clearRetranslatePoller = (jobId: string) => {
+    const intervalId = retranslatePollersRef.current.get(jobId)
+    if (intervalId) {
+      window.clearInterval(intervalId)
+      retranslatePollersRef.current.delete(jobId)
+    }
+  }
+
+  const refreshPreviewAfterRetranslate = async (translationId: string) => {
+    if (!projectID || !languageCode) {
+      toast.error('프로젝트 정보를 확인할 수 없습니다. 새 오디오를 가져오지 못했습니다.')
+      return
+    }
+
+    const current = editedTranslationsRef.current.find((t) => t.id === translationId)
+    if (!current) {
+      return
+    }
+
+    const segId = current.segmentId ?? current.id
+
+    try {
+      const res = await createSegmentPreview(projectID, languageCode, segId, {
+        text: current.translated,
+      })
+
+      if (res.status === 'completed') {
+        patchPreviewOn(translationId, {
+          status: 'completed',
+          jobId: res.previewId,
+          videoUrl: res.videoUrl,
+          audioUrl: res.audioUrl,
+          updatedAt: res.updatedAt,
+        })
+        toast.success('재번역된 오디오가 준비되었습니다')
+        return
+      }
+
+      if (res.status === 'processing' && res.previewId) {
+        patchPreviewOn(translationId, { status: 'processing', jobId: res.previewId })
+        beginPreviewPolling(translationId, res.previewId)
+        return
+      }
+
+      patchPreviewOn(translationId, { status: 'failed' })
+      toast.error('새로운 오디오를 불러오지 못했습니다')
+    } catch (error) {
+      patchPreviewOn(translationId, { status: 'failed' })
+      if (error instanceof Error) {
+        toast.error(error.message ?? '새로운 오디오 조회 실패')
+      } else {
+        toast.error('새로운 오디오 조회 실패')
+      }
+    }
+  }
+
   const handlePreview = async (translation: Translation) => {
     if (!projectID || !languageCode) {
       toast.error('프로젝트 정보를 확인할 수 없어 미리보기를 생성하지 못했습니다.')
@@ -224,21 +283,6 @@ export function AdvancedTranslationEditor({
       }
     }
   }
-
-  // const handlePreview = (translation: Translation) => {
-  //   setPreviewTranslation(translation)
-  //   setIsPreviewOpen(true)
-  //   setIsPreviewProcessing(true)
-
-  //   if (previewTimerRef.current) {
-  //     window.clearTimeout(previewTimerRef.current)
-  //   }
-
-  //   previewTimerRef.current = window.setTimeout(() => {
-  //     setIsPreviewProcessing(false)
-  //   }, 1200)
-  // }
-
   const handlePreviewOpenChange = (open: boolean) => {
     if (!open) {
       if (previewTimerRef.current) {
@@ -254,6 +298,10 @@ export function AdvancedTranslationEditor({
   }
 
   useEffect(() => {
+    editedTranslationsRef.current = editedTranslations
+  }, [editedTranslations])
+
+  useEffect(() => {
     return () => {
       if (previewTimerRef.current) {
         window.clearTimeout(previewTimerRef.current)
@@ -261,6 +309,10 @@ export function AdvancedTranslationEditor({
       if (previewPollerRef.current) {
         window.clearInterval(previewPollerRef.current)
       }
+      retranslatePollersRef.current.forEach((intervalId) => {
+        window.clearInterval(intervalId)
+      })
+      retranslatePollersRef.current.clear()
     }
   }, [])
 
@@ -322,13 +374,63 @@ export function AdvancedTranslationEditor({
     toast.success('용어 교정이 적용되었습니다')
   }
 
-  const handleRetranslate = (id: string) => {
-    const target = editedTranslations.find((translation) => translation.id === id)
-    const label = target?.original ? `"${target.original}"` : '선택된 문장'
-    toast.info(`${label} 재번역 중...`)
-    setTimeout(() => {
-      toast.success(`${label} 재번역이 완료되었습니다`)
-    }, 1500)
+  const handleRetranslate = async (id: string) => {
+    if (!projectID) {
+      toast.error('프로젝트 정보를 확인할 수 없어 재번역을 시작하지 못했습니다.')
+      return
+    }
+
+    const target = editedTranslationsRef.current.find((translation) => translation.id === id)
+    if (!target) {
+      toast.error('선택된 문장을 찾을 수 없습니다.')
+      return
+    }
+
+    const segmentId = target.segmentId ?? target.id
+
+    const label = target.original ? `"${target.original}"` : '선택된 문장'
+    patchPreviewOn(id, { status: 'processing' })
+    toast.info(`${label} 재번역 작업을 시작했습니다`)
+
+    try {
+      const res = await requestSegmentRetranslate(projectID, segmentId, {
+        text: target.translated,
+      })
+
+      patchPreviewOn(id, { status: 'processing', jobId: res.jobId })
+
+      const poller = window.setInterval(async () => {
+        try {
+          const job = await fetchJobStatus(res.jobId)
+          if (job.status === 'done') {
+            clearRetranslatePoller(res.jobId)
+            await refreshPreviewAfterRetranslate(id)
+          } else if (job.status === 'failed') {
+            clearRetranslatePoller(res.jobId)
+            patchPreviewOn(id, { status: 'failed' })
+            const message = (job.error as string | undefined) ?? '재번역 작업이 실패했습니다'
+            toast.error(message)
+          }
+        } catch (error) {
+          clearRetranslatePoller(res.jobId)
+          patchPreviewOn(id, { status: 'failed' })
+          if (error instanceof Error) {
+            toast.error(error.message ?? '재번역 상태 확인에 실패했습니다')
+          } else {
+            toast.error('재번역 상태 확인에 실패했습니다')
+          }
+        }
+      }, 1500)
+
+      retranslatePollersRef.current.set(res.jobId, poller)
+    } catch (error) {
+      patchPreviewOn(id, { status: 'failed' })
+      if (error instanceof Error) {
+        toast.error(error.message ?? '재번역 요청에 실패했습니다')
+      } else {
+        toast.error('재번역 요청에 실패했습니다')
+      }
+    }
   }
 
   const handleSave = () => {
@@ -403,7 +505,7 @@ export function AdvancedTranslationEditor({
           <TabsContent value="edit" className="grid grid-cols-1 lg:grid-cols-4 gap-6 m-0">
             {/* 왼쪽: 영상 미리보기 + 이슈 요약 */}
             <div className="lg:col-span-1 space-y-4">
-              <Card className="lg:sticky lg:top-24">
+              <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
                     <MonitorPlay className="w-4 h-4 text-blue-500" />

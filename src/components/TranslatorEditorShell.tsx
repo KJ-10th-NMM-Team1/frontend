@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
-
 import { fetchProjectDetail } from '@/features/projects/services/projects'
 import type {
   ProjectDetail,
