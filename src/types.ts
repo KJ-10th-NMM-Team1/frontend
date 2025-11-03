@@ -31,15 +31,6 @@ export interface Language {
   translationReviewed?: boolean
   voiceConfig?: Record<string, { voiceId?: string; preserveTone: boolean }>
 }
-export interface STTSegment {
-  id: string
-  startTime: string
-  endTime: string
-  text: string
-  speaker?: string
-  confidence: number
-}
-
 export type TranslationIssueType = 'term' | 'length' | 'number' | 'tone'
 
 export type TranslationIssueSeverity = 'warning' | 'error'
@@ -64,6 +55,15 @@ export interface TermCorrection {
   reason?: string
 }
 
+export interface STTSegment {
+  id: string
+  startTime: string
+  endTime: string
+  text: string
+  speaker?: string
+  confidence: number
+}
+
 export interface Translation {
   id: string
   timestamp: string
@@ -77,6 +77,8 @@ export interface Translation {
   translatedSpeechSeconds?: number
   correctionSuggestions?: CorrectionSuggestion[]
   termCorrections?: TermCorrection[]
+  assets?: SegmentAssetKeys
+  rawSegment?: ProjectSegment
 
   // 백엔드 세그먼트 PK (없으면 기존 id를 임시로 사용)
   segmentId?: string
@@ -110,6 +112,8 @@ export interface Project {
   jobStatus?: 'queued' | 'in_progress' | 'done' | 'failed'
   jobResultKey?: string
   jobMetadata?: Record<string, unknown>
+  segmentAssetsPrefix?: string
+  segments?: ProjectSegment[]
 }
 
 export type PipelineStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'review'
@@ -130,4 +134,35 @@ export interface ProjectPipeline {
   stages: PipelineStage[]
   current_stage: string
   overall_progress: number
+}
+
+export interface SegmentAssetKeys {
+  sourceKey?: string
+  bgmKey?: string
+  ttsKey?: string
+  mixKey?: string
+  videoKey?: string
+}
+
+export interface ProjectSegmentIssue {
+  issueId?: string
+  issueContext?: string | null
+  [key: string]: unknown
+}
+
+export interface ProjectSegment {
+  id: string
+  text: string
+  translation: string
+  start: number
+  end: number
+  length: number
+  score?: number | null
+  issues?: ProjectSegmentIssue[]
+  assets?: SegmentAssetKeys
+}
+
+export interface ProjectDetail extends Project {
+  segments: ProjectSegment[]
+  segmentAssetsPrefix?: string
 }
