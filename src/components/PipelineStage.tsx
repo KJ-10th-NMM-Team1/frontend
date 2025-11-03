@@ -19,7 +19,7 @@ export function PipelineStage({
   title,
   description,
   status,
-  progress = 0,
+  // progress = 0,
   onEdit,
   showEditButton = false,
   editLabel,

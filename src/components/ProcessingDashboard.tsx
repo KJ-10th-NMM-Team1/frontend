@@ -457,32 +457,32 @@ export function ProcessingDashboard({
     return languages.find((lang) => lang.code === voiceMappingLanguageCode)
   }, [languages, voiceMappingLanguageCode])
 
-  const handleStageEdit = (stageId: string) => {
-    if (stageId === 'rag') {
-      const initialAssignments = languages.reduce<Record<string, string>>((acc, lang) => {
-        if (lang.translator) acc[lang.code] = lang.translator
-        return acc
-      }, {})
-      const initialReviews = languages.reduce<Record<string, boolean>>((acc, lang) => {
-        acc[lang.code] = lang.translationReviewed ?? false
-        return acc
-      }, {})
+  // const handleStageEdit = (stageId: string) => {
+  //   if (stageId === 'rag') {
+  //     const initialAssignments = languages.reduce<Record<string, string>>((acc, lang) => {
+  //       if (lang.translator) acc[lang.code] = lang.translator
+  //       return acc
+  //     }, {})
+  //     const initialReviews = languages.reduce<Record<string, boolean>>((acc, lang) => {
+  //       acc[lang.code] = lang.translationReviewed ?? false
+  //       return acc
+  //     }, {})
 
-      setAssignmentDraft(initialAssignments)
-      setReviewDraft(initialReviews)
-      ragModal.open()
-      return
-    }
-    if (stageId === 'stt') {
-      setCurrentView('stt')
-      return
-    }
-    if (stageId === 'outputs') {
-      setCurrentView('outputs')
-      return
-    }
-    setCurrentView('translation')
-  }
+  //     setAssignmentDraft(initialAssignments)
+  //     setReviewDraft(initialReviews)
+  //     ragModal.open()
+  //     return
+  //   }
+  //   if (stageId === 'stt') {
+  //     setCurrentView('stt')
+  //     return
+  //   }
+  //   if (stageId === 'outputs') {
+  //     setCurrentView('outputs')
+  //     return
+  //   }
+  //   setCurrentView('translation')
+  // }
 
   const handleRagModalSave = () => {
     if (languages.length === 0) {
