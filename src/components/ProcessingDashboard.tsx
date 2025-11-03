@@ -95,7 +95,7 @@ export function ProcessingDashboard({
   const { data: pipelineData, isConnected, error } = useSSE<ProjectPipeline>(
     `/api/pipeline/${project.id}/stream`
   )
-  console.log('isConnected: 'isConnected)
+  console.log('isConnected: ', isConnected)
   console.log(' SSE error:', error)
 
   // 기본 단계들을 항상 표시하고, 백엔드 데이터가 있으면 병합
