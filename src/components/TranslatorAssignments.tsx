@@ -1,8 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
+import { ClipboardList, Languages } from 'lucide-react'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Progress } from './ui/progress'
-import { ClipboardList, Languages } from 'lucide-react'
 
 export interface TranslatorAssignment {
   projectId: string
