@@ -81,6 +81,6 @@ export function useSSE<T>(url: string) {
   return {
     data,
     isConnected,
-    error
+    error,
   }
 }
