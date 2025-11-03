@@ -145,15 +145,15 @@ export function TranslatorEditorShell({ assignment, onBack }: TranslatorEditorSh
             </div>
           </div>
           {project?.segmentAssetsPrefix ? (
-            <span className="text-xs text-gray-400">
-              Assets: {project.segmentAssetsPrefix}
-            </span>
+            <span className="text-xs text-gray-400"> Assets: {project.segmentAssetsPrefix}</span>
           ) : null}
         </div>
       </header>
 
       {isLoading ? (
-        <div className="max-w-6xl mx-auto px-6 py-12 text-sm text-gray-500">세그먼트를 불러오는 중…</div>
+        <div className="max-w-6xl mx-auto px-6 py-12 text-sm text-gray-500">
+          세그먼트를 불러오는 중…
+        </div>
       ) : error ? (
         <div className="max-w-6xl mx-auto px-6 py-12 text-sm text-red-500">
           세그먼트를 불러오는 중 오류가 발생했습니다. {error}
