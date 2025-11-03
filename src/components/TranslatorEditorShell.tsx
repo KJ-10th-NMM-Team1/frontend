@@ -92,6 +92,7 @@ export function TranslatorEditorShell({ assignment, onBack }: TranslatorEditorSh
   const [project, setProject] = useState<ProjectDetail | null>(null)
   const [segments, setSegments] = useState<ProjectSegment[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  // const [translations, setTranslations] = useState<TranslationEntry[]>([])
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {

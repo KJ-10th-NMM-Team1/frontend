@@ -162,6 +162,17 @@ export default function App() {
             <div className="flex items-center gap-2">
               <Button
                 variant={viewMode === 'owner' ? 'default' : 'outline'}
+                size="lg"
+                onClick={() => {
+                  setViewMode('owner')
+                  setSelectedProject(null)
+                }}
+              >
+                로그인
+              </Button>
+
+              <Button
+                variant={viewMode === 'owner' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => {
                   setViewMode('owner')
