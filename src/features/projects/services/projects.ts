@@ -12,7 +12,7 @@ import type {
 } from '@/types'
 
 interface RawProject {
-  _id: string
+  id: string
   title?: string
   status?: string
   video_source?: string | null
@@ -168,7 +168,7 @@ const mapProject = (raw: RawProject): Project => {
   const derivedName = raw.title || raw.video_source?.split('/').pop() || '새 프로젝트'
 
   return {
-    id: raw._id,
+    id: raw.id,
     name: derivedName,
     languages,
     status,
@@ -205,8 +205,8 @@ export const fetchProjectDetail = async (projectId: string): Promise<ProjectDeta
   }
 }
 
-export const fetchProjectsByOwner = async (ownerCode: string): Promise<Project[]> => {
-  const res = await fetch(getApiUrl(`/api/projects/owner/${encodeURIComponent(ownerCode)}`), {
+export const fetchProjectsByOwner = async (): Promise<Project[]> => {
+  const res = await fetch(getApiUrl(`/api/projects/me`), {
     method: 'GET',
     credentials: 'include',
   })
