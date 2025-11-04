@@ -30,6 +30,7 @@ import { Suggestion } from './editor/LangSuggest'
 import { IussueCard } from './editor/IussueCard'
 import { StatisticsCard } from './editor/StatisticsCard'
 import { TermCorrectionCard } from './editor/LangCorrection'
+import { Toaster } from './ui/sonner'
 
 export interface AdvancedTranslationEditorProps {
   projectID: string
@@ -61,8 +62,6 @@ export function AdvancedTranslationEditor({
   //     setSelectedTab(value)
   //   }
   // }
-
-  console.log(editedTranslations)
 
   const enrichTranslations = useMemo(
     () => editedTranslations.map((t) => ({ ...t, issues: t.issues ?? [] })),
@@ -349,8 +348,8 @@ export function AdvancedTranslationEditor({
   const handleApplyIssueSuggestion = (id: string, suggestion: string) => {
     setEditedTranslations((prev) =>
       prev.map((t) => (t.id === id ? { ...t, translated: suggestion, issues: [] } : t))
-    )
-    toast.success('제안이 적용되었습니다')
+    ) // 당장은 적용 후 이슈를 0로 만든다
+    toast.success('교정 후보가 적용되었습니다')
   }
 
   // const handleApplyCorrectionSuggestion = (id: string, suggestion: CorrectionSuggestion) => {
@@ -559,12 +558,12 @@ export function AdvancedTranslationEditor({
               </CardContent>
             </Card>
             <IussueCard issueStats={issueStats} />
-
             <StatisticsCard editedTranslations={enrichTranslations} />
           </div>
 
           {/* 오른쪽: 번역 리스트 */}
           <div className="lg:col-span-3">
+            <Toaster />
             <div className="space-y-4">
               {translationGroups.map((group, gidx) => {
                 // const groupIssues = group.translations.reduce(
@@ -787,10 +786,10 @@ export function AdvancedTranslationEditor({
                                   ))}
                                 </div>
                               )} */}
-                              <TermCorrectionCard
-                                termCorrections={combinedSuggestions}
-                                // onApply={handleApplyTermCorrection}
-                              />
+
+                              {combinedSuggestions.length > 0 && (
+                                <TermCorrectionCard termCorrections={combinedSuggestions} />
+                              )}
                               {/* <Suggestion combinedSuggestions={combinedSuggestions} /> */}
                             </div>
                           )
