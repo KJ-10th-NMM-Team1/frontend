@@ -2,34 +2,33 @@ import { ProcessingDashboard } from '@/components/ProcessingDashboard'
 import { ProjectCard } from '@/components/ProjectCard'
 import { Button } from '@/components/ui/button'
 import { Toaster } from '@/components/ui/sonner'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CreateProjectModal } from '@/features/projects/components/CreateProjectModal'
 import { useCreateProjectModal } from '@/features/projects/hooks/useCreateProjectModal'
-import { fetchProjects } from '@/features/projects/services/projects'
+import { fetchProjectsByOwner } from '@/features/projects/services/projects'
 import { finishUpload, getPresignedUrl, uploadFile } from '@/features/projects/services/upload'
+import { useAuth } from '@/hooks/useAuth'
+import TranslatorManagementPage from '@/pages/TranslatorManagementPage'
 import type { Project } from '@/types'
+import { Plus } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 export default function OwnerPage() {
   const [projects, setProjects] = useState<Project[]>([])
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
-
-  const loadProjects = useCallback(async () => {
-    try {
-      const list = await fetchProjects()
-      setProjects(list)
-      return list
-    } catch (err) {
-      console.error('프로젝트 조회 실패', err)
-      throw err
-    }
+  const [activeTab, setActiveTab] = useState<'projects' | 'translators'>('projects')
+  const { user } = useAuth()
+  const ownerCode = user?.code ?? ''
+  const loadProjects = useCallback(async (code: string) => {
+    const list = await fetchProjectsByOwner(code) // 새로 만든 API
+    setProjects(list)
   }, [])
 
   useEffect(() => {
-    loadProjects().catch(() => {
-      // 이미 콘솔에 에러 로그 출력됨
-    })
-  }, [loadProjects])
+    if (!ownerCode) return
+    void loadProjects(ownerCode)
+  }, [ownerCode, loadProjects])
 
   const createProjectModal = useCreateProjectModal({
     onSubmit: async (p) => {
@@ -43,8 +42,8 @@ export default function OwnerPage() {
         formData.append('file', p.videoFile)
 
         await uploadFile(upload_url, formData)
-        await finishUpload({ object_key, project_id })
-        await loadProjects()
+        await finishUpload({ object_key, project_id, ownerCode })
+        await loadProjects(ownerCode)
         toast.success('프로젝트 업로드 완료')
       } catch (error) {
         toast.error('업로드 중 오류가 발생했습니다.')
@@ -52,6 +51,12 @@ export default function OwnerPage() {
       }
     },
   })
+  const { ownerCode: formOwnerCode, setOwnerCode: setFormOwnerCode } = createProjectModal.form
+  useEffect(() => {
+    if (ownerCode && ownerCode !== formOwnerCode) {
+      setFormOwnerCode(ownerCode)
+    }
+  }, [ownerCode, formOwnerCode, setFormOwnerCode])
 
   if (selectedProject) {
     return (
@@ -70,24 +75,42 @@ export default function OwnerPage() {
       />
     )
   }
-
   return (
-    <div>
-      {/* 헤더, 버튼 등 기존 JSX */}
-      <div className="flex justify-end mb-6">
-        <Button onClick={createProjectModal.open} className="gap-2">
-          새 프로젝트
-        </Button>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {projects.map((project) => (
-          <ProjectCard
-            key={project.id}
-            project={project}
-            onClick={() => setSelectedProject(project)} // 사용자가 클릭할 때 액션
-          />
-        ))}
-      </div>
+    <div className="space-y-6">
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as 'projects' | 'translators')}
+      >
+        <TabsList className="w-full max-w-md">
+          <TabsTrigger value="projects" className="flex-1">
+            프로젝트 관리
+          </TabsTrigger>
+          <TabsTrigger value="translators" className="flex-1">
+            번역가 관리
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="projects" className="space-y-6">
+          <div className="flex justify-end">
+            <Button onClick={createProjectModal.open} className="gap-2">
+              <Plus className="h-4 w-4" />새 프로젝트
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {projects.map((project) => (
+              <ProjectCard
+                key={project.id}
+                project={project}
+                onClick={() => setSelectedProject(project)} // 사용자가 클릭할 때 액션
+              />
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="translators" className="space-y-6">
+          <TranslatorManagementPage />
+        </TabsContent>
+      </Tabs>
       <CreateProjectModal
         isOpen={createProjectModal.isOpen}
         onClose={createProjectModal.close}

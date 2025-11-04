@@ -1,11 +1,11 @@
 import { getApiUrl } from '@/config'
+import { handleResponse } from '@/lib/http'
 import {
-  type CreateProjectResponse,
   type CreateProjectPayload,
+  type CreateProjectResponse,
   type FinUploadPayload,
   type FinishUploadResponse,
 } from '../types/createProject'
-import { handleResponse } from '@/lib/http'
 
 export const getPresignedUrl = async (p: CreateProjectPayload) => {
   const res = await fetch(getApiUrl('/api/storage/prepare-upload'), {
@@ -15,6 +15,7 @@ export const getPresignedUrl = async (p: CreateProjectPayload) => {
     body: JSON.stringify({
       filename: p.videoFile.name,
       content_type: p.videoFile.type,
+      owner_code: p.ownerCode,
     }),
   })
 
@@ -38,7 +39,11 @@ export const finishUpload = async (p: FinUploadPayload) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body: JSON.stringify(p),
+    body: JSON.stringify({
+      object_key: p.object_key,
+      project_id: p.project_id,
+      owner_code: p.ownerCode,
+    }),
   })
 
   return handleResponse<FinishUploadResponse>(res)

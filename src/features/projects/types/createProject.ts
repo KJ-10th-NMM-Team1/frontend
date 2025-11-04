@@ -9,10 +9,12 @@
 
 export interface CreateProjectFormValues {
   videoFile: File | null
+  ownerCode: string
 }
 
 export interface CreateProjectPayload {
   videoFile: File
+  ownerCode: string
 }
 
 export interface CreateProjectResponse {
@@ -25,6 +27,7 @@ export interface CreateProjectResponse {
 export interface FinUploadPayload {
   project_id: string
   object_key: string
+  ownerCode: string
 }
 
 export interface FinishUploadResponse {

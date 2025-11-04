@@ -4,13 +4,10 @@ import type { CreateProjectFormValues } from '../types/createProject'
 
 const defaultValues: CreateProjectFormValues = {
   videoFile: null,
+  ownerCode: '',
 }
 
-export interface UseCreateProjectFormOptions {
-  defaultValues?: Partial<CreateProjectFormValues>
-}
-
-export function useCreateProjectForm(options: UseCreateProjectFormOptions = {}) {
+export function useCreateProjectForm() {
   const {
     handleSubmit,
     reset: resetInternal,
@@ -19,13 +16,11 @@ export function useCreateProjectForm(options: UseCreateProjectFormOptions = {}) 
     formState,
   } = useForm<CreateProjectFormValues>({
     mode: 'onSubmit',
-    defaultValues: {
-      ...defaultValues,
-      ...options.defaultValues,
-    },
+    defaultValues,
   })
 
   const videoFile = watch('videoFile')
+  const ownerCode = watch('ownerCode') ?? ''
 
   const setVideoFile = useCallback(
     (file: File | null) => {
@@ -34,21 +29,27 @@ export function useCreateProjectForm(options: UseCreateProjectFormOptions = {}) 
     [setValue]
   )
 
-  const reset = useCallback(() => {
-    resetInternal({
-      ...defaultValues,
-      ...options.defaultValues,
-    })
-  }, [resetInternal, options.defaultValues])
+  const setOwnerCode = useCallback(
+    (code: string) => {
+      setValue('ownerCode', code, { shouldDirty: true, shouldTouch: true })
+    },
+    [setValue]
+  )
 
-  const canSubmit = useMemo(() => Boolean(videoFile), [videoFile])
+  const reset = useCallback(() => {
+    resetInternal(defaultValues)
+  }, [resetInternal])
+
+  const canSubmit = useMemo(() => Boolean(videoFile && ownerCode), [videoFile, ownerCode])
 
   return {
     formState,
     handleSubmit,
     setVideoFile,
+    setOwnerCode,
     reset,
     videoFile,
+    ownerCode,
     hasVideo: Boolean(videoFile),
     canSubmit,
   }

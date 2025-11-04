@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { useModal } from '../../../hooks/useModal'
-import { useCreateProjectForm } from './useCreateProjectForm'
 import type { CreateProjectPayload } from '../types/createProject'
+import { useCreateProjectForm } from './useCreateProjectForm'
 
 interface UseCreateProjectModalOptions {
   onSubmit(project: CreateProjectPayload): Promise<void> | void
@@ -17,6 +17,7 @@ export function useCreateProjectModal(options: UseCreateProjectModalOptions) {
 
     await options.onSubmit({
       videoFile: form.videoFile!,
+      ownerCode: form.ownerCode,
     })
 
     // form.actions.setIsUploading(false)

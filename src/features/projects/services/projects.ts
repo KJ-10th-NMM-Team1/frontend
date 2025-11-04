@@ -204,3 +204,12 @@ export const fetchProjectDetail = async (projectId: string): Promise<ProjectDeta
     segmentAssetsPrefix: data.segment_assets_prefix ?? base.segmentAssetsPrefix,
   }
 }
+
+export const fetchProjectsByOwner = async (ownerCode: string): Promise<Project[]> => {
+  const res = await fetch(getApiUrl(`/api/projects/owner/${encodeURIComponent(ownerCode)}`), {
+    method: 'GET',
+    credentials: 'include',
+  })
+  const data = await handleResponse<RawProject[]>(res)
+  return data.map(mapProject)
+}

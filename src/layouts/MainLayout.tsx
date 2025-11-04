@@ -1,22 +1,61 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Video } from 'lucide-react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { getApiUrl } from '@/config'
 
 export default function MainLayout() {
   const navigate = useNavigate()
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => !!localStorage.getItem('authToken'))
+  const location = useLocation()
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null)
   const baseBtn =
     'rounded-md px-4 py-2 text-sm font-medium transition-colors border border-transparent'
   const activeBtn = 'bg-blue-600 text-white'
   const inactiveBtn = 'bg-white text-gray-700 hover:bg-gray-100 border-gray-200'
 
-  const handleLogout = () => {
-    // 1. localStorage에서 토큰 삭제
-    localStorage.removeItem('authToken')
-    // 2. React state를 변경하여 컴포넌트 리렌더링 (가장 중요!)
-    setIsLoggedIn(false)
-    // 3. 로그인 페이지로 이동
-    navigate('/login')
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      try {
+        const response = await fetch(getApiUrl('api/auth/me'), {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        })
+        if (response.ok) {
+          setIsLoggedIn(true)
+        } else {
+          setIsLoggedIn(false)
+        }
+      } catch (error) {
+        console.error('로그인 상태 확인 오류:', error)
+        setIsLoggedIn(false)
+      }
+    }
+    checkLoginStatus()
+  }, [location.pathname])
+
+  const handleLogout = async () => {
+    try {
+      // [2] 백엔드의 /logout 엔드포인트를 호출
+      const response = await fetch(getApiUrl('api/auth/logout'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      })
+
+      if (!response.ok) {
+        throw new Error('로그아웃 실패')
+      }
+
+      console.log('로그아웃 성공, 쿠키 만료됨')
+      setIsLoggedIn(false)
+      navigate('/login')
+    } catch (error) {
+      console.error('로그아웃 중 오류:', error)
+    }
   }
 
   return (
@@ -45,14 +84,10 @@ export default function MainLayout() {
                 >
                   번역가 모드
                 </NavLink>
-                {isLoggedIn ? (
-                  <NavLink
-                    to="/logout"
-                    onClick={handleLogout}
-                    className={({ isActive }) => `${baseBtn} ${isActive ? activeBtn : inactiveBtn}`}
-                  >
+                {isLoggedIn === null ? null : isLoggedIn ? (
+                  <button onClick={handleLogout} className={`${baseBtn} ${inactiveBtn}`}>
                     로그아웃
-                  </NavLink>
+                  </button>
                 ) : (
                   <NavLink
                     to="/login"

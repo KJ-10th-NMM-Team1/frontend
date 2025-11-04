@@ -167,3 +167,18 @@ export interface ProjectDetail extends Project {
   segments: ProjectSegment[]
   segmentAssetsPrefix?: string
 }
+
+export interface AuthUser {
+  code: string
+  name: string
+  email?: string
+  role?: 'owner' | 'translator' | 'admin'
+}
+
+export interface AuthContextValue {
+  user: AuthUser | null
+  setUser(user: AuthUser | null): void
+  isLoading: boolean
+  setIsLoading(next: boolean): void
+  refresh(): Promise<void>
+}
