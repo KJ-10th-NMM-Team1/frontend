@@ -30,7 +30,6 @@ export function useSSE<T>(url: string) {
         eventSourceRef.current.close()
       }
       try {
-        console.log('SSE connecting to:', url)
         const eventSource = new EventSource(url)
         eventSourceRef.current = eventSource
 

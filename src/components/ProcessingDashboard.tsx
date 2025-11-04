@@ -14,7 +14,8 @@ import type { STTEditorProps } from './STTEditor'
 import type { AdvancedTranslationEditorProps } from './AdvancedTranslationEditor'
 import { useModal } from '../hooks/useModal'
 import { TranslatorAssignmentDialog } from '@/features/translators/components/TranslatorAssignmentDialog'
-
+import { getVoiceConfig, updateVoiceConfig } from '@/features/projects/services/voice'
+import { toast } from 'sonner'
 interface ProcessingDashboardProps {
   project: Project
   onBack: () => void
@@ -28,6 +29,14 @@ export function ProcessingDashboard({
   onBack,
   onUpdateProject,
 }: ProcessingDashboardProps) {
+  // 디버깅: 프로젝트 데이터 확인
+  console.log('ProcessingDashboard loaded with project:', {
+    id: project.id,
+    name: project.name,
+    voice_config: project.voice_config,
+    has_voice_config: !!project.voice_config && Object.keys(project.voice_config).length > 0,
+  })
+
   const [languages, setLanguages] = useState<Language[]>(() =>
     project.languages.map((lang) => ({
       ...lang,
@@ -119,8 +128,6 @@ export function ProcessingDashboard({
     isConnected,
     error,
   } = useSSE<ProjectPipeline>(`/api/pipeline/${project.id}/stream`)
-  console.log('isConnected: ', isConnected)
-  console.log(' SSE error:', error)
 
   // 기본 단계들을 항상 표시하고, 백엔드 데이터가 있으면 병합
   const stages = Object.entries(DEFAULT_STAGES).map(([id, defaultStage]) => {
@@ -170,51 +177,78 @@ export function ProcessingDashboard({
     setCurrentView('dashboard')
   }, [setCurrentView])
 
-  const handleVoiceMappingSave = () => {
+  const handleVoiceMappingSave = async () => {
     if (!voiceMappingLanguageCode) {
       handleVoiceMappingCancel()
       return
     }
 
-    const nextLanguages = languages.map((lang) =>
-      lang.code === voiceMappingLanguageCode
-        ? {
-            ...lang,
-            voiceConfig: { ...voiceMappingDraft },
-          }
-        : lang
-    )
+    try {
+      // voiceConfig를 그대로 전송 (VoiceMapping 형식)
+      await updateVoiceConfig(project.id, voiceMappingDraft)
 
-    setLanguages(nextLanguages)
-    updateVoiceStageStatus(nextLanguages)
-    if (onUpdateProject) {
-      onUpdateProject({ ...project, languages: nextLanguages })
+      // 로컬 상태 업데이트
+      const nextLanguages = languages.map((lang) =>
+        lang.code === voiceMappingLanguageCode
+          ? {
+              ...lang,
+              voiceConfig: { ...voiceMappingDraft },
+            }
+          : lang
+      )
+
+      setLanguages(nextLanguages)
+      updateVoiceStageStatus(nextLanguages)
+      if (onUpdateProject) {
+        onUpdateProject({ ...project, languages: nextLanguages })
+      }
+
+      toast.success('보이스 설정이 저장되었습니다') // ← try 안으로 이동
+      handleVoiceMappingCancel()
+    } catch (error) {
+      // ← 이제 try와 연결됨
+      console.error('보이스 설정 저장 실패:', error)
+      toast.error('저장에 실패했습니다')
     }
-    handleVoiceMappingCancel()
   }
+
   useEffect(() => {
-    const cloned = project.languages.map((lang) => ({
-      ...lang,
-      translationReviewed: lang.translationReviewed ?? false,
-      voiceConfig: lang.voiceConfig ?? {},
-    }))
-    setLanguages(cloned)
-    setSelectedLanguageCode(project.languages[0]?.code ?? '')
-    setVoiceMappingLanguageCode(null)
-    setVoiceMappingDraft({})
-    setAssignmentDraft(
-      cloned.reduce<Record<string, string>>((acc, lang) => {
-        if (lang.translator) acc[lang.code] = lang.translator
-        return acc
-      }, {})
-    )
-    setReviewDraft(
-      cloned.reduce<Record<string, boolean>>((acc, lang) => {
-        acc[lang.code] = lang.translationReviewed ?? false
-        return acc
-      }, {})
-    )
-    updateVoiceStageStatus(cloned)
+    const initializeProject = async () => {
+      const cloned = project.languages.map((lang) => ({
+        ...lang,
+        translationReviewed: lang.translationReviewed ?? false,
+        voiceConfig: lang.voiceConfig ?? {},
+      }))
+      setLanguages(cloned)
+      setSelectedLanguageCode(project.languages[0]?.code ?? '')
+      setVoiceMappingLanguageCode(null)
+      setVoiceMappingDraft({})
+      setAssignmentDraft(
+        cloned.reduce<Record<string, string>>((acc, lang) => {
+          if (lang.translator) acc[lang.code] = lang.translator
+          return acc
+        }, {})
+      )
+      setReviewDraft(
+        cloned.reduce<Record<string, boolean>>((acc, lang) => {
+          acc[lang.code] = lang.translationReviewed ?? false
+          return acc
+        }, {})
+      )
+      updateVoiceStageStatus(cloned)
+
+      // 서버에서 보이스 설정 로드
+      try {
+        const data = await getVoiceConfig(project.id)
+        if (data.voice_config && Object.keys(data.voice_config).length > 0) {
+          setVoiceMappingDraft(data.voice_config)
+        }
+      } catch (error) {
+        console.error('보이스 설정 로드 실패:', error)
+      }
+    }
+
+    initializeProject()
   }, [project, updateVoiceStageStatus])
 
   useEffect(() => {
@@ -842,12 +876,12 @@ export function ProcessingDashboard({
                           <Badge
                             variant="outline"
                             className={`text-[10px] leading-tight px-1.5 py-0.5 ${
-                              lang.voiceConfig && Object.keys(lang.voiceConfig).length > 0
+                              project.voice_config && Object.keys(project.voice_config).length > 0
                                 ? 'border-blue-200 text-blue-600'
                                 : 'border-gray-200 text-gray-500'
                             }`}
                           >
-                            {lang.voiceConfig && Object.keys(lang.voiceConfig).length > 0
+                            {project.voice_config && Object.keys(project.voice_config).length > 0
                               ? '목소리 매핑 완료'
                               : '목소리 미지정'}
                           </Badge>

@@ -7,15 +7,7 @@ import { Avatar, AvatarFallback } from './ui/avatar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { Switch } from './ui/switch'
 import { Play, User, Wand2 } from 'lucide-react'
-
-interface VoicePreset {
-  id: string
-  name: string
-  gender: 'male' | 'female' | 'neutral'
-  age: string
-  style: string
-  language: string
-}
+import { getVoicePresets, type VoicePreset } from '@/features/projects/services/voice'
 
 interface Translation {
   id: string
@@ -28,21 +20,7 @@ interface VoiceSelectorProps {
   initialConfig?: Record<string, { voiceId?: string; preserveTone: boolean }>
 }
 
-const voicePresets: VoicePreset[] = [
-  { id: 'v1', name: '지민', gender: 'female', age: '20대', style: '친근한', language: '한국어' },
-  { id: 'v2', name: '준호', gender: 'male', age: '30대', style: '전문적', language: '한국어' },
-  { id: 'v3', name: '서연', gender: 'female', age: '30대', style: '뉴스 앵커', language: '한국어' },
-  { id: 'v4', name: '민수', gender: 'male', age: '40대', style: '차분한', language: '한국어' },
-  { id: 'v5', name: 'Emma', gender: 'female', age: '20s', style: 'Friendly', language: 'English' },
-  {
-    id: 'v6',
-    name: 'James',
-    gender: 'male',
-    age: '30s',
-    style: 'Professional',
-    language: 'English',
-  },
-]
+
 
 const styleOptions = [
   { value: 'news', label: '뉴스/공식' },
@@ -59,6 +37,14 @@ export function VoiceSelector({ translations, onVoiceChange, initialConfig }: Vo
     Record<string, { voiceId?: string; preserveTone: boolean; lastVoiceId?: string }>
   >({})
   const [selectedStyle, setSelectedStyle] = useState<string>('friendly')
+  const [voicePresets, setVoicePresets] = useState<VoicePreset[]>([])
+
+  // 보이스 프리셋 로드
+  useEffect(() => {
+    getVoicePresets()
+      .then(setVoicePresets)
+      .catch((err) => console.error('Failed to load voice presets:', err))
+  }, [])
 
   useEffect(() => {
     setSpeakerConfig((prev) => {
@@ -90,9 +76,7 @@ export function VoiceSelector({ translations, onVoiceChange, initialConfig }: Vo
     setSpeakerConfig((prev) => {
       const existing = prev[speaker] ?? { preserveTone: true }
       const next = updater(existing)
-      const merged = { ...prev, [speaker]: next }
-      onVoiceChange?.(speaker, { voiceId: next.voiceId, preserveTone: next.preserveTone })
-      return merged
+      return { ...prev, [speaker]: next }
     })
   }
 
@@ -102,25 +86,26 @@ export function VoiceSelector({ translations, onVoiceChange, initialConfig }: Vo
       voiceId,
       lastVoiceId: voiceId,
     }))
+    onVoiceChange?.(speaker, { voiceId, preserveTone: speakerConfig[speaker]?.preserveTone ?? false })
   }
 
   const handleToneToggle = (speaker: string, preserveTone: boolean) => {
-    updateSpeakerConfig(speaker, (existing) => {
-      if (preserveTone) {
-        return {
+    const existing = speakerConfig[speaker] ?? { preserveTone: true }
+    const nextConfig = preserveTone
+      ? {
           ...existing,
           preserveTone: true,
           lastVoiceId: existing.voiceId ?? existing.lastVoiceId,
           voiceId: undefined,
         }
-      }
-      const restoredVoice = existing.lastVoiceId ?? existing.voiceId
-      return {
-        ...existing,
-        preserveTone: false,
-        voiceId: restoredVoice,
-      }
-    })
+      : {
+          ...existing,
+          preserveTone: false,
+          voiceId: existing.lastVoiceId ?? existing.voiceId,
+        }
+    
+    updateSpeakerConfig(speaker, () => nextConfig)
+    onVoiceChange?.(speaker, { voiceId: nextConfig.voiceId, preserveTone: nextConfig.preserveTone })
   }
 
   return (
