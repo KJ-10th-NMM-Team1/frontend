@@ -4,9 +4,10 @@ import type { IPipelineStage } from '../types'
 
 interface PipelinesProps {
   pipelines: IPipelineStage[]
+  onStageEdit?(stageId: string): void
 }
 
-const Pipelines: FC<PipelinesProps> = ({ pipelines }) => {
+const Pipelines: FC<PipelinesProps> = ({ pipelines, onStageEdit }) => {
   return (
     <>
       {pipelines.map((pipeline) => (
@@ -18,17 +19,19 @@ const Pipelines: FC<PipelinesProps> = ({ pipelines }) => {
           progress={pipeline.progress}
           estimatedTime={pipeline.estimatedTime}
           onEdit={
-            pipeline.id === 'rag' || pipeline.id === 'outputs'
-              ? () => {} // handleStageEdit(pipeline.id)
+            pipeline.id === 'rag' || pipeline.id === 'voice_mapping' || pipeline.id === 'outputs'
+              ? () => onStageEdit?.(pipeline.id)
               : undefined
           }
-          showEditButton={pipeline.id === 'rag' || pipeline.id === 'outputs'}
+          showEditButton={pipeline.id === 'rag' || pipeline.id === 'voice_mapping' || pipeline.id === 'outputs'}
           editLabel={
             pipeline.id === 'rag'
               ? '번역가 지정'
-              : pipeline.id === 'outputs'
-                ? '산출물 확인'
-                : undefined
+              : pipeline.id === 'voice_mapping'
+                ? '보이스 설정'
+                : pipeline.id === 'outputs'
+                  ? '산출물 확인'
+                  : undefined
           }
         />
       ))}

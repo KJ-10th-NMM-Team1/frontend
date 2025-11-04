@@ -95,7 +95,15 @@ export interface Translation {
   }
 }
 
-export type ProjectStatus = 'upload_done' | 'stt' | 'mt' | 'tts' | 'pack' | 'publish' | 'done'
+export type ProjectStatus =
+  | 'upload_done'
+  | 'stt'
+  | 'mt'
+  | 'voice_mapping'
+  | 'tts'
+  | 'pack'
+  | 'publish'
+  | 'done'
 
 export interface Project {
   id: string

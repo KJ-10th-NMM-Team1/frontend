@@ -17,6 +17,7 @@ interface PipelineContainerProps {
   project: Project
   onOverallProgressChange?(prog: number): void
   onSummaryChange?(summary: PipelineSummary): void
+  onStageEdit?(stageId: string): void
 }
 
 const computeOverallProgress = (stages: IPipelineStage[]) => {
@@ -29,6 +30,7 @@ const PipelineContainer: FC<PipelineContainerProps> = ({
   project,
   onOverallProgressChange,
   onSummaryChange,
+  onStageEdit,
 }) => {
   const [pipelines, setPipelines] = useState<IPipelineStage[]>(() =>
     DEFAULT_STAGES.map((stage) => ({ ...stage }))
@@ -71,7 +73,7 @@ const PipelineContainer: FC<PipelineContainerProps> = ({
     onSummaryChange?.(summarizeStages(pipelines))
   }, [pipelines, onOverallProgressChange, onSummaryChange])
 
-  return <Pipelines pipelines={pipelines} />
+  return <Pipelines pipelines={pipelines} onStageEdit={onStageEdit} />
 }
 
 export default PipelineContainer

@@ -16,6 +16,7 @@ import { getVoiceConfig, updateVoiceConfig } from '@/features/projects/services/
 import { toast } from 'sonner'
 import PipelineContainer from '@/features/pipelines/components/PipelinesContainer'
 import type { PipelineSummary } from '@/features/pipelines/types'
+import { updatePipelineStage } from '@/features/pipelines/services'
 interface ProcessingDashboardProps {
   project: Project
   onBack: () => void
@@ -162,6 +163,9 @@ export function ProcessingDashboard({
       // voiceConfig를 그대로 전송 (VoiceMapping 형식)
       await updateVoiceConfig(project.id, voiceMappingDraft)
 
+      // voice_mapping 단계를 completed로 업데이트
+      await updatePipelineStage(project.id, 'voice_mapping', 'completed', 100)
+
       // 로컬 상태 업데이트
       const nextLanguages = languages.map((lang) =>
         lang.code === voiceMappingLanguageCode
@@ -178,10 +182,9 @@ export function ProcessingDashboard({
         onUpdateProject({ ...project, languages: nextLanguages })
       }
 
-      toast.success('보이스 설정이 저장되었습니다') // ← try 안으로 이동
+      toast.success('보이스 설정이 저장되었습니다')
       handleVoiceMappingCancel()
     } catch (error) {
-      // ← 이제 try와 연결됨
       console.error('보이스 설정 저장 실패:', error)
       toast.error('저장에 실패했습니다')
     }
@@ -266,7 +269,7 @@ export function ProcessingDashboard({
       startTime: '00:00:13',
       endTime: '00:00:18',
       text: 'Absolutely, it keeps every team aligned and efficient',
-      speaker: 'B',
+      speaker: 'A',
       confidence: 0.81,
     },
     {
@@ -274,7 +277,7 @@ export function ProcessingDashboard({
       startTime: '00:00:19',
       endTime: '00:00:25',
       text: "Let's dive into the details",
-      speaker: 'B',
+      speaker: 'A',
       confidence: 0.88,
     },
   ]
@@ -372,7 +375,7 @@ export function ProcessingDashboard({
       translated: '맞아요, 모든 팀이 정렬되고 효율적으로 움직이죠',
       confidence: 0.81,
       issues: [],
-      speaker: 'B',
+      speaker: 'A',
       segmentDurationSeconds: 5,
       originalSpeechSeconds: 4.3,
       translatedSpeechSeconds: 4.6,
@@ -384,7 +387,7 @@ export function ProcessingDashboard({
       translated: '자세한 내용을 살펴보겠습니다',
       confidence: 0.88,
       issues: [],
-      speaker: 'B',
+      speaker: 'A',
       segmentDurationSeconds: 6,
       originalSpeechSeconds: 4.8,
       translatedSpeechSeconds: 5.2,
@@ -783,6 +786,15 @@ export function ProcessingDashboard({
                     project={project}
                     onOverallProgressChange={setOverallProgress}
                     onSummaryChange={setPipelineSummary}
+                    onStageEdit={(stageId) => {
+                      if (stageId === 'voice_mapping') {
+                        handleOpenVoiceMappingPage(selectedLanguageCode)
+                      } else if (stageId === 'rag') {
+                        ragModal.open()
+                      } else if (stageId === 'outputs') {
+                        setCurrentView('outputs')
+                      }
+                    }}
                   />
 
                   {/* {stages.map((stage) => (
@@ -881,7 +893,7 @@ export function ProcessingDashboard({
                           </Badge>
                         )}
                       </div>
-                      {lang.dubbing && (
+                      {/* {lang.dubbing && (
                         <div className="mt-2">
                           <Button
                             variant="link"
@@ -895,7 +907,7 @@ export function ProcessingDashboard({
                             목소리 매핑 설정
                           </Button>
                         </div>
-                      )}
+                      )} */}
                     </div>
                   ))}
                 </CardContent>
