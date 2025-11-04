@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { getProjectStatusLabel, getProjectStatusStyle } from '@/features/projects/services/projects'
 import type { TranslatorAssignment } from '@/pages/TranslatorPage'
-import { Languages,AlertTriangle } from 'lucide-react'
+import { Languages, AlertTriangle } from 'lucide-react'
 
 interface TranslatorAssignmentCardProps {
   assignment: TranslatorAssignment
