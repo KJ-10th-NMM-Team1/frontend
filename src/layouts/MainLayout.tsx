@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Video } from 'lucide-react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { getApiUrl } from '@/config'
 
 export default function MainLayout() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null)
   const baseBtn =
     'rounded-md px-4 py-2 text-sm font-medium transition-colors border border-transparent'
@@ -32,7 +33,7 @@ export default function MainLayout() {
       }
     }
     checkLoginStatus()
-  }, [])
+  }, [location.pathname])
 
   const handleLogout = async () => {
     try {
@@ -83,7 +84,7 @@ export default function MainLayout() {
                 >
                   번역가 모드
                 </NavLink>
-                {isLoggedIn ? (
+                {isLoggedIn === null ? null : isLoggedIn ? (
                   <button onClick={handleLogout} className={`${baseBtn} ${inactiveBtn}`}>
                     로그아웃
                   </button>

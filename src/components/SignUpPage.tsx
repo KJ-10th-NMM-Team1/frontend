@@ -59,7 +59,7 @@ export const SignUpView = () => {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
+    <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold">회원가입</CardTitle>
@@ -159,8 +159,14 @@ export const SignUpView = () => {
         <CardFooter className="flex justify-center">
           <p className="text-sm text-gray-500">
             이미 계정이 있으신가요?{' '}
-            <Button variant="link" size="sm" className="p-0 h-auto">
-              <a href="/login">로그인</a>
+            <Button
+              variant="link"
+              size="sm"
+              type="button"
+              className="p-0 h-auto font-medium text-blue-600 hover:text-blue-500"
+              onClick={() => navigate('/login')}
+            >
+              로그인
             </Button>
           </p>
         </CardFooter>

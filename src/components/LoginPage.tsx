@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Button } from './ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from './ui/card'
-import { AlertCircle, Link, Loader2 } from 'lucide-react'
+import { AlertCircle, Loader2 } from 'lucide-react'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
 import { LogIn } from 'lucide-react'
@@ -132,9 +132,13 @@ export const LoginView = () => {
         <CardFooter className="flex justify-center">
           <p className="text-sm text-gray-500">
             계정이 없으신가요?{' '}
-            <Link className="font-medium text-blue-600 hover:text-blue-500" to="/signup">
+            <button
+              type="button"
+              onClick={() => navigate('/signup')}
+              className="font-medium text-blue-600 hover:text-blue-500 focus:outline-none"
+            >
               회원가입
-            </Link>
+            </button>
           </p>
         </CardFooter>
       </Card>
