@@ -43,7 +43,7 @@ export default function OwnerPage() {
 
         await uploadFile(upload_url, formData)
         await finishUpload({ object_key, project_id, ownerCode })
-        await loadProjects(ownerCode)
+        await loadProjects()
         toast.success('프로젝트 업로드 완료')
       } catch (error) {
         toast.error('업로드 중 오류가 발생했습니다.')
@@ -75,13 +75,22 @@ export default function OwnerPage() {
       />
     )
   }
+
+  const handleOpenCreateProject = () => {
+    if (!user) {
+      toast.error('로그인 후 이용 가능합니다.')
+      return
+    }
+    createProjectModal.open()
+  }
+
   return (
     <div className="space-y-6">
       <Tabs
         value={activeTab}
         onValueChange={(value) => setActiveTab(value as 'projects' | 'translators')}
       >
-        <TabsList className="w-full max-w-md">
+        <TabsList className="w-fit">
           <TabsTrigger value="projects" className="flex-1">
             프로젝트 관리
           </TabsTrigger>
@@ -92,11 +101,11 @@ export default function OwnerPage() {
 
         <TabsContent value="projects" className="space-y-6">
           <div className="flex justify-end">
-            <Button onClick={createProjectModal.open} className="gap-2">
+            <Button onClick={handleOpenCreateProject} className="gap-2">
               <Plus className="h-4 w-4" />새 프로젝트
             </Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {projects.map((project) => (
               <ProjectCard
                 key={project.id}
