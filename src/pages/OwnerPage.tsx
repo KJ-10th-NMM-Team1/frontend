@@ -20,14 +20,14 @@ export default function OwnerPage() {
   const [activeTab, setActiveTab] = useState<'projects' | 'translators'>('projects')
   const { user } = useAuth()
   const ownerCode = user?.code ?? ''
-  const loadProjects = useCallback(async (code: string) => {
-    const list = await fetchProjectsByOwner(code) // 새로 만든 API
+  const loadProjects = useCallback(async () => {
+    const list = await fetchProjectsByOwner() // 새로 만든 API
     setProjects(list)
   }, [])
 
   useEffect(() => {
     if (!ownerCode) return
-    void loadProjects(ownerCode)
+    void loadProjects()
   }, [ownerCode, loadProjects])
 
   const createProjectModal = useCreateProjectModal({
