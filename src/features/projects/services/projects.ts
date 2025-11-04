@@ -12,7 +12,7 @@ import type {
 } from '@/types'
 
 interface RawProject {
-  _id: string
+  id: string
   title?: string
   status?: string
   video_source?: string | null
@@ -168,7 +168,7 @@ const mapProject = (raw: RawProject): Project => {
   const derivedName = raw.title || raw.video_source?.split('/').pop() || '새 프로젝트'
 
   return {
-    id: raw._id,
+    id: raw.id,
     name: derivedName,
     languages,
     status,
