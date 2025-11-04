@@ -12,9 +12,11 @@ import type { STTEditorProps } from './STTEditor'
 import type { AdvancedTranslationEditorProps } from './AdvancedTranslationEditor'
 import { useModal } from '../hooks/useModal'
 import { TranslatorAssignmentDialog } from '@/features/translators/components/TranslatorAssignmentDialog'
+import { getVoiceConfig, updateVoiceConfig } from '@/features/projects/services/voice'
+import { toast } from 'sonner'
 import PipelineContainer from '@/features/pipelines/components/PipelinesContainer'
 import type { PipelineSummary } from '@/features/pipelines/types'
-
+import { updatePipelineStage } from '@/features/pipelines/services'
 interface ProcessingDashboardProps {
   project: Project
   onBack: () => void
@@ -28,6 +30,14 @@ export function ProcessingDashboard({
   onBack,
   onUpdateProject,
 }: ProcessingDashboardProps) {
+  // 디버깅: 프로젝트 데이터 확인
+  console.log('ProcessingDashboard loaded with project:', {
+    id: project.id,
+    name: project.name,
+    voice_config: project.voice_config,
+    has_voice_config: !!project.voice_config && Object.keys(project.voice_config).length > 0,
+  })
+
   const [languages, setLanguages] = useState<Language[]>(() =>
     project.languages.map((lang) => ({
       ...lang,
@@ -143,51 +153,80 @@ export function ProcessingDashboard({
     setCurrentView('dashboard')
   }, [setCurrentView])
 
-  const handleVoiceMappingSave = () => {
+  const handleVoiceMappingSave = async () => {
     if (!voiceMappingLanguageCode) {
       handleVoiceMappingCancel()
       return
     }
 
-    const nextLanguages = languages.map((lang) =>
-      lang.code === voiceMappingLanguageCode
-        ? {
-            ...lang,
-            voiceConfig: { ...voiceMappingDraft },
-          }
-        : lang
-    )
+    try {
+      // voiceConfig를 그대로 전송 (VoiceMapping 형식)
+      await updateVoiceConfig(project.id, voiceMappingDraft)
 
-    setLanguages(nextLanguages)
-    updateVoiceStageStatus(nextLanguages)
-    if (onUpdateProject) {
-      onUpdateProject({ ...project, languages: nextLanguages })
+      // voice_mapping 단계를 completed로 업데이트
+      await updatePipelineStage(project.id, 'voice_mapping', 'completed', 100)
+
+      // 로컬 상태 업데이트
+      const nextLanguages = languages.map((lang) =>
+        lang.code === voiceMappingLanguageCode
+          ? {
+              ...lang,
+              voiceConfig: { ...voiceMappingDraft },
+            }
+          : lang
+      )
+
+      setLanguages(nextLanguages)
+      updateVoiceStageStatus(nextLanguages)
+      if (onUpdateProject) {
+        onUpdateProject({ ...project, languages: nextLanguages })
+      }
+
+      toast.success('보이스 설정이 저장되었습니다')
+      handleVoiceMappingCancel()
+    } catch (error) {
+      console.error('보이스 설정 저장 실패:', error)
+      toast.error('저장에 실패했습니다')
     }
-    handleVoiceMappingCancel()
   }
+
   useEffect(() => {
-    const cloned = project.languages.map((lang) => ({
-      ...lang,
-      translationReviewed: lang.translationReviewed ?? false,
-      voiceConfig: lang.voiceConfig ?? {},
-    }))
-    setLanguages(cloned)
-    setSelectedLanguageCode(project.languages[0]?.code ?? '')
-    setVoiceMappingLanguageCode(null)
-    setVoiceMappingDraft({})
-    setAssignmentDraft(
-      cloned.reduce<Record<string, string>>((acc, lang) => {
-        if (lang.translator) acc[lang.code] = lang.translator
-        return acc
-      }, {})
-    )
-    setReviewDraft(
-      cloned.reduce<Record<string, boolean>>((acc, lang) => {
-        acc[lang.code] = lang.translationReviewed ?? false
-        return acc
-      }, {})
-    )
-    updateVoiceStageStatus(cloned)
+    const initializeProject = async () => {
+      const cloned = project.languages.map((lang) => ({
+        ...lang,
+        translationReviewed: lang.translationReviewed ?? false,
+        voiceConfig: lang.voiceConfig ?? {},
+      }))
+      setLanguages(cloned)
+      setSelectedLanguageCode(project.languages[0]?.code ?? '')
+      setVoiceMappingLanguageCode(null)
+      setVoiceMappingDraft({})
+      setAssignmentDraft(
+        cloned.reduce<Record<string, string>>((acc, lang) => {
+          if (lang.translator) acc[lang.code] = lang.translator
+          return acc
+        }, {})
+      )
+      setReviewDraft(
+        cloned.reduce<Record<string, boolean>>((acc, lang) => {
+          acc[lang.code] = lang.translationReviewed ?? false
+          return acc
+        }, {})
+      )
+      updateVoiceStageStatus(cloned)
+
+      // 서버에서 보이스 설정 로드
+      try {
+        const data = await getVoiceConfig(project.id)
+        if (data.voice_config && Object.keys(data.voice_config).length > 0) {
+          setVoiceMappingDraft(data.voice_config)
+        }
+      } catch (error) {
+        console.error('보이스 설정 로드 실패:', error)
+      }
+    }
+
+    initializeProject()
   }, [project, updateVoiceStageStatus])
 
   useEffect(() => {
@@ -230,7 +269,7 @@ export function ProcessingDashboard({
       startTime: '00:00:13',
       endTime: '00:00:18',
       text: 'Absolutely, it keeps every team aligned and efficient',
-      speaker: 'B',
+      speaker: 'A',
       confidence: 0.81,
     },
     {
@@ -238,7 +277,7 @@ export function ProcessingDashboard({
       startTime: '00:00:19',
       endTime: '00:00:25',
       text: "Let's dive into the details",
-      speaker: 'B',
+      speaker: 'A',
       confidence: 0.88,
     },
   ]
@@ -336,7 +375,7 @@ export function ProcessingDashboard({
       translated: '맞아요, 모든 팀이 정렬되고 효율적으로 움직이죠',
       confidence: 0.81,
       issues: [],
-      speaker: 'B',
+      speaker: 'A',
       segmentDurationSeconds: 5,
       originalSpeechSeconds: 4.3,
       translatedSpeechSeconds: 4.6,
@@ -348,7 +387,7 @@ export function ProcessingDashboard({
       translated: '자세한 내용을 살펴보겠습니다',
       confidence: 0.88,
       issues: [],
-      speaker: 'B',
+      speaker: 'A',
       segmentDurationSeconds: 6,
       originalSpeechSeconds: 4.8,
       translatedSpeechSeconds: 5.2,
@@ -747,6 +786,15 @@ export function ProcessingDashboard({
                     project={project}
                     onOverallProgressChange={setOverallProgress}
                     onSummaryChange={setPipelineSummary}
+                    onStageEdit={(stageId) => {
+                      if (stageId === 'voice_mapping') {
+                        handleOpenVoiceMappingPage(selectedLanguageCode)
+                      } else if (stageId === 'rag') {
+                        ragModal.open()
+                      } else if (stageId === 'outputs') {
+                        setCurrentView('outputs')
+                      }
+                    }}
                   />
 
                   {/* {stages.map((stage) => (
@@ -834,18 +882,18 @@ export function ProcessingDashboard({
                           <Badge
                             variant="outline"
                             className={`text-[10px] leading-tight px-1.5 py-0.5 ${
-                              lang.voiceConfig && Object.keys(lang.voiceConfig).length > 0
+                              project.voice_config && Object.keys(project.voice_config).length > 0
                                 ? 'border-blue-200 text-blue-600'
                                 : 'border-gray-200 text-gray-500'
                             }`}
                           >
-                            {lang.voiceConfig && Object.keys(lang.voiceConfig).length > 0
+                            {project.voice_config && Object.keys(project.voice_config).length > 0
                               ? '목소리 매핑 완료'
                               : '목소리 미지정'}
                           </Badge>
                         )}
                       </div>
-                      {lang.dubbing && (
+                      {/* {lang.dubbing && (
                         <div className="mt-2">
                           <Button
                             variant="link"
@@ -859,7 +907,7 @@ export function ProcessingDashboard({
                             목소리 매핑 설정
                           </Button>
                         </div>
-                      )}
+                      )} */}
                     </div>
                   ))}
                 </CardContent>

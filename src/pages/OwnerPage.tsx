@@ -62,7 +62,10 @@ export default function OwnerPage() {
     return (
       <ProcessingDashboard
         project={selectedProject}
-        onBack={() => setSelectedProject(null)}
+        onBack={async () => {
+          await loadProjects()
+          setSelectedProject(null)
+        }}
         onUpdateProject={(updated) => {
           setProjects((prev) =>
             prev.map((project) => (project.id === updated.id ? updated : project))

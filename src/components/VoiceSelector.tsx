@@ -7,15 +7,7 @@ import { Avatar, AvatarFallback } from './ui/avatar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { Switch } from './ui/switch'
 import { Play, User, Wand2 } from 'lucide-react'
-
-interface VoicePreset {
-  id: string
-  name: string
-  gender: 'male' | 'female' | 'neutral'
-  age: string
-  style: string
-  language: string
-}
+import { getVoicePresets, type VoicePreset } from '@/features/projects/services/voice'
 
 interface Translation {
   id: string
@@ -28,22 +20,6 @@ interface VoiceSelectorProps {
   initialConfig?: Record<string, { voiceId?: string; preserveTone: boolean }>
 }
 
-const voicePresets: VoicePreset[] = [
-  { id: 'v1', name: '지민', gender: 'female', age: '20대', style: '친근한', language: '한국어' },
-  { id: 'v2', name: '준호', gender: 'male', age: '30대', style: '전문적', language: '한국어' },
-  { id: 'v3', name: '서연', gender: 'female', age: '30대', style: '뉴스 앵커', language: '한국어' },
-  { id: 'v4', name: '민수', gender: 'male', age: '40대', style: '차분한', language: '한국어' },
-  { id: 'v5', name: 'Emma', gender: 'female', age: '20s', style: 'Friendly', language: 'English' },
-  {
-    id: 'v6',
-    name: 'James',
-    gender: 'male',
-    age: '30s',
-    style: 'Professional',
-    language: 'English',
-  },
-]
-
 const styleOptions = [
   { value: 'news', label: '뉴스/공식' },
   { value: 'friendly', label: '친근한' },
@@ -55,10 +31,21 @@ export function VoiceSelector({ translations, onVoiceChange, initialConfig }: Vo
   const speakers = Array.from(
     new Set(translations.map((t) => t.speaker).filter(Boolean))
   ) as string[]
+
+  // 화자가 없으면 기본 화자 1명 추가
+  const displaySpeakers = speakers.length > 0 ? speakers : ['A']
   const [speakerConfig, setSpeakerConfig] = useState<
     Record<string, { voiceId?: string; preserveTone: boolean; lastVoiceId?: string }>
   >({})
   const [selectedStyle, setSelectedStyle] = useState<string>('friendly')
+  const [voicePresets, setVoicePresets] = useState<VoicePreset[]>([])
+
+  // 보이스 프리셋 로드
+  useEffect(() => {
+    getVoicePresets()
+      .then(setVoicePresets)
+      .catch((err) => console.error('Failed to load voice presets:', err))
+  }, [])
 
   useEffect(() => {
     setSpeakerConfig((prev) => {
@@ -66,7 +53,7 @@ export function VoiceSelector({ translations, onVoiceChange, initialConfig }: Vo
         string,
         { voiceId?: string; preserveTone: boolean; lastVoiceId?: string }
       > = {}
-      speakers.forEach((speaker) => {
+      displaySpeakers.forEach((speaker) => {
         const incoming = initialConfig?.[speaker]
         const existing = prev[speaker]
         next[speaker] = {
@@ -77,7 +64,7 @@ export function VoiceSelector({ translations, onVoiceChange, initialConfig }: Vo
       })
       return next
     })
-  }, [initialConfig, speakers])
+  }, [initialConfig, displaySpeakers])
 
   const updateSpeakerConfig = (
     speaker: string,
@@ -90,9 +77,7 @@ export function VoiceSelector({ translations, onVoiceChange, initialConfig }: Vo
     setSpeakerConfig((prev) => {
       const existing = prev[speaker] ?? { preserveTone: true }
       const next = updater(existing)
-      const merged = { ...prev, [speaker]: next }
-      onVoiceChange?.(speaker, { voiceId: next.voiceId, preserveTone: next.preserveTone })
-      return merged
+      return { ...prev, [speaker]: next }
     })
   }
 
@@ -102,25 +87,29 @@ export function VoiceSelector({ translations, onVoiceChange, initialConfig }: Vo
       voiceId,
       lastVoiceId: voiceId,
     }))
+    onVoiceChange?.(speaker, {
+      voiceId,
+      preserveTone: speakerConfig[speaker]?.preserveTone ?? false,
+    })
   }
 
   const handleToneToggle = (speaker: string, preserveTone: boolean) => {
-    updateSpeakerConfig(speaker, (existing) => {
-      if (preserveTone) {
-        return {
+    const existing = speakerConfig[speaker] ?? { preserveTone: true }
+    const nextConfig = preserveTone
+      ? {
           ...existing,
           preserveTone: true,
           lastVoiceId: existing.voiceId ?? existing.lastVoiceId,
           voiceId: undefined,
         }
-      }
-      const restoredVoice = existing.lastVoiceId ?? existing.voiceId
-      return {
-        ...existing,
-        preserveTone: false,
-        voiceId: restoredVoice,
-      }
-    })
+      : {
+          ...existing,
+          preserveTone: false,
+          voiceId: existing.lastVoiceId ?? existing.voiceId,
+        }
+
+    updateSpeakerConfig(speaker, () => nextConfig)
+    onVoiceChange?.(speaker, { voiceId: nextConfig.voiceId, preserveTone: nextConfig.preserveTone })
   }
 
   return (
@@ -222,105 +211,98 @@ export function VoiceSelector({ translations, onVoiceChange, initialConfig }: Vo
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {speakers.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <User className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                  <p className="text-sm">감지된 화자가 없습니다</p>
-                </div>
-              ) : (
-                speakers.map((speaker) => {
-                  const selectedVoice = speakerConfig[speaker]?.voiceId
-                  const preserveTone = speakerConfig[speaker]?.preserveTone ?? true
-                  const voice = voicePresets.find((v) => v.id === selectedVoice)
+              {displaySpeakers.map((speaker) => {
+                const selectedVoice = speakerConfig[speaker]?.voiceId
+                const preserveTone = speakerConfig[speaker]?.preserveTone ?? true
+                const voice = voicePresets.find((v) => v.id === selectedVoice)
 
-                  return (
-                    <Card key={speaker} className="border-2">
-                      <CardContent className="p-4">
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
+                return (
+                  <Card key={speaker} className="border-2">
+                    <CardContent className="p-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Avatar className="w-8 h-8">
+                              <AvatarFallback className="bg-gray-100">{speaker}</AvatarFallback>
+                            </Avatar>
+                            <span>화자 {speaker}</span>
+                          </div>
+                          <Badge variant="secondary">
+                            {translations.filter((t) => t.speaker === speaker).length}개 문장
+                          </Badge>
+                        </div>
+
+                        <Select
+                          disabled={preserveTone}
+                          value={selectedVoice}
+                          onValueChange={(value) => handleVoiceSelect(speaker, value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="보이스 선택" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {voicePresets.map((v) => (
+                              <SelectItem key={v.id} value={v.id}>
+                                {v.name} ({v.style})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        <div className="flex items-center justify-between bg-gray-50 p-3 rounded">
+                          <div>
+                            <p className="text-sm font-medium">원문 톤 유지</p>
+                            <p className="text-xs text-gray-500">
+                              원본 발화자의 톤과 억양을 최대한 반영합니다
+                            </p>
+                          </div>
+                          <Switch
+                            checked={preserveTone}
+                            onCheckedChange={(checked) => handleToneToggle(speaker, checked)}
+                          />
+                        </div>
+
+                        {preserveTone && (
+                          <div className="flex items-center justify-between bg-blue-50 p-3 rounded text-xs text-blue-700">
+                            원문 화자의 톤을 그대로 클로닝하여 사용합니다.
+                          </div>
+                        )}
+
+                        {!preserveTone && voice && (
+                          <div className="flex items-center justify-between bg-gray-50 p-3 rounded">
                             <div className="flex items-center gap-2">
                               <Avatar className="w-8 h-8">
-                                <AvatarFallback className="bg-gray-100">{speaker}</AvatarFallback>
+                                <AvatarFallback
+                                  className={
+                                    voice.gender === 'female'
+                                      ? 'bg-pink-100 text-pink-700'
+                                      : 'bg-blue-100 text-blue-700'
+                                  }
+                                >
+                                  <User className="w-4 h-4" />
+                                </AvatarFallback>
                               </Avatar>
-                              <span>화자 {speaker}</span>
-                            </div>
-                            <Badge variant="secondary">
-                              {translations.filter((t) => t.speaker === speaker).length}개 문장
-                            </Badge>
-                          </div>
-
-                          <Select
-                            disabled={preserveTone}
-                            value={selectedVoice}
-                            onValueChange={(value) => handleVoiceSelect(speaker, value)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="보이스 선택" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {voicePresets.map((v) => (
-                                <SelectItem key={v.id} value={v.id}>
-                                  {v.name} ({v.style})
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-
-                          <div className="flex items-center justify-between bg-gray-50 p-3 rounded">
-                            <div>
-                              <p className="text-sm font-medium">원문 톤 유지</p>
-                              <p className="text-xs text-gray-500">
-                                원본 발화자의 톤과 억양을 최대한 반영합니다
-                              </p>
-                            </div>
-                            <Switch
-                              checked={preserveTone}
-                              onCheckedChange={(checked) => handleToneToggle(speaker, checked)}
-                            />
-                          </div>
-
-                          {preserveTone && (
-                            <div className="flex items-center justify-between bg-blue-50 p-3 rounded text-xs text-blue-700">
-                              원문 화자의 톤을 그대로 클로닝하여 사용합니다.
-                            </div>
-                          )}
-
-                          {!preserveTone && voice && (
-                            <div className="flex items-center justify-between bg-gray-50 p-3 rounded">
-                              <div className="flex items-center gap-2">
-                                <Avatar className="w-8 h-8">
-                                  <AvatarFallback
-                                    className={
-                                      voice.gender === 'female'
-                                        ? 'bg-pink-100 text-pink-700'
-                                        : 'bg-blue-100 text-blue-700'
-                                    }
-                                  >
-                                    <User className="w-4 h-4" />
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div className="text-sm">
-                                  <p>{voice.name}</p>
-                                  <p className="text-xs text-gray-500">{voice.style}</p>
-                                </div>
+                              <div className="text-sm">
+                                <p>{voice.name}</p>
+                                <p className="text-xs text-gray-500">{voice.style}</p>
                               </div>
-                              <Button variant="ghost" size="sm" className="gap-1">
-                                <Play className="w-3 h-3" />
-                                샘플
-                              </Button>
                             </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )
-                })
-              )}
+                            <Button variant="ghost" size="sm" className="gap-1">
+                              <Play className="w-3 h-3" />
+                              샘플
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })}
             </div>
           </CardContent>
         </Card>
 
-        {speakers.length > 0 && (
+        {displaySpeakers.length > 0 && (
           <Card className="mt-4">
             <CardHeader>
               <CardTitle className="text-base">프리뷰 설정</CardTitle>

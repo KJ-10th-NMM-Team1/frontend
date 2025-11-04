@@ -49,6 +49,7 @@ export const PIPELINE_STAGE_ORDER = [
   'stt',
   'mt',
   'rag',
+  'voice_mapping', // voice 파이프 라인 추가
   'tts',
   'packaging',
   'outputs',
@@ -74,18 +75,24 @@ export const PIPELINE_STAGE_META: Record<string, PipelineStageMeta> = {
     description: 'AI 교정 결과를 검토하고, 번역가를 지정해 상세 번역을 요청하세요',
     estimatedTime: '3분',
   },
+  voice_mapping: {
+    // voice 파이프 라인 추가
+    title: '5. 보이스 매핑',
+    description: '화자별 보이스를 설정하고 톤 유지 여부를 결정합니다',
+    estimatedTime: '1분',
+  },
   tts: {
-    title: '5. TTS (Text to Speech)',
+    title: '6. TTS (Text to Speech)',
     description: '번역된 텍스트를 음성으로 변환합니다',
     estimatedTime: '5분',
   },
   packaging: {
-    title: '6. 패키징',
+    title: '7. 패키징',
     description: '더빙된 음성과 자막을 영상에 합성합니다',
     estimatedTime: '2분',
   },
   outputs: {
-    title: '7. 산출물 점검 및 Publish',
+    title: '8. 산출물 점검 및 Publish',
     description: '완료된 산출물을 검수하고 배포 설정을 확정합니다',
   },
 }
