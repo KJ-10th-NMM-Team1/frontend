@@ -17,10 +17,7 @@ const Pipelines: FC<PipelinesProps> = ({ pipelines, onStageEdit }) => {
       {pipelines.map((pipeline) => {
         // voice_mapping은 RAG 완료 후에만 활성화
         const canEditVoiceMapping = pipeline.id === 'voice_mapping' && isRagCompleted
-        const canEdit = 
-          pipeline.id === 'rag' || 
-          canEditVoiceMapping || 
-          pipeline.id === 'outputs'
+        const canEdit = pipeline.id === 'rag' || canEditVoiceMapping || pipeline.id === 'outputs'
 
         return (
           <PipelineStage
