@@ -17,7 +17,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const me = await fetchCurrentUser()
       setUser(me)
     } catch (error) {
-      console.error('Failed to fetch current user', error)
+      if (error instanceof Error && error.message.includes('401')) {
+        // 로그인 안 된 상태 → 조용히 무시
+      } else {
+        console.warn('Failed to fetch current user', error)
+      }
       setUser(null)
     } finally {
       setIsLoading(false)

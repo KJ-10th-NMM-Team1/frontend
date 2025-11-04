@@ -1,6 +1,4 @@
-import * as React from 'react'
 import { Button } from '@/components/ui/button'
-import type { useCreateProjectForm } from '../hooks/useCreateProjectForm'
 import {
   ModalBody,
   ModalContainer,
@@ -8,6 +6,8 @@ import {
   ModalHeaderSection,
   ModalRoot,
 } from '@/components/ui/modal'
+import * as React from 'react'
+import type { useCreateProjectForm } from '../hooks/useCreateProjectForm'
 
 interface CreateProjectModalProps {
   isOpen: boolean
@@ -35,7 +35,7 @@ export function CreateProjectModal({ isOpen, onClose, form, onSubmit }: CreatePr
 
   return (
     <ModalRoot open={isOpen} onOpenChange={(open) => (!open ? handleClose() : undefined)}>
-      <ModalContainer>
+      <ModalContainer className="w-full sm:w-[520px] overflow-hidden">
         <form
           onSubmit={handleSubmit(async () => {
             await onSubmit()
@@ -62,7 +62,7 @@ export function CreateProjectModal({ isOpen, onClose, form, onSubmit }: CreatePr
                   </label>
                 ) : (
                   <div className="flex items-center justify-between gap-4">
-                    <span className="truncate text-sm">{videoFile.name}</span>
+                    <span className="text-sm break-all">{videoFile.name}</span>
                     <Button type="button" variant="ghost" size="sm" onClick={handleRemoveFile}>
                       파일 제거
                     </Button>

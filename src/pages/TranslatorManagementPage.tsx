@@ -23,8 +23,10 @@ import {
   updateTranslator,
   type Translator,
 } from '@/features/translators/services/translators'
+import { useAuth } from '@/hooks/useAuth'
 
 export default function TranslatorManagementPage() {
+  const { user } = useAuth()
   const [translators, setTranslators] = useState<Translator[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -79,6 +81,10 @@ export default function TranslatorManagementPage() {
   })
 
   const handleOpenCreateModal = () => {
+    if (!user) {
+      toast.error('로그인 후 이용 가능합니다.')
+      return
+    }
     createTranslatorModal.form.reset()
     createTranslatorModal.open()
   }
