@@ -23,6 +23,7 @@ interface RawProject {
   job_status?: string
   segments?: RawSegment[]
   segment_assets_prefix?: string
+  issue_count?: number
 }
 
 interface RawSegmentIssue extends Record<string, unknown> {
@@ -56,13 +57,14 @@ interface RawSegment {
 }
 
 const projectStatusMap: Record<string, ProjectStatus> = {
-  upload_done: 'upload_done',
-  stt: 'stt',
-  mt: 'mt',
-  tts: 'tts',
-  pack: 'pack',
-  publish: 'publish',
-  done: 'done',
+  pending: 'uploading',
+  upload_done: 'uploading',
+  processing: 'processing',
+  in_progress: 'processing',
+  completed: 'completed',
+  done: 'completed',
+  failed: 'failed',
+  review: 'review',
 }
 
 const languageStatusMap: Record<string, LanguageStatus> = {
@@ -178,6 +180,7 @@ const mapProject = (raw: RawProject): Project => {
     segments: undefined,
     jobId: raw.job_id,
     jobStatus: raw.job_status as Project['jobStatus'],
+    issue_count: raw.issue_count,
   }
 }
 
@@ -212,4 +215,36 @@ export const fetchProjectsByOwner = async (): Promise<Project[]> => {
   })
   const data = await handleResponse<RawProject[]>(res)
   return data.map(mapProject)
+}
+
+export const getProjectStatusLabel = (status: string) => {
+  switch (status) {
+    case 'uploading':
+      return '업로드'
+    case 'processing':
+      return '처리 중'
+    case 'completed':
+      return '완료'
+    case 'failed':
+      return '실패'
+    case 'review':
+      return '검수대기'
+    default:
+      return status
+  }
+}
+
+export const getProjectStatusStyle = (status: string) => {
+  switch (status) {
+    case 'uploading':
+      return 'bg-blue-100 text-blue-700'
+    case 'processing':
+      return 'bg-yellow-100 text-yellow-700'
+    case 'completed':
+      return 'bg-green-100 text-green-700'
+    case 'failed':
+      return 'bg-red-100 text-red-700'
+    default:
+      return 'bg-gray-100 text-gray-700'
+  }
 }

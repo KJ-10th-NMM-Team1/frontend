@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft } from 'lucide-react'
 import { fetchProjectDetail } from '@/features/projects/services/projects'
+import type { TranslatorAssignment } from '@/pages/TranslatorPage'
 import type {
   ProjectDetail,
   ProjectSegment,
@@ -8,9 +7,8 @@ import type {
   TranslationIssue,
   TranslationIssueType,
 } from '@/types'
+import { useEffect, useMemo, useState } from 'react'
 import { AdvancedTranslationEditor } from './AdvancedTranslationEditor'
-import { Button } from './ui/button'
-import type { TranslatorAssignment } from '@/pages/TranslatorPage'
 
 interface TranslatorEditorShellProps {
   assignment: TranslatorAssignment
@@ -93,6 +91,8 @@ export function TranslatorEditorShell({ assignment, onBack }: TranslatorEditorSh
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // console.log(assignment)
+
   useEffect(() => {
     let isMounted = true
     setIsLoading(true)
@@ -133,15 +133,7 @@ export function TranslatorEditorShell({ assignment, onBack }: TranslatorEditorSh
       <header className="bg-white border-b sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" onClick={onBack} className="gap-2">
-              <ArrowLeft className="w-4 h-4" />
-              할당 목록
-            </Button>
-            <div className="h-6 w-px bg-gray-300" />
-            <div>
-              <h2 className="text-lg font-semibold">{pageTitle}</h2>
-              <p className="text-xs text-gray-500">번역가: {assignment.translator || '미지정'}</p>
-            </div>
+            <h2 className="text-lg font-semibold">{pageTitle}</h2>
           </div>
           {project?.segmentAssetsPrefix ? (
             <span className="text-xs text-gray-400"> Assets: {project.segmentAssetsPrefix}</span>

@@ -95,7 +95,7 @@ export interface Translation {
   }
 }
 
-export type ProjectStatus = 'uploading' | 'processing' | 'completed' | 'failed'
+export type ProjectStatus = 'uploading' | 'processing' | 'completed' | 'failed' | 'review'
 
 export interface Project {
   id: string
@@ -117,6 +117,7 @@ export interface Project {
   jobMetadata?: Record<string, unknown>
   segmentAssetsPrefix?: string
   segments?: ProjectSegment[]
+  issue_count?: number
 }
 
 export type PipelineStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'review'

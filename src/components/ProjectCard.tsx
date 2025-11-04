@@ -1,3 +1,4 @@
+import { getProjectStatusLabel, getProjectStatusStyle } from '@/features/projects/services/projects'
 import { Clock, Globe, MoreVertical, Video } from 'lucide-react'
 import type { Project } from '../types'
 import { Badge } from './ui/badge'
@@ -8,36 +9,6 @@ import { Progress } from './ui/progress'
 interface ProjectCardProps {
   project: Project
   onClick?: () => void
-}
-
-const getProjectStatusLabel = (status: string) => {
-  switch (status) {
-    case 'uploading':
-      return '업로드 중'
-    case 'processing':
-      return '처리 중'
-    case 'completed':
-      return '완료'
-    case 'failed':
-      return '실패'
-    default:
-      return status
-  }
-}
-
-const getProjectStatusStyle = (status: string) => {
-  switch (status) {
-    case 'uploading':
-      return 'bg-blue-100 text-blue-700'
-    case 'processing':
-      return 'bg-yellow-100 text-yellow-700'
-    case 'completed':
-      return 'bg-green-100 text-green-700'
-    case 'failed':
-      return 'bg-red-100 text-red-700'
-    default:
-      return 'bg-gray-100 text-gray-700'
-  }
 }
 
 export function ProjectCard({ project, onClick }: ProjectCardProps) {
