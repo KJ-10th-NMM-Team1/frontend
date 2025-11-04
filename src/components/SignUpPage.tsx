@@ -45,7 +45,8 @@ export const SignUpView = () => {
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.detail || '회원가입에 실패했습니다.')
+        console.log(errorData)
+        throw new Error('회원가입에 실패했습니다.')
       }
 
       // const data = await response.json();

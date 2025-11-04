@@ -7,6 +7,7 @@ import { Label } from './ui/label'
 import { LogIn } from 'lucide-react'
 import { getApiUrl } from '@/config'
 import { useNavigate } from 'react-router-dom'
+import { GoogleLoginButton } from './GoogleLoginButton'
 
 export const LoginView = () => {
   const navigate = useNavigate()
@@ -60,6 +61,40 @@ export const LoginView = () => {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleGoogleSignIn = async (credential: string) => {
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const response = await fetch(getApiUrl('api/auth/google/login'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ id_token: credential }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null)
+        const message =
+          (errorData && (errorData.detail || errorData.message)) ||
+          '구글 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.'
+        throw new Error(message)
+      }
+
+      navigate('/', { replace: true })
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : '구글 로그인 중 알 수 없는 오류가 발생했습니다.'
+      )
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleGoogleError = (message: string) => {
+    setError(message)
   }
 
   return (
@@ -126,6 +161,19 @@ export const LoginView = () => {
               )}
             </Button>
           </form>
+
+          <div className="mt-6 space-y-4">
+            <div className="flex items-center gap-2 text-xs text-gray-400">
+              <span className="h-px flex-1 bg-gray-200" />
+              <span>또는</span>
+              <span className="h-px flex-1 bg-gray-200" />
+            </div>
+            <GoogleLoginButton
+              onToken={handleGoogleSignIn}
+              onError={handleGoogleError}
+              disabled={isLoading}
+            />
+          </div>
         </CardContent>
 
         {/* 하단 링크 */}
