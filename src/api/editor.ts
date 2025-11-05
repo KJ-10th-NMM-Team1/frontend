@@ -1,6 +1,18 @@
 // frontend/src/api/editor.ts
 export type PreviewStatus = 'pending' | 'processing' | 'completed' | 'failed'
 
+const normalizeStatus = (s?: string): PreviewStatus => {
+  const v = (s ?? '').toLowerCase()
+  if (v === 'done' || v === 'completed') return 'completed'
+  if (v === 'in_progress' || v === 'queued' || v === 'processing') return 'processing'
+  if (v === 'failed') return 'failed'
+  return 'processing'
+}
+
+const readBodyText = async (res: Response) => {
+  try { return await res.text() } catch { return '' }
+}
+
 export async function createSegmentPreview(
   projectId: string,
   languageCode: string,
@@ -14,7 +26,9 @@ export async function createSegmentPreview(
   updatedAt?: string
 }> {
   const res = await fetch(
-    `/api/editor/projects/${encodeURIComponent(projectId)}/languages/${encodeURIComponent(languageCode)}/segments/${encodeURIComponent(segmentId)}/preview`,
+    `/api/editor/projects/${encodeURIComponent(projectId)}/languages/${encodeURIComponent(
+      languageCode
+    )}/segments/${encodeURIComponent(segmentId)}/preview`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -22,19 +36,36 @@ export async function createSegmentPreview(
     }
   )
   if (!res.ok) {
-    const msg = await res.text().catch(() => '')
+    const msg = await readBodyText(res)
     throw new Error(`Create preview failed: ${res.status} ${msg}`)
   }
-  return res.json()
+
+  const data: any = await res.json()
+  return {
+    previewId: data.previewId ?? data.preview_id ?? data.id ?? data.jobId ?? data.job_id,
+    status: normalizeStatus(data.status),
+    videoUrl: data.videoUrl ?? data.video_url,
+    audioUrl: data.audioUrl ?? data.audio_url,
+    updatedAt: data.updatedAt ?? data.updated_at,
+  }
 }
 
 export async function getSegmentPreview(
   previewId: string
 ): Promise<{ status: PreviewStatus; videoUrl?: string; audioUrl?: string; updatedAt?: string }> {
-  const res = await fetch(`/api/editor/preview/${encodeURIComponent(previewId)}`, { method: 'GET' })
+  const res = await fetch(`/api/editor/preview/${encodeURIComponent(previewId)}`, {
+    method: 'GET',
+  })
   if (!res.ok) {
-    const msg = await res.text().catch(() => '')
+    const msg = await readBodyText(res)
     throw new Error(`Get preview failed: ${res.status} ${msg}`)
   }
-  return res.json()
+
+  const data: any = await res.json()
+  return {
+    status: normalizeStatus(data.status),
+    videoUrl: data.videoUrl ?? data.video_url,
+    audioUrl: data.audioUrl ?? data.audio_url,
+    updatedAt: data.updatedAt ?? data.updated_at,
+  }
 }
