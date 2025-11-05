@@ -668,6 +668,7 @@ export function ProcessingDashboard({
 
           <VoiceSelector
             translations={translations}
+            projectId={project.id}
             initialConfig={voiceMappingDraft}
             onVoiceChange={handleVoiceMappingDraftChange}
           />

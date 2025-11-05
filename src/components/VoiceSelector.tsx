@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Button } from './ui/button'
 import { Badge } from './ui/badge'
@@ -6,8 +6,9 @@ import { ScrollArea } from './ui/scroll-area'
 import { Avatar, AvatarFallback } from './ui/avatar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { Switch } from './ui/switch'
-import { Play, User, Wand2 } from 'lucide-react'
-import { getVoicePresets, type VoicePreset } from '@/features/projects/services/voice'
+import { Play, User, Wand2, Upload } from 'lucide-react'
+import { getVoicePresets, type VoicePreset, uploadVoiceFile, getCustomVoices, type CustomVoice } from '@/features/projects/services/voice'
+import { toast } from 'sonner'
 
 interface Translation {
   id: string
@@ -16,6 +17,7 @@ interface Translation {
 
 interface VoiceSelectorProps {
   translations: Translation[]
+  projectId: string
   onVoiceChange?: (speaker: string, config: { voiceId?: string; preserveTone: boolean }) => void
   initialConfig?: Record<string, { voiceId?: string; preserveTone: boolean }>
 }
@@ -27,7 +29,7 @@ const styleOptions = [
   { value: 'energetic', label: '활기찬' },
 ]
 
-export function VoiceSelector({ translations, onVoiceChange, initialConfig }: VoiceSelectorProps) {
+export function VoiceSelector({ translations, projectId, onVoiceChange, initialConfig }: VoiceSelectorProps) {
   const speakers = Array.from(
     new Set(translations.map((t) => t.speaker).filter(Boolean))
   ) as string[]
@@ -39,13 +41,21 @@ export function VoiceSelector({ translations, onVoiceChange, initialConfig }: Vo
   >({})
   const [selectedStyle, setSelectedStyle] = useState<string>('friendly')
   const [voicePresets, setVoicePresets] = useState<VoicePreset[]>([])
+  const [customVoices, setCustomVoices] = useState<CustomVoice[]>([])
+  const [isUploading, setIsUploading] = useState(false)
+  const [activeTab, setActiveTab] = useState<'preset' | 'custom'>('preset')
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // 보이스 프리셋 로드
+  // 보이스 프리셋 및 커스텀 보이스 로드
   useEffect(() => {
     getVoicePresets()
       .then(setVoicePresets)
       .catch((err) => console.error('Failed to load voice presets:', err))
-  }, [])
+    
+    getCustomVoices(projectId)
+      .then(setCustomVoices)
+      .catch((err) => console.error('Failed to load custom voices:', err))
+  }, [projectId])
 
   useEffect(() => {
     setSpeakerConfig((prev) => {
@@ -112,71 +122,156 @@ export function VoiceSelector({ translations, onVoiceChange, initialConfig }: Vo
     onVoiceChange?.(speaker, { voiceId: nextConfig.voiceId, preserveTone: nextConfig.preserveTone })
   }
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // 오디오 파일 검증
+    if (!file.type.startsWith('audio/')) {
+      toast.error('오디오 파일만 업로드 가능합니다')
+      return
+    }
+
+    setIsUploading(true)
+    try {
+      await uploadVoiceFile(file, projectId)
+      toast.success('음성 파일이 업로드되었습니다')
+      // 커스텀 보이스 목록 새로고침
+      const voices = await getCustomVoices(projectId)
+      setCustomVoices(voices)
+    } catch (error) {
+      console.error('Voice upload failed:', error)
+      toast.error('음성 파일 업로드에 실패했습니다')
+    } finally {
+      setIsUploading(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
+  }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* 왼쪽: 보이스 프리셋 */}
+      {/* 왼쪽: 보이스 선택 */}
       <div className="space-y-4">
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base">보이스 프리셋</CardTitle>
-              <Select value={selectedStyle} onValueChange={setSelectedStyle}>
-                <SelectTrigger className="w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {styleOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex items-center justify-between mb-3">
+              <CardTitle className="text-base">보이스 선택</CardTitle>
+              {activeTab === 'preset' && (
+                <Select value={selectedStyle} onValueChange={setSelectedStyle}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {styleOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+            <div className="flex gap-2 border-b">
+              <button
+                onClick={() => setActiveTab('preset')}
+                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                  activeTab === 'preset'
+                    ? 'border-b-2 border-blue-500 text-blue-600'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                프리셋
+              </button>
+              <button
+                onClick={() => setActiveTab('custom')}
+                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                  activeTab === 'custom'
+                    ? 'border-b-2 border-blue-500 text-blue-600'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                커스텀 ({customVoices.length})
+              </button>
             </div>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[calc(90vh-400px)]">
-              <div className="grid gap-3">
-                {voicePresets.map((voice) => (
-                  <Card
-                    key={voice.id}
-                    className="hover:border-blue-300 transition-colors cursor-pointer"
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="w-12 h-12">
-                          <AvatarFallback
-                            className={
-                              voice.gender === 'female'
-                                ? 'bg-pink-100 text-pink-700'
-                                : 'bg-blue-100 text-blue-700'
-                            }
-                          >
-                            <User className="w-5 h-5" />
-                          </AvatarFallback>
-                        </Avatar>
+            <ScrollArea className="h-[calc(90vh-500px)]">
+              {activeTab === 'preset' && (
+                <div className="grid gap-3">
+                  {voicePresets.map((voice) => (
+                    <Card
+                      key={voice.id}
+                      className="hover:border-blue-300 transition-colors cursor-pointer"
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="w-12 h-12">
+                            <AvatarFallback
+                              className={
+                                voice.gender === 'female'
+                                  ? 'bg-pink-100 text-pink-700'
+                                  : 'bg-blue-100 text-blue-700'
+                              }
+                            >
+                              <User className="w-5 h-5" />
+                            </AvatarFallback>
+                          </Avatar>
 
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span>{voice.name}</span>
-                            <Badge variant="outline" className="text-xs">
-                              {voice.age}
-                            </Badge>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span>{voice.name}</span>
+                              <Badge variant="outline" className="text-xs">
+                                {voice.age}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-gray-500">
+                              {voice.style} • {voice.language}
+                            </p>
                           </div>
-                          <p className="text-xs text-gray-500">
-                            {voice.style} • {voice.language}
-                          </p>
-                        </div>
 
-                        <Button variant="ghost" size="sm" className="gap-1">
-                          <Play className="w-3 h-3" />
-                          샘플
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                          <Button variant="ghost" size="sm" className="gap-1">
+                            <Play className="w-3 h-3" />
+                            샘플
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+              {activeTab === 'custom' && (
+                <div className="grid gap-3">
+                  {customVoices.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500 text-sm">
+                      업로드된 커스텀 보이스가 없습니다
+                    </div>
+                  ) : (
+                    customVoices.map((voice) => (
+                      <Card key={voice.id} className="hover:border-blue-300 transition-colors cursor-pointer">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="w-12 h-12">
+                              <AvatarFallback className="bg-purple-100 text-purple-700">
+                                <Wand2 className="w-5 h-5" />
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <p className="font-medium">{voice.name}</p>
+                              <p className="text-xs text-gray-500">커스텀 보이스</p>
+                            </div>
+                            <Button variant="ghost" size="sm" className="gap-1">
+                              <Play className="w-3 h-3" />
+                              샘플
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              )}
             </ScrollArea>
           </CardContent>
         </Card>
@@ -184,19 +279,30 @@ export function VoiceSelector({ translations, onVoiceChange, initialConfig }: Vo
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Wand2 className="w-4 h-4" />
-              보이스 클로닝
+              <Upload className="w-4 h-4" />
+              보이스 업로드
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-center p-6 border-2 border-dashed rounded-lg">
               <p className="text-sm text-gray-600 mb-3">
-                원하는 음성 샘플을 업로드하여
-                <br />
-                커스텀 보이스를 생성하세요
+                원하는 음성 샘플을 업로드하여 커스텀 보이스를 생성하세요
               </p>
-              <Button variant="outline" size="sm">
-                음성 파일 업로드
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="audio/*"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                {isUploading ? '업로드 중...' : '음성 파일 업로드'}
               </Button>
             </div>
           </CardContent>
@@ -246,6 +352,16 @@ export function VoiceSelector({ translations, onVoiceChange, initialConfig }: Vo
                                 {v.name} ({v.style})
                               </SelectItem>
                             ))}
+                            {customVoices.length > 0 && (
+                              <>
+                                <SelectItem disabled value="separator">─── 커스텀 보이스 ───</SelectItem>
+                                {customVoices.map((v) => (
+                                  <SelectItem key={v.id} value={v.id}>
+                                    🎤 {v.name}
+                                  </SelectItem>
+                                ))}
+                              </>
+                            )}
                           </SelectContent>
                         </Select>
 
