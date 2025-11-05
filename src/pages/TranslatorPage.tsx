@@ -12,9 +12,10 @@ export interface TranslatorAssignment {
   languageCode: string
   languageName: string
   translator: string
-  status?: string
+  status: string
   progress?: number
   isDubbing?: boolean
+  issueCount?: number
 }
 
 export default function TranslatorDashboardPage() {
@@ -35,22 +36,19 @@ export default function TranslatorDashboardPage() {
     loadProjects().catch(() => {})
   }, [loadProjects])
 
-  const assignments = useMemo<TranslatorAssignment[]>(
-    () =>
-      projects.flatMap((project) =>
-        project.languages.map((lang) => ({
-          projectId: project.id,
-          projectName: project.name,
-          languageCode: lang.code,
-          languageName: lang.name,
-          status: lang.status,
-          progress: lang.progress,
-          translator: lang.translator ?? '',
-          isDubbing: lang.dubbing,
-        }))
-      ),
-    [projects]
-  )
+  const assignments = useMemo<TranslatorAssignment[]>(() => {
+    return projects.map((project) => ({
+      projectId: project.id,
+      projectName: project.name,
+      status: project.status,
+      progress: project.languages?.[0]?.progress ?? project.uploadProgress ?? 0,
+      translator: project.languages?.[0]?.translator ?? '',
+      languageCode: project.languages?.[0]?.code ?? '',
+      languageName: project.languages?.[0]?.name ?? '',
+      isDubbing: project.languages?.[0]?.dubbing ?? false,
+      issueCount: project.issue_count ?? 0,
+    }))
+  }, [projects])
 
   const translatorNames = useMemo(() => {
     const names = new Set<string>()
@@ -93,6 +91,8 @@ export default function TranslatorDashboardPage() {
     selectedTranslator === ''
       ? assignments
       : assignments.filter((a) => a.translator === selectedTranslator)
+
+  // console.log('visible assignments', visibleAssignments)
 
   return (
     <div className="space-y-6">

@@ -7,7 +7,13 @@ import { Avatar, AvatarFallback } from './ui/avatar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { Switch } from './ui/switch'
 import { Play, User, Wand2, Upload } from 'lucide-react'
-import { getVoicePresets, type VoicePreset, uploadVoiceFile, getCustomVoices, type CustomVoice } from '@/features/projects/services/voice'
+import {
+  getVoicePresets,
+  type VoicePreset,
+  uploadVoiceFile,
+  getCustomVoices,
+  type CustomVoice,
+} from '@/features/projects/services/voice'
 import { toast } from 'sonner'
 
 interface Translation {
@@ -29,7 +35,12 @@ const styleOptions = [
   { value: 'energetic', label: '활기찬' },
 ]
 
-export function VoiceSelector({ translations, projectId, onVoiceChange, initialConfig }: VoiceSelectorProps) {
+export function VoiceSelector({
+  translations,
+  projectId,
+  onVoiceChange,
+  initialConfig,
+}: VoiceSelectorProps) {
   const speakers = Array.from(
     new Set(translations.map((t) => t.speaker).filter(Boolean))
   ) as string[]
@@ -51,7 +62,7 @@ export function VoiceSelector({ translations, projectId, onVoiceChange, initialC
     getVoicePresets()
       .then(setVoicePresets)
       .catch((err) => console.error('Failed to load voice presets:', err))
-    
+
     getCustomVoices(projectId)
       .then(setCustomVoices)
       .catch((err) => console.error('Failed to load custom voices:', err))
@@ -249,7 +260,10 @@ export function VoiceSelector({ translations, projectId, onVoiceChange, initialC
                     </div>
                   ) : (
                     customVoices.map((voice) => (
-                      <Card key={voice.id} className="hover:border-blue-300 transition-colors cursor-pointer">
+                      <Card
+                        key={voice.id}
+                        className="hover:border-blue-300 transition-colors cursor-pointer"
+                      >
                         <CardContent className="p-4">
                           <div className="flex items-center gap-3">
                             <Avatar className="w-12 h-12">
@@ -354,7 +368,9 @@ export function VoiceSelector({ translations, projectId, onVoiceChange, initialC
                             ))}
                             {customVoices.length > 0 && (
                               <>
-                                <SelectItem disabled value="separator">─── 커스텀 보이스 ───</SelectItem>
+                                <SelectItem disabled value="separator">
+                                  ─── 커스텀 보이스 ───
+                                </SelectItem>
                                 {customVoices.map((v) => (
                                   <SelectItem key={v.id} value={v.id}>
                                     🎤 {v.name}

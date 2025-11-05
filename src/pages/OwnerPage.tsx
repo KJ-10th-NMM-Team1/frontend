@@ -21,7 +21,7 @@ export default function OwnerPage() {
   const { user } = useAuth()
   const ownerCode = user?.code ?? ''
   const loadProjects = useCallback(async () => {
-    const list = await fetchProjectsByOwner() // 새로 만든 API
+    const list = await fetchProjectsByOwner()
     setProjects(list)
   }, [])
 

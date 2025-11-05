@@ -125,6 +125,7 @@ export interface Project {
   jobMetadata?: Record<string, unknown>
   segmentAssetsPrefix?: string
   segments?: ProjectSegment[]
+  issue_count?: number
 }
 
 export type PipelineStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'review'
