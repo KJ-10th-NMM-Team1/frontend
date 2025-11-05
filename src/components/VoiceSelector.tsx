@@ -7,13 +7,7 @@ import { Avatar, AvatarFallback } from './ui/avatar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { Switch } from './ui/switch'
 import { Play, User, Wand2, Upload } from 'lucide-react'
-import {
-  getVoicePresets,
-  type VoicePreset,
-  uploadVoiceFile,
-  getCustomVoices,
-  type CustomVoice,
-} from '@/features/projects/services/voice'
+import { getVoicePresets, type VoicePreset, uploadVoiceFile, getCustomVoices, type CustomVoice } from '@/features/projects/services/voice'
 import { toast } from 'sonner'
 
 interface Translation {
@@ -35,15 +29,13 @@ const styleOptions = [
   { value: 'energetic', label: '활기찬' },
 ]
 
-export function VoiceSelector({
-  translations,
-  projectId,
-  onVoiceChange,
-  initialConfig,
-}: VoiceSelectorProps) {
+export function VoiceSelector({ translations, projectId, onVoiceChange, initialConfig }: VoiceSelectorProps) {
   const speakers = Array.from(
     new Set(translations.map((t) => t.speaker).filter(Boolean))
   ) as string[]
+
+  // 화자가 없으면 기본 화자 1명 추가
+  const displaySpeakers = speakers.length > 0 ? speakers : ['A']
 
   // 화자가 없으면 기본 화자 1명 추가
   const displaySpeakers = speakers.length > 0 ? speakers : ['A']
@@ -62,7 +54,7 @@ export function VoiceSelector({
     getVoicePresets()
       .then(setVoicePresets)
       .catch((err) => console.error('Failed to load voice presets:', err))
-
+    
     getCustomVoices(projectId)
       .then(setCustomVoices)
       .catch((err) => console.error('Failed to load custom voices:', err))
@@ -75,6 +67,7 @@ export function VoiceSelector({
         { voiceId?: string; preserveTone: boolean; lastVoiceId?: string }
       > = {}
       displaySpeakers.forEach((speaker) => {
+      displaySpeakers.forEach((speaker) => {
         const incoming = initialConfig?.[speaker]
         const existing = prev[speaker]
         next[speaker] = {
@@ -85,6 +78,7 @@ export function VoiceSelector({
       })
       return next
     })
+  }, [initialConfig, displaySpeakers])
   }, [initialConfig, displaySpeakers])
 
   const updateSpeakerConfig = (
@@ -99,6 +93,7 @@ export function VoiceSelector({
       const existing = prev[speaker] ?? { preserveTone: true }
       const next = updater(existing)
       return { ...prev, [speaker]: next }
+      return { ...prev, [speaker]: next }
     })
   }
 
@@ -112,9 +107,16 @@ export function VoiceSelector({
       voiceId,
       preserveTone: speakerConfig[speaker]?.preserveTone ?? false,
     })
+    onVoiceChange?.(speaker, {
+      voiceId,
+      preserveTone: speakerConfig[speaker]?.preserveTone ?? false,
+    })
   }
 
   const handleToneToggle = (speaker: string, preserveTone: boolean) => {
+    const existing = speakerConfig[speaker] ?? { preserveTone: true }
+    const nextConfig = preserveTone
+      ? {
     const existing = speakerConfig[speaker] ?? { preserveTone: true }
     const nextConfig = preserveTone
       ? {
@@ -260,10 +262,7 @@ export function VoiceSelector({
                     </div>
                   ) : (
                     customVoices.map((voice) => (
-                      <Card
-                        key={voice.id}
-                        className="hover:border-blue-300 transition-colors cursor-pointer"
-                      >
+                      <Card key={voice.id} className="hover:border-blue-300 transition-colors cursor-pointer">
                         <CardContent className="p-4">
                           <div className="flex items-center gap-3">
                             <Avatar className="w-12 h-12">
@@ -335,7 +334,26 @@ export function VoiceSelector({
                 const selectedVoice = speakerConfig[speaker]?.voiceId
                 const preserveTone = speakerConfig[speaker]?.preserveTone ?? true
                 const voice = voicePresets.find((v) => v.id === selectedVoice)
+              {displaySpeakers.map((speaker) => {
+                const selectedVoice = speakerConfig[speaker]?.voiceId
+                const preserveTone = speakerConfig[speaker]?.preserveTone ?? true
+                const voice = voicePresets.find((v) => v.id === selectedVoice)
 
+                return (
+                  <Card key={speaker} className="border-2">
+                    <CardContent className="p-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Avatar className="w-8 h-8">
+                              <AvatarFallback className="bg-gray-100">{speaker}</AvatarFallback>
+                            </Avatar>
+                            <span>화자 {speaker}</span>
+                          </div>
+                          <Badge variant="secondary">
+                            {translations.filter((t) => t.speaker === speaker).length}개 문장
+                          </Badge>
+                        </div>
                 return (
                   <Card key={speaker} className="border-2">
                     <CardContent className="p-4">
@@ -368,9 +386,7 @@ export function VoiceSelector({
                             ))}
                             {customVoices.length > 0 && (
                               <>
-                                <SelectItem disabled value="separator">
-                                  ─── 커스텀 보이스 ───
-                                </SelectItem>
+                                <SelectItem disabled value="separator">─── 커스텀 보이스 ───</SelectItem>
                                 {customVoices.map((v) => (
                                   <SelectItem key={v.id} value={v.id}>
                                     🎤 {v.name}
@@ -393,7 +409,24 @@ export function VoiceSelector({
                             onCheckedChange={(checked) => handleToneToggle(speaker, checked)}
                           />
                         </div>
+                        <div className="flex items-center justify-between bg-gray-50 p-3 rounded">
+                          <div>
+                            <p className="text-sm font-medium">원문 톤 유지</p>
+                            <p className="text-xs text-gray-500">
+                              원본 발화자의 톤과 억양을 최대한 반영합니다
+                            </p>
+                          </div>
+                          <Switch
+                            checked={preserveTone}
+                            onCheckedChange={(checked) => handleToneToggle(speaker, checked)}
+                          />
+                        </div>
 
+                        {preserveTone && (
+                          <div className="flex items-center justify-between bg-blue-50 p-3 rounded text-xs text-blue-700">
+                            원문 화자의 톤을 그대로 클로닝하여 사용합니다.
+                          </div>
+                        )}
                         {preserveTone && (
                           <div className="flex items-center justify-between bg-blue-50 p-3 rounded text-xs text-blue-700">
                             원문 화자의 톤을 그대로 클로닝하여 사용합니다.
@@ -430,10 +463,41 @@ export function VoiceSelector({
                   </Card>
                 )
               })}
+                        {!preserveTone && voice && (
+                          <div className="flex items-center justify-between bg-gray-50 p-3 rounded">
+                            <div className="flex items-center gap-2">
+                              <Avatar className="w-8 h-8">
+                                <AvatarFallback
+                                  className={
+                                    voice.gender === 'female'
+                                      ? 'bg-pink-100 text-pink-700'
+                                      : 'bg-blue-100 text-blue-700'
+                                  }
+                                >
+                                  <User className="w-4 h-4" />
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="text-sm">
+                                <p>{voice.name}</p>
+                                <p className="text-xs text-gray-500">{voice.style}</p>
+                              </div>
+                            </div>
+                            <Button variant="ghost" size="sm" className="gap-1">
+                              <Play className="w-3 h-3" />
+                              샘플
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })}
             </div>
           </CardContent>
         </Card>
 
+        {displaySpeakers.length > 0 && (
         {displaySpeakers.length > 0 && (
           <Card className="mt-4">
             <CardHeader>
