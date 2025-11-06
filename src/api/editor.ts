@@ -11,11 +11,11 @@ const normalizeStatus = (s?: string): PreviewStatus => {
 
 const readBodyText = async (res: Response) => {
   try {
-    return await res.text();
+    return await res.text()
   } catch {
-    return '';
+    return ''
   }
-};
+}
 
 export async function createSegmentPreview(
   projectId: string,
