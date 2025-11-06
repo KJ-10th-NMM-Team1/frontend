@@ -71,7 +71,7 @@ export async function createSegmentPreview(
     throw new Error(`Create preview failed: ${res.status} ${msg}`)
   }
 
-const data = (await res.json()) as PreviewCreateResponse;
+  const data = (await res.json()) as PreviewCreateResponse
   return {
     previewId: data.previewId ?? data.preview_id ?? data.id ?? data.jobId ?? data.job_id,
     status: normalizeStatus(data.status),
@@ -92,7 +92,7 @@ export async function getSegmentPreview(
     throw new Error(`Get preview failed: ${res.status} ${msg}`)
   }
 
-const data = (await res.json()) as PreviewGetResponse;
+  const data = (await res.json()) as PreviewGetResponse
   return {
     status: normalizeStatus(data.status),
     videoUrl: data.videoUrl ?? data.video_url,
