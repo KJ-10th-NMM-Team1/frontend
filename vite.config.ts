@@ -63,7 +63,7 @@ export default ({ mode }) => {
       host: true, // 0.0.0.0
       port: 5173,
       strictPort: true,
-      allowedHosts: ['ec2-54-180-144-127.ap-northeast-2.compute.amazonaws.com'],
+      allowedHosts: ['ec2-43-200-75-215.ap-northeast-2.compute.amazonaws.com'],
       hmr: {
         host: 'localhost', // 브라우저에서 접속할 호스트
         port: 5173,
