@@ -2,19 +2,28 @@
 export type PreviewStatus = 'pending' | 'processing' | 'completed' | 'failed'
 
 type PreviewCreateResponse = {
-  previewId?: string; preview_id?: string; id?: string;
-  jobId?: string; job_id?: string;
-  status?: string;
-  videoUrl?: string; video_url?: string;
-  audioUrl?: string; audio_url?: string;
-  updatedAt?: string; updated_at?: string;
+  previewId?: string
+  preview_id?: string
+  id?: string
+  jobId?: string
+  job_id?: string
+  status?: string
+  videoUrl?: string
+  video_url?: string
+  audioUrl?: string
+  audio_url?: string
+  updatedAt?: string
+  updated_at?: string
 }
 
 type PreviewGetResponse = {
-  status?: string;
-  videoUrl?: string; video_url?: string;
-  audioUrl?: string; audio_url?: string;
-  updatedAt?: string; updated_at?: string;
+  status?: string
+  videoUrl?: string
+  video_url?: string
+  audioUrl?: string
+  audio_url?: string
+  updatedAt?: string
+  updated_at?: string
 }
 
 const readJson = async <T>(res: Response) => (await res.json()) as T
