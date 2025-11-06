@@ -1,3 +1,5 @@
+import { getApiUrl } from '@/config'
+
 // frontend/src/api/editor.ts
 export type PreviewStatus = 'pending' | 'processing' | 'completed' | 'failed'
 
@@ -57,9 +59,11 @@ export async function createSegmentPreview(
   updatedAt?: string
 }> {
   const res = await fetch(
-    `/api/editor/projects/${encodeURIComponent(projectId)}/languages/${encodeURIComponent(
-      languageCode
-    )}/segments/${encodeURIComponent(segmentId)}/preview`,
+    getApiUrl(
+      `/api/editor/projects/${encodeURIComponent(projectId)}/languages/${encodeURIComponent(
+        languageCode
+      )}/segments/${encodeURIComponent(segmentId)}/preview`
+    ),
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -84,7 +88,7 @@ export async function createSegmentPreview(
 export async function getSegmentPreview(
   previewId: string
 ): Promise<{ status: PreviewStatus; videoUrl?: string; audioUrl?: string; updatedAt?: string }> {
-  const res = await fetch(`/api/editor/preview/${encodeURIComponent(previewId)}`, {
+  const res = await fetch(getApiUrl(`/api/editor/preview/${encodeURIComponent(previewId)}`), {
     method: 'GET',
   })
   if (!res.ok) {
