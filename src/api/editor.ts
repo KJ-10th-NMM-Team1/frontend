@@ -1,6 +1,33 @@
 // frontend/src/api/editor.ts
 export type PreviewStatus = 'pending' | 'processing' | 'completed' | 'failed'
 
+type PreviewCreateResponse = {
+  previewId?: string
+  preview_id?: string
+  id?: string
+  jobId?: string
+  job_id?: string
+  status?: string
+  videoUrl?: string
+  video_url?: string
+  audioUrl?: string
+  audio_url?: string
+  updatedAt?: string
+  updated_at?: string
+}
+
+type PreviewGetResponse = {
+  status?: string
+  videoUrl?: string
+  video_url?: string
+  audioUrl?: string
+  audio_url?: string
+  updatedAt?: string
+  updated_at?: string
+}
+
+const readJson = async <T>(res: Response) => (await res.json()) as T
+
 const normalizeStatus = (s?: string): PreviewStatus => {
   const v = (s ?? '').toLowerCase()
   if (v === 'done' || v === 'completed') return 'completed'
@@ -44,7 +71,7 @@ export async function createSegmentPreview(
     throw new Error(`Create preview failed: ${res.status} ${msg}`)
   }
 
-  const data: any = await res.json()
+const data = await readJson<PreviewCreateResponse>(res)
   return {
     previewId: data.previewId ?? data.preview_id ?? data.id ?? data.jobId ?? data.job_id,
     status: normalizeStatus(data.status),
@@ -65,7 +92,7 @@ export async function getSegmentPreview(
     throw new Error(`Get preview failed: ${res.status} ${msg}`)
   }
 
-  const data: any = await res.json()
+const data = await readJson<PreviewGetResponse>(res)
   return {
     status: normalizeStatus(data.status),
     videoUrl: data.videoUrl ?? data.video_url,
