@@ -7,13 +7,16 @@ ENV_FILE="$APP_DIR/.env"
 
 mkdir -p "$APP_DIR"
 
-SECRET_JSON=$(
+if ! SECRET_JSON=$(
   aws secretsmanager get-secret-value \
     --secret-id "front/env" \
     --region ap-northeast-2 \
     --query SecretString \
     --output text
-)
+); then
+  echo "Secrets Manager에서 front/env 값을 가져오지 못했습니다. IAM 권한을 확인하세요." >&2
+  exit 1
+fi
 
 if command -v jq >/dev/null 2>&1; then
   echo "$SECRET_JSON" | jq -r 'to_entries|map("\(.key)=\(.value)")|.[]' > "$ENV_FILE"
