@@ -1,4 +1,4 @@
-const DEFAULT_API_BASE_URL = 'ec2-43-203-118-46.ap-northeast-2.compute.amazonaws.com:8000'
+const DEFAULT_API_BASE_URL = 'http://ec2-43-203-118-46.ap-northeast-2.compute.amazonaws.com:8000'
 
 const rawBaseUrl = import.meta.env.VITE_API_BASE_URL as string | undefined
 
