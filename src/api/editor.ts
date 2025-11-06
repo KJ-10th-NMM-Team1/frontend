@@ -2,28 +2,19 @@
 export type PreviewStatus = 'pending' | 'processing' | 'completed' | 'failed'
 
 type PreviewCreateResponse = {
-  previewId?: string
-  preview_id?: string
-  id?: string
-  jobId?: string
-  job_id?: string
-  status?: string
-  videoUrl?: string
-  video_url?: string
-  audioUrl?: string
-  audio_url?: string
-  updatedAt?: string
-  updated_at?: string
+  previewId?: string; preview_id?: string; id?: string;
+  jobId?: string; job_id?: string;
+  status?: string;
+  videoUrl?: string; video_url?: string;
+  audioUrl?: string; audio_url?: string;
+  updatedAt?: string; updated_at?: string;
 }
 
 type PreviewGetResponse = {
-  status?: string
-  videoUrl?: string
-  video_url?: string
-  audioUrl?: string
-  audio_url?: string
-  updatedAt?: string
-  updated_at?: string
+  status?: string;
+  videoUrl?: string; video_url?: string;
+  audioUrl?: string; audio_url?: string;
+  updatedAt?: string; updated_at?: string;
 }
 
 const readJson = async <T>(res: Response) => (await res.json()) as T
@@ -71,7 +62,7 @@ export async function createSegmentPreview(
     throw new Error(`Create preview failed: ${res.status} ${msg}`)
   }
 
-const data = await readJson<PreviewCreateResponse>(res)
+const data = (await res.json()) as PreviewCreateResponse;
   return {
     previewId: data.previewId ?? data.preview_id ?? data.id ?? data.jobId ?? data.job_id,
     status: normalizeStatus(data.status),
@@ -92,7 +83,7 @@ export async function getSegmentPreview(
     throw new Error(`Get preview failed: ${res.status} ${msg}`)
   }
 
-const data = await readJson<PreviewGetResponse>(res)
+const data = (await res.json()) as PreviewGetResponse;
   return {
     status: normalizeStatus(data.status),
     videoUrl: data.videoUrl ?? data.video_url,
