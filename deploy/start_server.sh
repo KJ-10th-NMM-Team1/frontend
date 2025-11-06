@@ -13,7 +13,7 @@ cd $APP_DIR
 # 3. pm2를 사용해 Node.js 서버 시작
 #    (package.json의 "start" 스크립트를 실행)
 echo "Starting React SSR (Node.js) server using pm2..."
-
+pm2 delete react-app || true
 # 'react-app'이라는 이름으로 'npm start' 명령어를 실행합니다.
 # (예: "start": "next start")
 
