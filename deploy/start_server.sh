@@ -1,5 +1,8 @@
 #!/bin/bash
 set -ex # (디버깅을 위해 추가)
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+# 2. 그 상위 디렉토리 (압축이 풀린 루트, /opt/.../deployment-archive)
+ARCHIVE_ROOT=$( dirname "$SCRIPT_DIR" )
 
 APP_DIR="/home/ubuntu/app"
 VENV_DIR="$APP_DIR/venv" # (FastAPI/Python용 venv 경로. React에는 불필요할 수 있음)
@@ -27,10 +30,7 @@ echo "Starting React SSR (Node.js) server using pm2..."
 # 이미 실행 중이면 restart하여 'Process not found' 오류를 발생시키지 않습니다.
 #
 # (pm2가 전역으로 설치되어 있어야 함: sudo npm install pm2 -g)
-pm2 startOrRestart ecosystem.config.js
+pm2 startOrRestart "$ARCHIVE_ROOT/ecosystem.config.js"
 
-# (선택 사항) PM2가 재부팅 시에도 실행되도록 설정 저장
-# (이 명령어는 EC2에서 수동으로 1회만 실행해도 됩니다)
-# pm2 save
 
 echo "Life Cycle - ApplicationStart: Server successfully started"
