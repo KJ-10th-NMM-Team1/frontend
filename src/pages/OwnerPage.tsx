@@ -15,7 +15,7 @@ import { CreateProjectModal } from '@/features/projects/components/CreateProject
 import { useCreateProjectModal } from '@/features/projects/hooks/useCreateProjectModal'
 import { fetchProjectsByOwner } from '@/features/projects/services/projects'
 import { finishUpload, getPresignedUrl, uploadFile } from '@/features/projects/services/upload'
-import { useAuth } from '@/hooks/useAuth'
+// import { useAuth } from '@/hooks/useAuth'
 import TranslatorManagementPage from '@/pages/TranslatorManagementPage'
 import type { Project } from '@/types'
 import { Loader2, Plus } from 'lucide-react'
@@ -31,18 +31,19 @@ export default function OwnerPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [isLoadingProjects, setIsLoadingProjects] = useState(false)
   const [hasNextPage, setHasNextPage] = useState(false)
-  const { user } = useAuth()
-  const ownerCode = user?.code ?? ''
+  // const { user } = useAuth()
+  // const ownerCode = user?.code ?? ''
+  const ownerCode = 'owner-1234'
 
   const loadProjects = useCallback(async (pageToLoad = 1) => {
     setIsLoadingProjects(true)
     try {
-      const { items, hasMore } = await fetchProjectsByOwner({
+      const { items } = await fetchProjectsByOwner({
         page: pageToLoad,
         limit: PROJECTS_PER_PAGE,
       })
 
-      setHasNextPage(hasMore)
+      // setHasNextPage(hasMore)
 
       if (pageToLoad > 1 && items.length === 0) {
         return false
@@ -81,7 +82,6 @@ export default function OwnerPage() {
     onSubmit: async (p) => {
       try {
         const { upload_url, fields, object_key, project_id } = await getPresignedUrl(p)
-
         const formData = new FormData()
         Object.entries(fields).forEach(([key, value]) => {
           formData.append(key, value)
@@ -124,10 +124,10 @@ export default function OwnerPage() {
   }
 
   const handleOpenCreateProject = () => {
-    if (!user) {
-      toast.error('로그인 후 이용 가능합니다.')
-      return
-    }
+    // if (!user) {
+    //   toast.error('로그인 후 이용 가능합니다.')
+    //   return
+    // }
     createProjectModal.open()
   }
 

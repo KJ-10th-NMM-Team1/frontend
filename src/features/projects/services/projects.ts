@@ -216,22 +216,22 @@ export interface FetchProjectsByOwnerParams {
 
 export interface OwnerProjectsPage {
   items: Project[]
-  page: number
-  limit: number
-  hasMore: boolean
+  // page: number
+  // limit: number
+  // hasMore: boolean
 }
 
 export const fetchProjectsByOwner = async (
   params: FetchProjectsByOwnerParams = {}
 ): Promise<OwnerProjectsPage> => {
-  const { page = 1, limit = 6, sort = 'createdAt' } = params
-  const searchParams = new URLSearchParams({
-    sort,
-    page: String(page),
-    limit: String(limit),
-  })
+  // const { page = 1, limit = 6, sort = 'created_at' } = params
+  // const searchParams = new URLSearchParams({
+  //   sort,
+  //   page: String(page),
+  //   limit: String(limit),
+  // })
 
-  const res = await fetch(getApiUrl(`/api/projects/me?${searchParams.toString()}`), {
+  const res = await fetch(getApiUrl('/api/projects'), {
     method: 'GET',
     credentials: 'include',
   })
@@ -240,9 +240,9 @@ export const fetchProjectsByOwner = async (
 
   return {
     items,
-    page,
-    limit,
-    hasMore: items.length === limit,
+    // page,
+    // limit,
+    // hasMore: items.length === limit,
   }
 }
 
