@@ -1,39 +1,41 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
-import { CloudUpload, Upload, X } from 'lucide-react'
+import { CloudUpload, Upload } from 'lucide-react'
+import { HTTPError } from 'ky'
 
-import type { VoiceSamplePayload } from '@/entities/voice-sample/types'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/Button'
 import { Checkbox } from '@/shared/ui/Checkbox'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from '@/shared/ui/Dialog'
+import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/Dialog'
 import { Input } from '@/shared/ui/Input'
 import { Label } from '@/shared/ui/Label'
+import { useUiStore } from '@/shared/store/useUiStore'
+import { routes } from '@/shared/config/routes'
 
-import { useCreateVoiceSample } from '../hooks/useVoiceSamples'
+import { usePrepareUploadMutation, useFinishUploadMutation } from '../hooks/useVoiceSampleStorage'
 
 type VoiceSampleCreationModalProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
-export function VoiceSampleCreationModal({
-  open,
-  onOpenChange,
-}: VoiceSampleCreationModalProps) {
+export function VoiceSampleCreationModal({ open, onOpenChange }: VoiceSampleCreationModalProps) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [isPublic, setIsPublic] = useState(true)
   const [audioFile, setAudioFile] = useState<File | null>(null)
   const [testText, setTestText] = useState('')
   const [consentChecked, setConsentChecked] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadStage, setUploadStage] = useState<'idle' | 'preparing' | 'uploading' | 'finalizing'>(
+    'idle',
+  )
 
-  const createMutation = useCreateVoiceSample()
+  const prepareUploadMutation = usePrepareUploadMutation()
+  const finishUploadMutation = useFinishUploadMutation()
+  const showToast = useUiStore((state) => state.showToast)
+  const navigate = useNavigate()
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -42,10 +44,19 @@ export function VoiceSampleCreationModal({
     }
   }
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
 
     if (!name.trim()) {
+      return
+    }
+
+    if (!audioFile) {
+      showToast({
+        id: 'voice-sample-no-file',
+        title: '파일 필요',
+        description: '음성 파일을 업로드해주세요.',
+      })
       return
     }
 
@@ -53,22 +64,94 @@ export function VoiceSampleCreationModal({
       return
     }
 
-    const payload: VoiceSamplePayload = {
-      name: name.trim(),
-      description: description.trim() || undefined,
-      isPublic,
-      audioFile: audioFile || undefined,
-      testText: testText.trim() || undefined,
-    }
+    try {
+      // 1. 업로드 준비
+      setUploadStage('preparing')
+      setUploadProgress(10)
+      const { upload_url, fields, object_key } = await prepareUploadMutation.mutateAsync({
+        filename: audioFile.name,
+        content_type: audioFile.type || 'audio/mpeg',
+      })
 
-    void (async () => {
-      try {
-        await createMutation.mutateAsync(payload)
+      // 2. S3에 파일 업로드
+      setUploadStage('uploading')
+      setUploadProgress(30)
+
+      // XMLHttpRequest로 진행률 추적
+      await uploadFileWithProgress({
+        uploadUrl: upload_url,
+        fields,
+        file: audioFile,
+        onProgress: (percent) => {
+          setUploadProgress(30 + percent * 0.5) // 30% ~ 80%
+        },
+      })
+
+      // 3. DB에 저장
+      setUploadStage('finalizing')
+      setUploadProgress(85)
+      await finishUploadMutation.mutateAsync({
+        name: name.trim(),
+        description: description.trim() || undefined,
+        is_public: isPublic,
+        object_key,
+      })
+
+      setUploadProgress(100)
+      showToast({
+        id: 'voice-sample-created',
+        title: '음성 샘플 생성 완료',
+        autoDismiss: 2500,
+      })
+      handleClose()
+    } catch (error) {
+      console.error('Failed to create voice sample:', error)
+
+      // 401 에러 처리 (인증 필요)
+      if (error instanceof HTTPError && error.response.status === 401) {
+        showToast({
+          id: 'voice-sample-unauthorized',
+          title: '로그인이 필요합니다',
+          description: '음성 샘플을 업로드하려면 로그인이 필요합니다.',
+          autoDismiss: 3000,
+        })
         handleClose()
-      } catch (error) {
-        console.error('Failed to create voice sample:', error)
+        setTimeout(() => {
+          navigate(routes.login)
+        }, 500)
+        return
       }
-    })()
+
+      // 기타 에러 처리
+      let errorMessage = '업로드 중 오류가 발생했습니다.'
+      if (error instanceof HTTPError) {
+        try {
+          const errorText = await error.response.text()
+          if (errorText) {
+            try {
+              const errorData = JSON.parse(errorText)
+              errorMessage = errorData.detail || errorData.message || errorMessage
+            } catch {
+              errorMessage = errorText || error.message || errorMessage
+            }
+          } else {
+            errorMessage = error.message || errorMessage
+          }
+        } catch {
+          errorMessage = error.message || errorMessage
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message
+      }
+
+      showToast({
+        id: 'voice-sample-error',
+        title: '업로드 실패',
+        description: errorMessage,
+      })
+      setUploadStage('idle')
+      setUploadProgress(0)
+    }
   }
 
   const handleClose = () => {
@@ -78,13 +161,22 @@ export function VoiceSampleCreationModal({
     setAudioFile(null)
     setTestText('')
     setConsentChecked(false)
+    setUploadStage('idle')
+    setUploadProgress(0)
     onOpenChange(false)
+  }
+
+  const isUploading = uploadStage !== 'idle'
+  const stageMessages = {
+    preparing: '업로드 준비 중...',
+    uploading: '파일 업로드 중...',
+    finalizing: '저장 중...',
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-4">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+        <div className="mb-4 flex items-center justify-between">
           <DialogTitle>음성샘플 만들기</DialogTitle>
         </div>
 
@@ -98,6 +190,7 @@ export function VoiceSampleCreationModal({
               onChange={(e) => setName(e.target.value)}
               placeholder="성우 이름을 입력하세요"
               required
+              disabled={isUploading}
             />
           </div>
 
@@ -109,6 +202,7 @@ export function VoiceSampleCreationModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="뉴스 아나운서로 어울리는 30대 남자 목소리"
+              disabled={isUploading}
             />
           </div>
 
@@ -119,11 +213,13 @@ export function VoiceSampleCreationModal({
               <button
                 type="button"
                 onClick={() => setIsPublic(true)}
+                disabled={isUploading}
                 className={cn(
-                  'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+                  'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
                   isPublic
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-surface-2 text-muted hover:bg-surface-3',
+                  isUploading && 'cursor-not-allowed opacity-50',
                 )}
               >
                 공개
@@ -131,11 +227,13 @@ export function VoiceSampleCreationModal({
               <button
                 type="button"
                 onClick={() => setIsPublic(false)}
+                disabled={isUploading}
                 className={cn(
-                  'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+                  'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
                   !isPublic
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-surface-2 text-muted hover:bg-surface-3',
+                  isUploading && 'cursor-not-allowed opacity-50',
                 )}
               >
                 비공개
@@ -151,7 +249,8 @@ export function VoiceSampleCreationModal({
                 type="button"
                 variant="secondary"
                 onClick={() => document.getElementById('audio-upload')?.click()}
-                className="bg-orange-500 hover:bg-orange-600 text-white"
+                className="bg-orange-500 text-white hover:bg-orange-600"
+                disabled={isUploading}
               >
                 <CloudUpload className="h-4 w-4" />
                 파일 업로드
@@ -162,6 +261,7 @@ export function VoiceSampleCreationModal({
                 accept="audio/wav,audio/mp3,audio/mpeg"
                 onChange={handleFileChange}
                 className="hidden"
+                disabled={isUploading}
               />
 
               <div
@@ -177,6 +277,19 @@ export function VoiceSampleCreationModal({
                     <p className="text-muted text-xs">
                       {(audioFile.size / 1024 / 1024).toFixed(2)} MB
                     </p>
+                    {isUploading && (
+                      <div className="mt-4 space-y-2">
+                        <div className="bg-surface-3 h-2 w-full rounded-full">
+                          <div
+                            className="bg-primary h-2 rounded-full transition-all"
+                            style={{ width: `${uploadProgress}%` }}
+                          />
+                        </div>
+                        <p className="text-muted text-xs">
+                          {stageMessages[uploadStage]} {Math.round(uploadProgress)}%
+                        </p>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -200,11 +313,12 @@ export function VoiceSampleCreationModal({
               placeholder="테스트할 텍스트를 입력하세요"
               className="border-surface-4 bg-surface-1 text-foreground focus-visible:outline-hidden focus-visible:ring-accent flex min-h-[100px] w-full rounded-xl border px-4 py-3 text-sm shadow-inner shadow-black/5 transition focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               rows={4}
+              disabled={isUploading}
             />
           </div>
 
           {/* Test Button */}
-          <Button type="button" variant="secondary" className="w-full">
+          <Button type="button" variant="secondary" className="w-full" disabled={isUploading}>
             테스트 해보기
           </Button>
 
@@ -214,11 +328,9 @@ export function VoiceSampleCreationModal({
               id="consent"
               checked={consentChecked}
               onCheckedChange={(checked) => setConsentChecked(checked === true)}
+              disabled={isUploading}
             />
-            <Label
-              htmlFor="consent"
-              className="text-muted text-xs leading-relaxed cursor-pointer"
-            >
+            <Label htmlFor="consent" className="text-muted cursor-pointer text-xs leading-relaxed">
               업로드한 음성샘플의 권한을 확인하고, 생성된 콘텐츠를 불법적이거나 사기성 목적으로
               사용하지 않겠습니다.
             </Label>
@@ -226,15 +338,17 @@ export function VoiceSampleCreationModal({
 
           {/* Submit Button */}
           <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={handleClose}>
+            <Button type="button" variant="outline" onClick={handleClose} disabled={isUploading}>
               취소
             </Button>
             <Button
               type="submit"
               variant="primary"
-              disabled={!name.trim() || !consentChecked || createMutation.isPending}
+              disabled={!name.trim() || !audioFile || !consentChecked || isUploading}
             >
-              {createMutation.isPending ? '생성 중...' : '음성 샘플 만들기'}
+              {isUploading
+                ? `${stageMessages[uploadStage]} ${Math.round(uploadProgress)}%`
+                : '음성 샘플 만들기'}
             </Button>
           </div>
         </form>
@@ -243,3 +357,50 @@ export function VoiceSampleCreationModal({
   )
 }
 
+// 진행률 추적이 포함된 업로드 함수
+async function uploadFileWithProgress({
+  uploadUrl,
+  fields,
+  file,
+  onProgress,
+}: {
+  uploadUrl: string
+  fields?: Record<string, string>
+  file: File
+  onProgress: (percent: number) => void
+}) {
+  const formData = new FormData()
+
+  if (fields) {
+    Object.entries(fields).forEach(([key, value]) => {
+      formData.append(key, value)
+    })
+  }
+  formData.append('file', file)
+
+  return new Promise<void>((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+
+    xhr.upload.addEventListener('progress', (e) => {
+      if (e.lengthComputable) {
+        const percent = (e.loaded / e.total) * 100
+        onProgress(percent)
+      }
+    })
+
+    xhr.addEventListener('load', () => {
+      if (xhr.status === 204 || xhr.status === 200) {
+        resolve()
+      } else {
+        reject(new Error(`Upload failed: ${xhr.status}`))
+      }
+    })
+
+    xhr.addEventListener('error', () => {
+      reject(new Error('Upload failed'))
+    })
+
+    xhr.open('POST', uploadUrl)
+    xhr.send(formData)
+  })
+}

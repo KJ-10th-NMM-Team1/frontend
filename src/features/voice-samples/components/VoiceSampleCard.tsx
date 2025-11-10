@@ -1,4 +1,4 @@
-import { Heart, MoreVertical, Play } from 'lucide-react'
+import { Heart, MoreVertical, Pause, Play } from 'lucide-react'
 
 import type { VoiceSample } from '@/entities/voice-sample/types'
 import { cn } from '@/shared/lib/utils'
@@ -17,11 +17,18 @@ import { useToggleFavorite } from '../hooks/useVoiceSamples'
 type VoiceSampleCardProps = {
   sample: VoiceSample
   isSelected?: boolean
+  isPlaying?: boolean
   onSelect?: (sample: VoiceSample) => void
   onPlay?: (sample: VoiceSample) => void
 }
 
-export function VoiceSampleCard({ sample, isSelected, onSelect, onPlay }: VoiceSampleCardProps) {
+export function VoiceSampleCard({
+  sample,
+  isSelected,
+  isPlaying = false,
+  onSelect,
+  onPlay,
+}: VoiceSampleCardProps) {
   const toggleFavorite = useToggleFavorite()
 
   const handleFavoriteClick = (event: React.MouseEvent) => {
@@ -34,24 +41,24 @@ export function VoiceSampleCard({ sample, isSelected, onSelect, onPlay }: VoiceS
     onPlay?.(sample)
   }
 
-  const handleCardClick = () => {
-    onSelect?.(sample)
-  }
-
   return (
     <Card
       className={cn(
-        'relative cursor-pointer transition-all hover:shadow-xl',
-        isSelected && 'ring-primary ring-2',
+        'relative transition-all hover:shadow-xl',
+        // 선택 기능 제거
+        // isSelected && 'ring-primary ring-2',
       )}
-      onClick={handleCardClick}
     >
       <div className="flex flex-col gap-3">
         {/* Header */}
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
-            {sample.isPublic && (
+            {sample.isPublic ? (
               <Badge className="bg-primary text-primary-foreground text-xs">Public</Badge>
+            ) : (
+              <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs">
+                Private
+              </Badge>
             )}
           </div>
           <div className="flex items-center gap-2">
@@ -93,6 +100,9 @@ export function VoiceSampleCard({ sample, isSelected, onSelect, onPlay }: VoiceS
               {sample.type && ` - ${sample.type}`}
             </h3>
           </div>
+          {sample.description && (
+            <p className="text-muted text-sm line-clamp-2">{sample.description}</p>
+          )}
           {sample.attributes && <p className="text-muted text-xs">{sample.attributes}</p>}
         </div>
 
@@ -100,12 +110,19 @@ export function VoiceSampleCard({ sample, isSelected, onSelect, onPlay }: VoiceS
         <div className="flex items-center gap-2">
           <Button
             type="button"
-            variant="primary"
+            variant={isPlaying ? 'secondary' : 'primary'}
             size="icon"
             onClick={handlePlayClick}
-            className="h-10 w-10 rounded-full"
+            className={cn(
+              'h-10 w-10 rounded-full transition-all',
+              isPlaying && 'bg-primary/80 hover:bg-primary/90',
+            )}
           >
-            <Play className="h-4 w-4 fill-current" />
+            {isPlaying ? (
+              <Pause className="h-4 w-4 fill-current" />
+            ) : (
+              <Play className="h-4 w-4 fill-current" />
+            )}
           </Button>
         </div>
       </div>

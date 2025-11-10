@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { Search, Waves } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -7,6 +7,7 @@ import type { VoiceSample } from '@/entities/voice-sample/types'
 import { VoiceSampleCard } from '@/features/voice-samples/components/VoiceSampleCard'
 import { useVoiceSamples } from '@/features/voice-samples/hooks/useVoiceSamples'
 import { VoiceSampleCreationModal } from '@/features/voice-samples/modals/VoiceSampleCreationModal'
+import { env } from '@/shared/config/env'
 import { useAuthStore } from '@/shared/store/useAuthStore'
 import { Checkbox } from '@/shared/ui/Checkbox'
 import { Input } from '@/shared/ui/Input'
@@ -20,6 +21,103 @@ export default function VoiceSamplesPage() {
   const [showFavorites, setShowFavorites] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedSample, setSelectedSample] = useState<VoiceSample | null>(null)
+
+  // 현재 재생 중인 오디오 추적
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null)
+  const [playingSampleId, setPlayingSampleId] = useState<string | null>(null)
+  // Audio 객체 캐시 제거 (이전 코드에서 삭제)
+
+  // Audio 객체 정리 함수
+  const cleanupAudio = (audio: HTMLAudioElement | null) => {
+    if (!audio) return
+
+    // 재생 정지
+    audio.pause()
+    audio.currentTime = 0
+
+    // 이벤트 리스너 제거를 위해 새 Audio 객체로 교체
+    // src를 비워서 메모리 해제
+    audio.src = ''
+    audio.load()
+  }
+
+  const handlePlay = (sample: VoiceSample) => {
+    // id가 없으면 재생 불가
+    if (!sample.id) {
+      console.warn('음성 샘플 ID가 없습니다:', sample)
+      return
+    }
+
+    // id 비교를 위해 문자열로 변환
+    const sampleId = String(sample.id)
+
+    // 같은 샘플이 재생 중이면 정지
+    if (playingSampleId && String(playingSampleId) === sampleId && currentAudioRef.current) {
+      cleanupAudio(currentAudioRef.current)
+      currentAudioRef.current = null
+      setPlayingSampleId(null)
+      return
+    }
+
+    // 다른 샘플이 재생 중이면 먼저 정리
+    if (currentAudioRef.current) {
+      cleanupAudio(currentAudioRef.current)
+      currentAudioRef.current = null
+      setPlayingSampleId(null)
+    }
+
+    // 음성 파일 URL 결정: audio_sample_url > file_path_wav (storage API) > previewUrl
+    let audioUrl: string | undefined
+
+    if (sample.audio_sample_url) {
+      audioUrl = sample.audio_sample_url
+    } else if (sample.file_path_wav) {
+      const apiBase = env.apiBaseUrl.startsWith('http')
+        ? `${env.apiBaseUrl}/api`
+        : env.apiBaseUrl || '/api'
+      const pathSegments = sample.file_path_wav.split('/')
+      const encodedPath = pathSegments.map((segment) => encodeURIComponent(segment)).join('/')
+      audioUrl = `${apiBase}/storage/media/${encodedPath}`
+    } else if (sample.previewUrl) {
+      audioUrl = sample.previewUrl
+    }
+
+    if (!audioUrl) {
+      console.warn('음성 파일 URL을 찾을 수 없습니다:', sample)
+      return
+    }
+
+    // Audio 객체 생성 및 재생
+    const audio = new Audio(audioUrl)
+    currentAudioRef.current = audio
+    setPlayingSampleId(sampleId)
+
+    // 재생 종료 시 정리
+    audio.addEventListener('ended', () => {
+      cleanupAudio(currentAudioRef.current)
+      currentAudioRef.current = null
+      setPlayingSampleId(null)
+    })
+
+    // 재생 시작
+    audio.play().catch((error) => {
+      console.error('음성 파일 재생 실패:', error)
+      cleanupAudio(currentAudioRef.current)
+      currentAudioRef.current = null
+      setPlayingSampleId(null)
+    })
+  }
+
+  // 컴포넌트 언마운트 시 오디오 정리
+  useEffect(() => {
+    return () => {
+      if (currentAudioRef.current) {
+        cleanupAudio(currentAudioRef.current)
+        currentAudioRef.current = null
+        setPlayingSampleId(null)
+      }
+    }
+  }, [])
 
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const navigate = useNavigate()
@@ -56,11 +154,6 @@ export default function VoiceSamplesPage() {
   if (!isAuthenticated) {
     navigate('/auth/login', { replace: true })
     return null
-  }
-
-  const handlePlay = (sample: VoiceSample) => {
-    // TODO: 실제 재생 로직 구현
-    console.log('Play:', sample)
   }
 
   return (
@@ -132,15 +225,29 @@ export default function VoiceSamplesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredSamples.map((sample) => (
-              <VoiceSampleCard
-                key={sample.id}
-                sample={sample}
-                isSelected={selectedSample?.id === sample.id}
-                onSelect={setSelectedSample}
-                onPlay={handlePlay}
-              />
-            ))}
+            {filteredSamples.map((sample, index) => {
+              // 고유한 key 생성: id가 있으면 사용, 없으면 index 사용
+              const uniqueKey = sample.id ? `${sample.id}-${index}` : `sample-${index}`
+              // id 비교를 위해 문자열로 변환 (id가 없으면 undefined 처리)
+              const sampleId = sample.id ? String(sample.id).trim() : undefined
+              const isSelected =
+                selectedSample?.id && sampleId
+                  ? String(selectedSample.id).trim() === sampleId
+                  : false
+              const isPlaying =
+                playingSampleId && sampleId ? String(playingSampleId).trim() === sampleId : false
+
+              return (
+                <VoiceSampleCard
+                  key={uniqueKey}
+                  sample={sample}
+                  isSelected={isSelected}
+                  isPlaying={isPlaying}
+                  onSelect={setSelectedSample}
+                  onPlay={handlePlay}
+                />
+              )
+            })}
           </div>
         )}
       </section>
