@@ -17,5 +17,5 @@ if [ ! -f package.json ] || [ ! -f package-lock.json ]; then
 fi
 
 echo "Installing dependencies with npm ci..."
-npm ci
+pnpm install
 echo "Life Cycle - AfterInstall: Dependency installation complete."

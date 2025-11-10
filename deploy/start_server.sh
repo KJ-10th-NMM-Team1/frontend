@@ -6,5 +6,5 @@ cd $APP_DIR
 
 echo "Starting React SSR (Node.js) server using pm2..."
 pm2 delete react-app || true
-pm2 start npm --name "react-app" -- run dev
+pm2 start pnpm --name "react-app" -- dev
 echo "Life Cycle - ApplicationStart: Server successfully started"
