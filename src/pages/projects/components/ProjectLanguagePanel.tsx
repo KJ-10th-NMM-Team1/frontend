@@ -1,6 +1,7 @@
 import { Download, Play } from 'lucide-react'
 
 import type { ProjectAsset, ProjectDetail } from '@/entities/project/types'
+import { env } from '@/shared/config/env'
 import { trackEvent } from '@/shared/lib/analytics'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/Button'
@@ -83,7 +84,7 @@ function LanguagePreview({
   const translatedSource = selectedAsset?.file_path
   const previewSource = version === 'original' ? videoSource : (translatedSource ?? videoSource)
   const languageLabel = languageNameMap[language] ?? language
-  const videoSrc = `${previewSource}`
+  const videoSrc = `${env.apiBaseUrl}/api/storage/media/${previewSource}`
 
   return (
     <div className="space-y-5">
