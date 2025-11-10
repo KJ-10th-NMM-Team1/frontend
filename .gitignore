@@ -33,3 +33,6 @@ app.zip
 *.zip
 
 .vscode/
+
+build/
+dist/
