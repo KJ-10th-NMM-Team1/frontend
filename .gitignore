@@ -23,16 +23,5 @@ dist-ssr
 *.sln
 *.sw?
 
-# Environment variable files (비밀 정보 제외)
 .env
-.env.local
 .env.*
-
-# 배포 산출물 제외
-app.zip
-*.zip
-
-.vscode/
-
-build/
-dist/

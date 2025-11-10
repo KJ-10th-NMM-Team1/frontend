@@ -2,7 +2,7 @@ name: deploy react app
 
 on:
   workflow_run:
-    workflows: ["react code style check"]
+    workflows: ['CI']
     types:
       - completed
     branches:
@@ -24,8 +24,8 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version: '20'
+          cache: 'npm'
 
       # 3. 의존성 설치 및 React 앱 '빌드' (Next.js/Remix 등)
       - name: Install and Build

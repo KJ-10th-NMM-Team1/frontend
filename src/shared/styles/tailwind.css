@@ -1,0 +1,210 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --background: 224 33% 98%;
+    --surface-1: 0 0% 100%;
+    --surface-2: 220 25% 98%;
+    --surface-3: 218 32% 95%;
+    --surface-4: 220 21% 88%;
+    --foreground: 221 47% 11%;
+    --muted: 225 15% 45%;
+    --accent: 261 83% 64%;
+    --accent-darker: 260 70% 48%;
+    --primary: 147 50% 36%;
+    --primary-hover: 147 55% 30%;
+    --primary-foreground: 0 0% 100%;
+    --success: 147 71% 38%;
+    --success-darker: 149 60% 30%;
+    --info: 200 90% 50%;
+    --danger: 355 82% 66%;
+    --danger-foreground: 0 0% 100%;
+    --warning: 40 98% 58%;
+    --warning-darker: 38 92% 45%;
+  }
+
+  body {
+    @apply bg-surface-1 text-foreground font-[\"Inter\",sans-serif] antialiased;
+  }
+
+  ::selection {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+  }
+}
+
+@layer utilities {
+  .bg-surface-1 {
+    background-color: hsl(var(--surface-1));
+  }
+  .bg-surface-2 {
+    background-color: hsl(var(--surface-2));
+  }
+  .bg-surface-3 {
+    background-color: hsl(var(--surface-3));
+  }
+  .bg-surface-4 {
+    background-color: hsl(var(--surface-4));
+  }
+  .text-foreground {
+    color: hsl(var(--foreground));
+  }
+  .text-muted {
+    color: hsl(var(--muted));
+  }
+  .text-primary {
+    color: hsl(var(--primary));
+  }
+  .text-primary-foreground {
+    color: hsl(var(--primary-foreground));
+  }
+  .text-success {
+    color: hsl(var(--success));
+  }
+  .text-success-darker {
+    color: hsl(var(--success-darker));
+  }
+  .text-warning {
+    color: hsl(var(--warning));
+  }
+  .text-warning-darker {
+    color: hsl(var(--warning-darker));
+  }
+  .bg-primary {
+    background-color: hsl(var(--primary));
+  }
+  .bg-primary-hover {
+    background-color: hsl(var(--primary-hover));
+  }
+  .bg-primary\/10 {
+    background-color: hsla(var(--primary), 0.1);
+  }
+  .bg-primary\/70 {
+    background-color: hsla(var(--primary), 0.7);
+  }
+  .bg-primary\/90 {
+    background-color: hsla(var(--primary), 0.9);
+  }
+  .bg-surface-1\/80 {
+    background-color: hsla(var(--surface-1), 0.8);
+  }
+  .bg-surface-1\/90 {
+    background-color: hsla(var(--surface-1), 0.9);
+  }
+  .bg-surface-2\/80 {
+    background-color: hsla(var(--surface-2), 0.8);
+  }
+  .bg-accent {
+    background-color: hsl(var(--accent));
+  }
+  .bg-accent\/15 {
+    background-color: hsla(var(--accent), 0.15);
+  }
+  .bg-info {
+    background-color: hsl(var(--info));
+  }
+  .border-surface-3 {
+    border-color: hsl(var(--surface-3));
+  }
+  .border-surface-4 {
+    border-color: hsl(var(--surface-4));
+  }
+  .border-primary {
+    border-color: hsl(var(--primary));
+  }
+  .border-primary\/60 {
+    border-color: hsla(var(--primary), 0.6);
+  }
+  .border-primary\/70 {
+    border-color: hsla(var(--primary), 0.7);
+  }
+  .border-info\/40 {
+    border-color: hsla(var(--info), 0.4);
+  }
+  .border-warning\/40 {
+    border-color: hsla(var(--warning), 0.4);
+  }
+  .border-accent\/40 {
+    border-color: hsla(var(--accent), 0.4);
+  }
+  .border-success\/40 {
+    border-color: hsla(var(--success), 0.4);
+  }
+  .bg-surface-3\/70 {
+    background-color: hsla(var(--surface-3), 0.7);
+  }
+  .bg-warning\/15 {
+    background-color: hsla(var(--warning), 0.15);
+  }
+  .bg-success\/15 {
+    background-color: hsla(var(--success), 0.15);
+  }
+  .bg-danger {
+    background-color: hsl(var(--danger));
+  }
+  .bg-danger\/10 {
+    background-color: hsla(var(--danger), 0.1);
+  }
+  .bg-danger\/90 {
+    background-color: hsla(var(--danger), 0.9);
+  }
+  .text-danger {
+    color: hsl(var(--danger));
+  }
+  .text-danger-foreground {
+    color: hsl(var(--danger-foreground));
+  }
+  .bg-info\/10 {
+    background-color: hsla(var(--info), 0.1);
+  }
+  .focus-visible\\:outline-hidden:focus-visible {
+    outline: none;
+  }
+  .shadow-primary\/40 {
+    box-shadow: 0 25px 45px -20px hsla(var(--primary), 0.4);
+  }
+}
+@layer utilities {
+  @keyframes modal-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes modal-fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes modal-slide-up {
+    from {
+      opacity: 0;
+      transform: translate3d(-50%, calc(-50% + 24px), 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(-50%, -50%, 0);
+    }
+  }
+
+  @keyframes modal-slide-down {
+    from {
+      opacity: 1;
+      transform: translate3d(-50%, -50%, 0);
+    }
+    to {
+      opacity: 0;
+      transform: translate3d(-50%, calc(-50% + 24px), 0);
+    }
+  }
+}
