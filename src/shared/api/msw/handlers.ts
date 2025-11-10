@@ -52,7 +52,7 @@ export const handlers = [
     return HttpResponse.json(project)
   }),
 
-  http.get('/api/editor/:id', ({ params }) => {
+  http.get('/api/projects/:id/languages/:lang', ({ params }) => {
     const project = sampleProjects.find((item) => item.id === params.id)
     if (!project) {
       return HttpResponse.json({ message: 'Editor state not found' }, { status: 404 })

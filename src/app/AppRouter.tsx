@@ -36,8 +36,8 @@ const router = createBrowserRouter(
         <Route index element={<ProjectsListPage />} />
         <Route path=":id" element={<ProjectDetailPage />} />
       </Route>
-      <Route path="editor/:id" element={<EditorPage />} />
       <Route path="voice-samples" element={<VoiceSamplesPage />} />
+      <Route path="editor/:projectId/:languageCode" element={<EditorPage />} />
       <Route path="example" element={<ExampleCrudPage />} />
       <Route path="example/modal" element={<ModalExamplePage />} />
       <Route path="*" element={<NotFoundPage />} />
