@@ -129,10 +129,10 @@ export function VoiceSampleCreationModal({ open, onOpenChange }: VoiceSampleCrea
           const errorText = await error.response.text()
           if (errorText) {
             try {
-              const errorData = JSON.parse(errorText)
+              const errorData = JSON.parse(errorText) as { detail?: string; message?: string }
               errorMessage = errorData.detail || errorData.message || errorMessage
             } catch {
-              errorMessage = errorText || error.message || errorMessage
+              errorMessage = errorText || errorMessage
             }
           } else {
             errorMessage = error.message || errorMessage
@@ -180,7 +180,12 @@ export function VoiceSampleCreationModal({ open, onOpenChange }: VoiceSampleCrea
           <DialogTitle>음성샘플 만들기</DialogTitle>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form
+          onSubmit={(e) => {
+            void handleSubmit(e)
+          }}
+          className="space-y-6"
+        >
           {/* Name Field */}
           <div className="space-y-2">
             <Label htmlFor="name">이름</Label>
