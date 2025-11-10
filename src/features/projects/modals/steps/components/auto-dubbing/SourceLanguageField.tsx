@@ -1,3 +1,4 @@
+import type { Language } from '@/entities/language/types'
 import { Checkbox } from '@/shared/ui/Checkbox'
 import { Label } from '@/shared/ui/Label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/Select'
@@ -6,7 +7,7 @@ import { ValidationMessage } from '@/shared/ui/ValidationMessage'
 type SourceLanguageFieldProps = {
   detectAutomatically: boolean
   onDetectChange: (checked: boolean) => void
-  languages: string[]
+  languages: Language[]
   sourceLanguage: string
   onSourceLanguageChange: (value: string) => void
   error?: string
@@ -40,13 +41,13 @@ export function SourceLanguageField({
             </SelectTrigger>
             <SelectContent>
               {languages.map((language) => (
-                <SelectItem key={language} value={language}>
-                  {language}
+                <SelectItem key={language.language_code} value={language.language_code}>
+                  {language.name_ko}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {/* <ValidationMessage message={error} /> */}
+          <ValidationMessage message={error} />
         </div>
       ) : null}
     </div>

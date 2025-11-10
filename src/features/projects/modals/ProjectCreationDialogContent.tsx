@@ -51,7 +51,7 @@ export function ProjectCreationDialogContent({
           initialValues={{
             title: draft.title,
             detectAutomatically: draft.detectAutomatically,
-            sourceLanguage: draft.sourceLanguage || '한국어',
+            sourceLanguage: draft.sourceLanguage || 'ko',
             targetLanguages: draft.targetLanguages,
             speakerCount: draft.speakerCount,
           }}

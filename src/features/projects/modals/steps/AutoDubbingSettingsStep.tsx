@@ -5,6 +5,9 @@ import { Loader2 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
+import type { Language } from '@/entities/language/types'
+import { sampleLanguages } from '@/entities/language/types'
+import { useLanguage } from '@/features/languages/hooks/useLanguage'
 import { trackEvent } from '@/shared/lib/analytics'
 import { Button } from '@/shared/ui/Button'
 import { DialogDescription, DialogTitle } from '@/shared/ui/Dialog'
@@ -18,7 +21,7 @@ import { AudioSpeakerCountField } from './components/auto-dubbing/SpeakerCountFi
 import { TargetLanguagesField } from './components/auto-dubbing/TargetLanguagesField'
 import { TitleField } from './components/auto-dubbing/TitleField'
 
-const languages = ['한국어', '영어', '일본어', '스페인어', '프랑스어']
+const FALLBACK_LANGUAGES: Language[] = sampleLanguages
 
 export const autoDubbingSettingsSchema = z
   .object({
@@ -70,18 +73,34 @@ export function AutoDubbingSettingsStep({
   const selectedTargets = useMemo(() => watchedTargetLanguages ?? [], [watchedTargetLanguages])
   const [pendingTarget, setPendingTarget] = useState<string>('')
 
-  const availableTargetOptions = useMemo(
-    () => languages.filter((language) => !selectedTargets.includes(language)),
-    [selectedTargets],
+  const { data: languageResponse } = useLanguage()
+
+  const languageItems = useMemo<Language[]>(
+    () => languageResponse ?? FALLBACK_LANGUAGES,
+    [languageResponse],
+  )
+  const languageLabelMap = useMemo<Record<string, string>>(
+    () =>
+      Object.fromEntries(
+        languageItems.map((language) => [language.language_code, language.name_ko]),
+      ),
+    [languageItems],
+  )
+  const availableTargetOptions = useMemo<Language[]>(
+    () => languageItems.filter((language) => !selectedTargets.includes(language.language_code)),
+    [languageItems, selectedTargets],
   )
 
   useEffect(() => {
     if (!pendingTarget && availableTargetOptions.length > 0) {
-      setPendingTarget(availableTargetOptions[0])
+      setPendingTarget(availableTargetOptions[0].language_code)
       return
     }
-    if (pendingTarget && !availableTargetOptions.includes(pendingTarget)) {
-      setPendingTarget(availableTargetOptions[0] ?? '')
+    if (
+      pendingTarget &&
+      !availableTargetOptions.some((option) => option.language_code === pendingTarget)
+    ) {
+      setPendingTarget(availableTargetOptions[0]?.language_code ?? '')
     }
   }, [availableTargetOptions, pendingTarget])
 
@@ -140,11 +159,10 @@ export function AutoDubbingSettingsStep({
       </DialogDescription>
 
       <TitleField registration={register('title')} error={errors.title?.message} />
-
       <SourceLanguageField
         detectAutomatically={detectAutomatically}
         onDetectChange={handleDetectChange}
-        languages={languages}
+        languages={languageItems}
         sourceLanguage={sourceLanguage}
         onSourceLanguageChange={handleSourceLanguageChange}
         error={errors.sourceLanguage?.message}
@@ -153,6 +171,7 @@ export function AutoDubbingSettingsStep({
       <TargetLanguagesField
         selectedTargets={selectedTargets}
         availableOptions={availableTargetOptions}
+        languageLabelMap={languageLabelMap}
         pendingTarget={pendingTarget}
         onPendingChange={setPendingTarget}
         onAddTarget={handleAddTarget}
@@ -168,8 +187,10 @@ export function AutoDubbingSettingsStep({
       <SettingsSummary
         title={watch('title')}
         draft={draft}
-        sourceLanguage={detectAutomatically ? '자동 인식' : sourceLanguage}
-        targetLanguages={selectedTargets}
+        sourceLanguage={
+          detectAutomatically ? '자동 인식' : (languageLabelMap[sourceLanguage] ?? sourceLanguage)
+        }
+        targetLanguages={selectedTargets.map((code) => languageLabelMap[code] ?? code)}
         speakerCount={speakerCount}
       />
 

@@ -1,5 +1,6 @@
 import { PlusCircle, X } from 'lucide-react'
 
+import type { Language } from '@/entities/language/types'
 import { Button } from '@/shared/ui/Button'
 import { Label } from '@/shared/ui/Label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/Select'
@@ -7,7 +8,8 @@ import { ValidationMessage } from '@/shared/ui/ValidationMessage'
 
 type TargetLanguagesFieldProps = {
   selectedTargets: string[]
-  availableOptions: string[]
+  availableOptions: Language[]
+  languageLabelMap: Record<string, string>
   pendingTarget: string
   onPendingChange: (value: string) => void
   onAddTarget: () => void
@@ -18,6 +20,7 @@ type TargetLanguagesFieldProps = {
 export function TargetLanguagesField({
   selectedTargets,
   availableOptions,
+  languageLabelMap,
   pendingTarget,
   onPendingChange,
   onAddTarget,
@@ -42,8 +45,8 @@ export function TargetLanguagesField({
                     </SelectItem>
                   ) : (
                     availableOptions.map((language) => (
-                      <SelectItem key={language} value={language}>
-                        {language}
+                      <SelectItem key={language.language_code} value={language.language_code}>
+                        {language.name_ko}
                       </SelectItem>
                     ))
                   )}
@@ -65,22 +68,25 @@ export function TargetLanguagesField({
             {selectedTargets.length === 0 ? (
               <p className="text-muted text-sm">추가된 타겟 언어가 없습니다.</p>
             ) : (
-              selectedTargets.map((language) => (
-                <span
-                  key={language}
-                  className="bg-surface-1 text-foreground border-surface-4 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm"
-                >
-                  {language}
-                  <button
-                    type="button"
-                    className="text-muted hover:text-danger transition"
-                    aria-label={`${language} 제거`}
-                    onClick={() => onRemoveTarget(language)}
+              selectedTargets.map((language) => {
+                const label = languageLabelMap[language] ?? language
+                return (
+                  <span
+                    key={language}
+                    className="bg-surface-1 text-foreground border-surface-4 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm"
                   >
-                    <X className="h-3 w-3" />
-                  </button>
-                </span>
-              ))
+                    {label}
+                    <button
+                      type="button"
+                      className="text-muted hover:text-danger transition"
+                      aria-label={`${label} 제거`}
+                      onClick={() => onRemoveTarget(language)}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )
+              })
             )}
           </div>
         </div>

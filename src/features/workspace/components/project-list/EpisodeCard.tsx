@@ -93,7 +93,7 @@ export function EpisodeCard({ project }: { project: ProjectSummary }) {
   const { data } = useLanguage()
   const languageItems = data?.items ?? EMPTY_LANGUAGES
   const languageMap = useMemo(
-    () => Object.fromEntries(languageItems.map((lang) => [lang.code, lang.nameKo])),
+    () => Object.fromEntries(languageItems.map((lang) => [lang.language_code, lang.name_ko])),
     [languageItems],
   )
   const sourceLangLabel = languageMap[project.sourceLanguage] ?? project.sourceLanguage
