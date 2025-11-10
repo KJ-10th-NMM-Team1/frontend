@@ -18,6 +18,7 @@ const WorkspacePage = lazy(() => import('../pages/workspace/WorkspacePage'))
 const ProjectsListPage = lazy(() => import('../pages/projects/ProjectsListPage'))
 const ProjectDetailPage = lazy(() => import('../pages/projects/ProjectDetailPage'))
 const EditorPage = lazy(() => import('../pages/editor/EditorPage'))
+const VoiceSamplesPage = lazy(() => import('../pages/voice-samples/VoiceSamplesPage'))
 const ExampleCrudPage = lazy(() => import('../pages/example/ExampleCrudPage'))
 const ModalExamplePage = lazy(() => import('../pages/example/ModalExamplePage'))
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'))
@@ -36,6 +37,7 @@ const router = createBrowserRouter(
         <Route path=":id" element={<ProjectDetailPage />} />
       </Route>
       <Route path="editor/:id" element={<EditorPage />} />
+      <Route path="voice-samples" element={<VoiceSamplesPage />} />
       <Route path="example" element={<ExampleCrudPage />} />
       <Route path="example/modal" element={<ModalExamplePage />} />
       <Route path="*" element={<NotFoundPage />} />

@@ -18,15 +18,16 @@ function handleErrorLogging(error: Error) {
 export const apiClient: KyInstance = ky.create({
   prefixUrl: env.apiBaseUrl,
   timeout: 15_000,
+  credentials: 'include', // 쿠키 전송
   hooks: {
     beforeRequest: [
       (request) => {
         request.headers.set('Accept', 'application/json')
         request.headers.set('Content-Type', 'application/json')
-        const token = localStorage.getItem('demo-token')
-        if (typeof token === 'string' && token.length > 0) {
-          request.headers.set('Authorization', `Bearer${token}`)
-        }
+        // const token = localStorage.getItem('demo-token')
+        // if (typeof token === 'string' && token.length > 0) {
+        //   request.headers.set('Authorization', `Bearer${token}`)
+        // }
         handleRequestLogging(request)
       },
     ],

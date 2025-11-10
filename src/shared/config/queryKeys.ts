@@ -10,4 +10,9 @@ export const queryKeys = {
     all: ['example', 'items'] as const,
     detail: (id: string) => ['example', 'items', id] as const,
   },
+  voiceSamples: {
+    all: ['voice-samples'] as const,
+    list: () => ['voice-samples', 'list'] as const,
+    detail: (id: string) => ['voice-samples', id] as const,
+  },
 }

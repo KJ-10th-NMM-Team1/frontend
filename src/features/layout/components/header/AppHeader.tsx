@@ -1,6 +1,7 @@
 import { LogOut, Waves } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 
+import { useLogoutMutation } from '@/features/auth/hooks/useAuthMutations'
 import { routes } from '@/shared/config/routes'
 import { useAuthStore } from '@/shared/store/useAuthStore'
 import { Button } from '@/shared/ui/Button'
@@ -16,9 +17,9 @@ import {
 export function AppHeader() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const userName = useAuthStore((state) => state.userName)
-  const signOut = useAuthStore((state) => state.signOut)
   const location = useLocation()
   const navigate = useNavigate()
+  const logoutMutation = useLogoutMutation()
   const isWideLayout = location.pathname.startsWith('/editor')
   const containerWidthClass = isWideLayout ? 'max-w-[1920px]' : 'max-w-7xl'
   const initials =
@@ -30,12 +31,11 @@ export function AppHeader() {
       .toUpperCase() ?? 'DP'
 
   const handleVoiceSamples = () => {
-    navigate({ pathname: routes.workspace, search: '?section=voice-samples' })
+    navigate(routes.voiceSamples)
   }
 
   const handleSignOut = () => {
-    signOut()
-    navigate(routes.home)
+    logoutMutation.mutate()
   }
   // const userNavItems = isAuthenticated
   //   ? [
