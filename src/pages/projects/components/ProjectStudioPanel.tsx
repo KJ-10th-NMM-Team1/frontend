@@ -1,18 +1,37 @@
+import { useMemo } from 'react'
+
 import { ExternalLink } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
+import { useLanguage } from '@/features/languages/hooks/useLanguage'
 import { routes } from '@/shared/config/routes'
 import { trackEvent } from '@/shared/lib/analytics'
 import { Button } from '@/shared/ui/Button'
 
 type ProjectStudioPanelProps = {
   projectId: string
-  selectedLanguage: string
-  isSourceLanguage: boolean  
+  selectedLanguageCode: string
+  isSourceLanguage: boolean
 }
 
-export function ProjectStudioPanel({ projectId, selectedLanguage, isSourceLanguage }: ProjectStudioPanelProps) {
-  const buttonLabel = isSourceLanguage ? '더빙 스튜디오 열기' : `더빙 스튜디오 열기(${selectedLanguage})`
+export function ProjectStudioPanel({
+  projectId,
+  selectedLanguageCode,
+  isSourceLanguage,
+}: ProjectStudioPanelProps) {
+  const { data: languageData } = useLanguage()
+
+  const languageNameMap = useMemo(() => {
+    const items = languageData?.items ?? []
+    return items.reduce<Record<string, string>>((acc, item) => {
+      acc[item.code] = item.nameKo
+      return acc
+    }, {})
+  }, [languageData])
+
+  const selectedLanguageLabel = languageNameMap[selectedLanguageCode] ?? selectedLanguageCode
+
+  const buttonLabel = isSourceLanguage ? '더빙 스튜디오 열기' : `더빙 스튜디오 열기(${selectedLanguageLabel})`
   return (
     <aside className="border-surface-3 flex items-center rounded-3xl border bg-white p-6">
       <div className="space-y-3">
@@ -30,7 +49,7 @@ export function ProjectStudioPanel({ projectId, selectedLanguage, isSourceLangua
               {buttonLabel}
             </div>
           ) : (
-            <Link to={routes.editor(projectId)}>
+            <Link to={routes.editor(projectId, selectedLanguageCode)}>
               <ExternalLink className="h-4 w-4" />
               {buttonLabel}
             </Link>

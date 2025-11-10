@@ -8,8 +8,8 @@ import { useEditorState } from '@/features/editor/hooks/useEditorState'
 import { Spinner } from '@/shared/ui/Spinner'
 
 export default function EditorPage() {
-  const { id = '' } = useParams<{ id: string }>()
-  const { data, isLoading } = useEditorState(id)
+  const { projectId = '', languageCode = '' } = useParams<{ projectId: string, languageCode: string }>()
+  const { data, isLoading } = useEditorState(projectId, languageCode)
 
   if (isLoading || !data) {
     return (
@@ -21,7 +21,7 @@ export default function EditorPage() {
   }
 
   const sourceLanguage = '원문'
-  const targetLanguage = data.playback.activeLanguage || data.targetLanguages[0] || '번역본'
+  const targetLanguage = data.playback.activeLanguage || '번역본'
 
   return (
     <div className="bg-surface-1 flex min-h-screen w-full flex-col gap-2 p-2">

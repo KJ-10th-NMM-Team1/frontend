@@ -5,8 +5,8 @@ export const routes = {
   workspace: '/workspace',
   projects: '/projects',
   projectDetail: (id: string) => `/projects/${id}`,
-  editor: (id: string) => `/editor/${id}`,
   voiceSamples: '/voice-samples',
+  editor: (projectId: string, languageCode: string) => `/editor/${projectId}/${languageCode}`,
 }
 
 export const workspaceModals = {

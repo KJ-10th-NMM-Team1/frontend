@@ -67,10 +67,7 @@ export default function ProjectDetailPage() {
   const targetLanguageLabels = targetLanguageCodes.map((code) => languageNameMap[code] ?? code)
 
   const activeLanguage = language ?? targetLanguageCodes[0] ?? project.sourceLanguage  
-
-  //ProjectStudioPanel props
   const isSourceLanguage = activeLanguage === project.sourceLanguage
-  const activeLanguageLabel = languageNameMap[activeLanguage] ?? activeLanguage
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-12">
@@ -92,7 +89,7 @@ export default function ProjectDetailPage() {
               asChild
               onClick={() => trackEvent('enter_editor_click', { projectId: project.id })}
             >
-              <Link to={routes.editor(project.id)}>편집하기</Link>
+              <Link to={routes.editor(project.id, activeLanguage)}>편집하기</Link>
             </Button>
           </div>
         ) : null}
@@ -108,9 +105,9 @@ export default function ProjectDetailPage() {
           assetsByLanguage={assetsByLanguage}
           languageNameMap={languageNameMap}
         />
-        <ProjectStudioPanel 
+        <ProjectStudioPanel
           projectId={project.id}
-          selectedLanguage={activeLanguageLabel}
+          selectedLanguageCode={activeLanguage}
           isSourceLanguage={isSourceLanguage}
         />
       </section>
