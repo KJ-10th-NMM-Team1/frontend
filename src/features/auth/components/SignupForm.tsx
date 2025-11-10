@@ -56,7 +56,12 @@ export function SignupForm() {
   const agreeTerms = watch('agreeTerms')
 
   const onSubmit = handleSubmit((data) => {
-    signupMutation.mutate(data)
+    signupMutation.mutate({
+      username: data.userName,
+      email: data.email,
+      hashed_password: data.password,
+      role: 'distributor',
+    })
   })
 
   return (
