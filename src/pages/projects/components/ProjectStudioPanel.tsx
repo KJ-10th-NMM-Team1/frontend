@@ -7,9 +7,12 @@ import { Button } from '@/shared/ui/Button'
 
 type ProjectStudioPanelProps = {
   projectId: string
+  selectedLanguage: string
+  isSourceLanguage: boolean  
 }
 
-export function ProjectStudioPanel({ projectId }: ProjectStudioPanelProps) {
+export function ProjectStudioPanel({ projectId, selectedLanguage, isSourceLanguage }: ProjectStudioPanelProps) {
+  const buttonLabel = isSourceLanguage ? '더빙 스튜디오 열기' : `더빙 스튜디오 열기(${selectedLanguage})`
   return (
     <aside className="border-surface-3 flex items-center rounded-3xl border bg-white p-6">
       <div className="space-y-3">
@@ -19,11 +22,19 @@ export function ProjectStudioPanel({ projectId }: ProjectStudioPanelProps) {
           asChild
           onClick={() => trackEvent('enter_editor_click', { projectId })}
           className="w-full"
+          variant={isSourceLanguage ? 'secondary' : 'primary'} // 필요시          
         >
-          <Link to={routes.editor(projectId)}>
-            <ExternalLink className="h-4 w-4" />
-            더빙 스튜디오 열기
-          </Link>
+          {isSourceLanguage ? (
+            <div className="inline-flex items-center gap-2">
+              <ExternalLink className="h-4 w-4" />
+              {buttonLabel}
+            </div>
+          ) : (
+            <Link to={routes.editor(projectId)}>
+              <ExternalLink className="h-4 w-4" />
+              {buttonLabel}
+            </Link>
+          )}
         </Button>
       </div>
     </aside>
