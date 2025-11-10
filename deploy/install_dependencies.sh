@@ -9,10 +9,16 @@ if [ ! -d "$APP_DIR" ]; then
 fi
 cd "$APP_DIR"
 
+PNPM_BIN="$HOME/.local/bin"
+mkdir -p "$PNPM_BIN"
+export PATH="$PNPM_BIN:$PATH"
+
 if ! command -v pnpm >/dev/null 2>&1; then
-  corepack enable pnpm
+  corepack enable pnpm --install-directory "$PNPM_BIN"
   corepack prepare pnpm@8 --activate
 fi
+
+pnpm build
 
 echo "Installing dependencies with npm ci..."
 pnpm install --frozen-lockfile
