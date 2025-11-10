@@ -4,7 +4,10 @@
 APP_DIR="/home/ubuntu/app"
 cd $APP_DIR
 
+PNPM_BIN="$HOME/.local/bin"
+export PATH="$PNPM_BIN:$PATH"
+
 echo "Starting React SSR (Node.js) server using pm2..."
 pm2 delete react-app || true
-pm2 start pnpm --name "react-app" -- dev
+pm2 start pnpm --name "react-app" -- dev --host 0.0.0.0 --port 5173
 echo "Life Cycle - ApplicationStart: Server successfully started"
