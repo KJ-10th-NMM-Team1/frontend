@@ -4,7 +4,7 @@ import tsconfigPaths from 'vite-tsconfig-paths'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  const apiBase = env.VITE_API_BASE_URL || 'http://localhost:8787'
+  const apiBase = env.VITE_API_BASE_URL || 'http://localhost:8000'
 
   return {
     plugins: [react(), tsconfigPaths()],
