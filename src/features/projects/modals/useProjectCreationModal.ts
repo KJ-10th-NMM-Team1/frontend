@@ -153,13 +153,14 @@ export function useProjectCreationModal() {
       speakerCount: values.speakerCount,
     }
     setDraft(nextDraft)
-
     updateProgress('processing', 0)
+
     createProjectMutation.mutate(
-      { ...nextDraft, owner_code: 'temp' },
+      { ...nextDraft, owner_id: 'temp' },
       {
         onSuccess(project) {
           const projectId = project.project_id
+
           if (nextDraft.sourceType === 'file') {
             if (!nextDraft.file) return
             void handleFileUpload(projectId, nextDraft.file)

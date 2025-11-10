@@ -15,16 +15,20 @@ interface ProjectThumbnail {
 export interface ProjectSummary {
   id: string
   title: string
-  sourceLanguage: string
+  owner_id: string
+  source_type: 'file' | 'youtube'
+  duration_seconds: number
   status: ProjectStatus
+  source_language: string
   dueDate: string
   assignedEditor?: string
   createdAt?: string
   video_source?: string
-  thumbnailUrl?: string
-  durationSeconds?: number
+  // thumbnailUrl?: string
   targets?: ProjectTarget[]
   thumbnail?: ProjectThumbnail
+  glosary_id?: string
+  created_at: Date
 }
 
 export type ProjectTargetStatus = 'pending' | 'processing' | 'completed' | 'failed'
@@ -49,24 +53,21 @@ export interface ProjectAsset {
 }
 
 export interface ProjectPayload {
+  owner_id: string
   title: string
   sourceType: 'file' | 'youtube'
-  detectAutomatically: boolean
-  sourceLanguage?: string | null
-  speakerCount: number
   youtubeUrl?: string
   fileName?: string
   fileSize?: number
-  owner_code: string
+  speakerCount: number
+  detectAutomatically: boolean
+  sourceLanguage?: string | null
+  targetLanguages: string[]
 }
 
 export interface ProjectDetail extends ProjectSummary {
-  description?: string
-  createdAt: string
-  // glossaryName?: string
-  speakerCount: number
+  speaker_count: number
   assets: ProjectAsset[]
-  // notes?: string
 }
 
 export interface ProjectResponse extends ProjectDetail {
@@ -116,7 +117,7 @@ export const sampleProjects: ProjectDetail[] = [
     title: 'AI Voice-over Launch Trailer',
     sourceLanguage: 'ko',
     status: 'completed',
-    video_source: 'https://www.w3schools.com/html/mov_bbb.mp4',    
+    video_source: 'https://www.w3schools.com/html/mov_bbb.mp4',
     dueDate: '2025-02-06',
     assignedEditor: 'translator-amy',
     description:
@@ -125,7 +126,7 @@ export const sampleProjects: ProjectDetail[] = [
     speakerCount: 3,
     thumbnailUrl:
       'https://images.unsplash.com/photo-1487528278747-ba99ed528ebc?auto=format&fit=crop&w=1200&q=80',
-    durationSeconds: 126,        
+    durationSeconds: 126,
     assets: [
       {
         id: 'asset-en-video',
@@ -166,7 +167,7 @@ export const sampleProjects: ProjectDetail[] = [
         codec: 'H.264',
         resolution: '1920x1080',
         sizeMb: 208,
-      },             
+      },
     ],
     targets: [
       {
