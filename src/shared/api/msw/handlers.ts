@@ -32,7 +32,6 @@ export const handlers = [
       id: project.id,
       title: project.title,
       sourceLanguage: project.sourceLanguage,
-      targetLanguages: project.targetLanguages,
       status: project.status,
       dueDate: project.dueDate,
       assignedEditor: project.assignedEditor,
