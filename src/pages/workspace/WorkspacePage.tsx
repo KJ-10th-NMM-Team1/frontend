@@ -64,7 +64,7 @@ export default function WorkspacePage() {
     const term = searchTerm.trim().toLowerCase()
     if (!term) return projects
     return projects.filter((project) => {
-      const haystack = `${project.title} ${project.status} ${project.targetLanguages.join(' ')}`
+      const haystack = `${project.title} ${project.status}`
       return haystack.toLowerCase().includes(term)
     })
   }, [projects, searchTerm])
