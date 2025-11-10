@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
+
 import { useQuery } from '@tanstack/react-query'
-import { getCurrentUser } from '../api/authApi'
+
 import { useAuthStore } from '../../../shared/store/useAuthStore'
+import { getCurrentUser } from '../api/authApi'
 
 export function useAuthRestore() {
   const authenticate = useAuthStore((state) => state.authenticate)

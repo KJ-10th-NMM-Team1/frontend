@@ -1,6 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 
+import { routes } from '../../../shared/config/routes'
+import { trackEvent } from '../../../shared/lib/analytics'
+import { useAuthStore } from '../../../shared/store/useAuthStore'
+import { useUiStore } from '../../../shared/store/useUiStore'
 import {
   login,
   signup,
@@ -9,10 +13,6 @@ import {
   type LoginPayload,
   type SignupPayload,
 } from '../api/authApi'
-import { trackEvent } from '../../../shared/lib/analytics'
-import { useAuthStore } from '../../../shared/store/useAuthStore'
-import { useUiStore } from '../../../shared/store/useUiStore'
-import { routes } from '../../../shared/config/routes'
 
 // type Credentials = {
 //   email: string
@@ -188,10 +188,10 @@ export function useLogoutMutation() {
     onSuccess: () => {
       // 인증 상태 초기화
       signOut()
-      
+
       // React Query 캐시 초기화
       queryClient.clear()
-      
+
       showToast({
         id: 'logout-success',
         title: '로그아웃 완료',
@@ -203,7 +203,7 @@ export function useLogoutMutation() {
       // API 호출 실패해도 로컬 상태는 초기화
       signOut()
       queryClient.clear()
-      
+
       console.error('Logout error:', error)
       navigate(routes.home)
     },

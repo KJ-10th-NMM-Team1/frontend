@@ -24,7 +24,7 @@ export interface LoginResponse {
   message: string
 }
 
-export interface SignupResponse extends UserOut {}
+export type SignupResponse = UserOut
 
 export async function signup(payload: SignupPayload): Promise<SignupResponse> {
   return apiClient.post('api/auth/signup', { json: payload }).json<SignupResponse>()

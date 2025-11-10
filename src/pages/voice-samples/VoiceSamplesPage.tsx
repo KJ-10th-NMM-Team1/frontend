@@ -3,15 +3,15 @@ import { useMemo, useState } from 'react'
 import { Search, Waves } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
-import { useVoiceSamples } from '@/features/voice-samples/hooks/useVoiceSamples'
+import type { VoiceSample } from '@/entities/voice-sample/types'
 import { VoiceSampleCard } from '@/features/voice-samples/components/VoiceSampleCard'
+import { useVoiceSamples } from '@/features/voice-samples/hooks/useVoiceSamples'
 import { VoiceSampleCreationModal } from '@/features/voice-samples/modals/VoiceSampleCreationModal'
 import { useAuthStore } from '@/shared/store/useAuthStore'
 import { Checkbox } from '@/shared/ui/Checkbox'
 import { Input } from '@/shared/ui/Input'
 import { Label } from '@/shared/ui/Label'
 import { Spinner } from '@/shared/ui/Spinner'
-import type { VoiceSample } from '@/entities/voice-sample/types'
 
 export default function VoiceSamplesPage() {
   const { data, isLoading } = useVoiceSamples()
@@ -24,9 +24,8 @@ export default function VoiceSamplesPage() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const navigate = useNavigate()
 
-  const samples = data?.samples || []
-
   const filteredSamples = useMemo(() => {
+    const samples = data?.samples || []
     let filtered = samples
 
     // Search filter
@@ -52,7 +51,7 @@ export default function VoiceSamplesPage() {
     }
 
     return filtered
-  }, [samples, searchTerm, showMySamples, showFavorites])
+  }, [data?.samples, searchTerm, showMySamples, showFavorites])
 
   if (!isAuthenticated) {
     navigate('/auth/login', { replace: true })

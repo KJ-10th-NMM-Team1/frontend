@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import type { VoiceSample, VoiceSamplePayload } from '@/entities/voice-sample/types'
+import { queryKeys } from '@/shared/config/queryKeys'
+
 import {
   createVoiceSample,
   deleteVoiceSample,
@@ -8,7 +10,6 @@ import {
   toggleFavorite,
   updateVoiceSample,
 } from '../api/voiceSamplesApi'
-import { queryKeys } from '@/shared/config/queryKeys'
 
 export function useVoiceSamples() {
   return useQuery({
@@ -23,7 +24,7 @@ export function useCreateVoiceSample() {
   return useMutation({
     mutationFn: createVoiceSample,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.voiceSamples.list() })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.voiceSamples.list() })
     },
   })
 }
@@ -35,7 +36,7 @@ export function useUpdateVoiceSample() {
     mutationFn: ({ id, payload }: { id: string; payload: Partial<VoiceSamplePayload> }) =>
       updateVoiceSample(id, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.voiceSamples.list() })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.voiceSamples.list() })
     },
   })
 }
@@ -46,7 +47,7 @@ export function useDeleteVoiceSample() {
   return useMutation({
     mutationFn: deleteVoiceSample,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.voiceSamples.list() })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.voiceSamples.list() })
     },
   })
 }
@@ -58,7 +59,7 @@ export function useToggleFavorite() {
     mutationFn: ({ id, isFavorite }: { id: string; isFavorite: boolean }) =>
       toggleFavorite(id, isFavorite),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.voiceSamples.list() })
+      void queryClient.invalidateQueries({ queryKey: queryKeys.voiceSamples.list() })
     },
   })
 }

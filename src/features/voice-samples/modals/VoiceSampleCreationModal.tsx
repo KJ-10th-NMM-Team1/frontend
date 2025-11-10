@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { CloudUpload, Upload, X } from 'lucide-react'
 
 import type { VoiceSamplePayload } from '@/entities/voice-sample/types'
+import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/Button'
 import { Checkbox } from '@/shared/ui/Checkbox'
 import {
@@ -13,8 +14,8 @@ import {
 } from '@/shared/ui/Dialog'
 import { Input } from '@/shared/ui/Input'
 import { Label } from '@/shared/ui/Label'
+
 import { useCreateVoiceSample } from '../hooks/useVoiceSamples'
-import { cn } from '@/shared/lib/utils'
 
 type VoiceSampleCreationModalProps = {
   open: boolean
@@ -41,7 +42,7 @@ export function VoiceSampleCreationModal({
     }
   }
 
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
 
     if (!name.trim()) {
@@ -60,12 +61,14 @@ export function VoiceSampleCreationModal({
       testText: testText.trim() || undefined,
     }
 
-    try {
-      await createMutation.mutateAsync(payload)
-      handleClose()
-    } catch (error) {
-      console.error('Failed to create voice sample:', error)
-    }
+    void (async () => {
+      try {
+        await createMutation.mutateAsync(payload)
+        handleClose()
+      } catch (error) {
+        console.error('Failed to create voice sample:', error)
+      }
+    })()
   }
 
   const handleClose = () => {

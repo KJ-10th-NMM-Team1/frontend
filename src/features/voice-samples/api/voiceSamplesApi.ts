@@ -1,10 +1,14 @@
-import type { VoiceSample, VoiceSamplePayload, VoiceSamplesResponse } from '@/entities/voice-sample/types'
+import type {
+  VoiceSample,
+  VoiceSamplePayload,
+  VoiceSamplesResponse,
+} from '@/entities/voice-sample/types'
 // import { apiClient } from '@/shared/api/client' // TODO: 실제 API 연결 시 사용
 
-export async function fetchVoiceSamples() {
+export function fetchVoiceSamples() {
   // TODO: 실제 API 엔드포인트로 교체 필요
   // return apiClient.get('api/voice-samples').json<VoiceSamplesResponse>()
-  
+
   // 임시로 목 데이터 반환
   return {
     samples: [
@@ -85,7 +89,7 @@ export async function fetchVoiceSamples() {
   } as VoiceSamplesResponse
 }
 
-export async function createVoiceSample(payload: VoiceSamplePayload) {
+export function createVoiceSample(payload: VoiceSamplePayload) {
   // TODO: 실제 API 엔드포인트로 교체 필요
   // const formData = new FormData()
   // formData.append('name', payload.name)
@@ -94,7 +98,7 @@ export async function createVoiceSample(payload: VoiceSamplePayload) {
   // if (payload.audioFile) formData.append('audioFile', payload.audioFile)
   // if (payload.testText) formData.append('testText', payload.testText)
   // return apiClient.post('api/voice-samples', { body: formData }).json<VoiceSample>()
-  
+
   // 임시로 목 데이터 반환
   return {
     id: Date.now().toString(),
@@ -105,29 +109,28 @@ export async function createVoiceSample(payload: VoiceSamplePayload) {
   } as VoiceSample
 }
 
-export async function updateVoiceSample(id: string, payload: Partial<VoiceSamplePayload>) {
+export function updateVoiceSample(id: string, payload: Partial<VoiceSamplePayload>) {
   // TODO: 실제 API 엔드포인트로 교체 필요
   // return apiClient.patch(`api/voice-samples/${id}`, { json: payload }).json<VoiceSample>()
-  
+
   return {
     id,
     ...payload,
   } as VoiceSample
 }
 
-export async function deleteVoiceSample(id: string) {
+export function deleteVoiceSample(id: string) {
   // TODO: 실제 API 엔드포인트로 교체 필요
   // await apiClient.delete(`api/voice-samples/${id}`)
   return { id }
 }
 
-export async function toggleFavorite(id: string, isFavorite: boolean) {
+export function toggleFavorite(id: string, isFavorite: boolean) {
   // TODO: 실제 API 엔드포인트로 교체 필요
   // return apiClient.patch(`api/voice-samples/${id}/favorite`, { json: { isFavorite } }).json<VoiceSample>()
-  
+
   return {
     id,
     isFavorite,
   } as Partial<VoiceSample>
 }
-

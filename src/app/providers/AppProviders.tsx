@@ -4,12 +4,12 @@ import { useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
-import { useLanguage } from '@/features/languages/hooks/useLanguage'
 import { useAuthRestore } from '@/features/auth/hooks/useAuthRestore'
+import { useLanguage } from '@/features/languages/hooks/useLanguage'
 
 import { env } from '../../shared/config/env'
-import { AppToaster } from '../../shared/ui/Toaster'
 import { Spinner } from '../../shared/ui/Spinner'
+import { AppToaster } from '../../shared/ui/Toaster'
 
 function createQueryClient() {
   return new QueryClient({
