@@ -113,13 +113,13 @@ function LanguagePreview({
           )
         })}
       </div>
-      <div className="border-surface-3 bg-surface-1 relative overflow-hidden rounded-md border">
+      <div className="border-surface-3 bg-surface-1 relative overflow-hidden rounded-lg border">
         {previewSource ? (
           <video
             key={`${language}-${version}`}
             controls
             autoPlay={false}
-            className="h-[24em] w-full bg-black object-contain"
+            className="h-auto max-h-[32em] min-h-[20em] w-full bg-black"
             src={videoSrc}
             preload="metadata"
           >
