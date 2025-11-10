@@ -22,16 +22,18 @@ export function ProjectStudioPanel({
   const { data: languageData } = useLanguage()
 
   const languageNameMap = useMemo(() => {
-    const items = languageData?.items ?? []
+    const items = languageData ?? []
     return items.reduce<Record<string, string>>((acc, item) => {
-      acc[item.code] = item.nameKo
+      acc[item.language_code] = item.name_ko
       return acc
     }, {})
   }, [languageData])
 
   const selectedLanguageLabel = languageNameMap[selectedLanguageCode] ?? selectedLanguageCode
 
-  const buttonLabel = isSourceLanguage ? '더빙 스튜디오 열기' : `더빙 스튜디오 열기(${selectedLanguageLabel})`
+  const buttonLabel = isSourceLanguage
+    ? '더빙 스튜디오 열기'
+    : `더빙 스튜디오 열기(${selectedLanguageLabel})`
   return (
     <aside className="border-surface-3 flex items-center rounded-3xl border bg-white p-6">
       <div className="space-y-3">
@@ -41,7 +43,7 @@ export function ProjectStudioPanel({
           asChild
           onClick={() => trackEvent('enter_editor_click', { projectId })}
           className="w-full"
-          variant={isSourceLanguage ? 'secondary' : 'primary'} // 필요시          
+          variant={isSourceLanguage ? 'secondary' : 'primary'} // 필요시
         >
           {isSourceLanguage ? (
             <div className="inline-flex items-center gap-2">

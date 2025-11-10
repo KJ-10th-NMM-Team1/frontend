@@ -17,7 +17,7 @@ import { ProjectStudioPanel } from './components/ProjectStudioPanel'
 export default function ProjectDetailPage() {
   const { id = '' } = useParams<{ id: string }>()
   const { data: project, isLoading } = useProject(id)
-  const { data: languageData } = useLanguage()  
+  const { data: languageData } = useLanguage()
   const roles = useAuthStore((state) => state.roles)
   const [language, setLanguage] = useState<string>()
   const [version, setVersion] = useState<'original' | 'translated'>('translated')
@@ -26,18 +26,20 @@ export default function ProjectDetailPage() {
   const assetsByLanguage = useMemo(() => {
     if (!project) return {}
     return (project.assets ?? []).reduce<Record<string, typeof project.assets>>((acc, asset) => {
-       acc[asset.languageCode] = acc[asset.languageCode] ? [...acc[asset.languageCode], asset] : [asset]
+      acc[asset.languageCode] = acc[asset.languageCode]
+        ? [...acc[asset.languageCode], asset]
+        : [asset]
       return acc
     }, {})
   }, [project])
 
   const languageNameMap = useMemo(() => {
-    const items = languageData?.items ?? []
+    const items = languageData ?? []
     return items.reduce<Record<string, string>>((acc, item) => {
-      acc[item.code] = item.nameKo
+      acc[item.language_code] = item.name_ko
       return acc
     }, {})
-  }, [languageData])  
+  }, [languageData])
 
   if (isLoading) {
     return (
@@ -63,11 +65,11 @@ export default function ProjectDetailPage() {
     project.targets && project.targets.length > 0
       ? project.targets.map((target) => target.languageCode)
       : []
-  const sourceLanguageLabel = languageNameMap[project.sourceLanguage] ?? project.sourceLanguage
+  const sourceLanguageLabel = languageNameMap[project.source_language] ?? project.source_language
   const targetLanguageLabels = targetLanguageCodes.map((code) => languageNameMap[code] ?? code)
 
-  const activeLanguage = language ?? targetLanguageCodes[0] ?? project.sourceLanguage  
-  const isSourceLanguage = activeLanguage === project.sourceLanguage
+  const activeLanguage = language ?? targetLanguageCodes[0] ?? project.source_language
+  const isSourceLanguage = activeLanguage === project.source_language
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-12">
@@ -76,11 +78,11 @@ export default function ProjectDetailPage() {
           <p className="text-muted text-xs font-semibold uppercase tracking-wider">프로젝트 상세</p>
           <h1 className="text-foreground mt-1 text-3xl font-semibold">{project.title}</h1>
           <p className="text-muted mt-2 text-sm">
-            {sourceLanguageLabel} → {targetLanguageLabels.join(', ')} | 화자{' '}
-            {project.speakerCount}명
+            {sourceLanguageLabel} → {targetLanguageLabels.join(', ')} | 화자 {project.speaker_count}
+            명
           </p>
           <p className="text-muted text-xs">
-            생성일 {new Date(project.createdAt).toLocaleString()}
+            생성일 {new Date(project.created_at).toLocaleString()}
           </p>
         </div>
         {canEdit ? (

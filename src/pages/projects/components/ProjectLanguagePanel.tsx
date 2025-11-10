@@ -27,7 +27,7 @@ export function ProjectLanguagePanel({
   const targetLanguageCodes = project.targets?.map((target) => target.languageCode)
   const uniqueTargetLanguages = Array.from(new Set(targetLanguageCodes))
 
-  const assets = assetsByLanguage[activeLanguage] ?? []    
+  const assets = assetsByLanguage[activeLanguage] ?? []
   return (
     <div className="border-surface-3 bg-surface-1 space-y-3 rounded-3xl border p-6 shadow-soft">
       <LanguagePreview
@@ -36,11 +36,11 @@ export function ProjectLanguagePanel({
         version={version}
         onVersionChange={onVersionChange}
         videoSource={project.video_source}
-        sourceLanguage={project.sourceLanguage}
+        sourceLanguage={project.source_language}
         targetLanguages={uniqueTargetLanguages}
         onLanguageChange={onLanguageChange}
         activeLanguage={activeLanguage}
-        languageNameMap={languageNameMap}        
+        languageNameMap={languageNameMap}
       />
     </div>
   )
@@ -78,7 +78,6 @@ function LanguagePreview({
       language: lang,
     }
   })
-  
 
   const selectedAsset = assets.find((asset) => asset.type === 'preview_video')
   const translatedSource = selectedAsset?.file_path

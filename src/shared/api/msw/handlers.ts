@@ -38,13 +38,13 @@ export const handlers = [
     const items = sampleProjects.map((project) => ({
       id: project.id,
       title: project.title,
-      sourceLanguage: project.sourceLanguage,
+      source_language: project.source_language,
       status: project.status,
       dueDate: project.dueDate,
       assignedEditor: project.assignedEditor,
       createdAt: project.createdAt,
-      thumbnailUrl: project.thumbnailUrl,
-      durationSeconds: project.durationSeconds,
+      thumbnail: project.thumbnail,
+      duration_seconds: project.duration_seconds,
       targets: project.targets,
     }))
 
@@ -140,7 +140,4 @@ export const handlers = [
       user: mockUser,
     })
   }),
-
 ]
-
-

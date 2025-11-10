@@ -91,12 +91,15 @@ export function EpisodeCard({ project }: { project: ProjectSummary }) {
 
   // 타겟 언어
   const { data } = useLanguage()
-  const languageItems = data?.items ?? EMPTY_LANGUAGES
-  const languageMap = useMemo(
-    () => Object.fromEntries(languageItems.map((lang) => [lang.language_code, lang.name_ko])),
-    [languageItems],
-  )
-  const sourceLangLabel = languageMap[project.sourceLanguage] ?? project.sourceLanguage
+  const languageItems = data ?? EMPTY_LANGUAGES
+  const languageMap = useMemo(() => {
+    const map: Record<string, string> = {}
+    languageItems.forEach((lang) => {
+      map[lang.language_code] = lang.name_ko
+    })
+    return map
+  }, [languageItems])
+  const sourceLangLabel = languageMap[project.source_language] ?? project.source_language
   const targetLangLabels =
     project.targets?.map((target) => languageMap[target.languageCode] ?? target.languageCode) ?? []
   const thumbnaileUrl =
@@ -131,9 +134,9 @@ export function EpisodeCard({ project }: { project: ProjectSummary }) {
           >
             {statusLabel}
           </span>
-          {project.durationSeconds != null && (
+          {project.duration_seconds != null && (
             <span className="absolute bottom-2 right-2 rounded-md bg-black/70 px-2 py-0.5 text-xs font-medium text-white">
-              {formatDuration(project.durationSeconds)}
+              {formatDuration(project.duration_seconds)}
             </span>
           )}
         </div>
