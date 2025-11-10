@@ -1,17 +1,18 @@
 import { useState } from 'react'
+
+import { HTTPError } from 'ky'
+import { CloudUpload, Upload } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
-import { CloudUpload, Upload } from 'lucide-react'
-import { HTTPError } from 'ky'
 
+import { routes } from '@/shared/config/routes'
 import { cn } from '@/shared/lib/utils'
+import { useUiStore } from '@/shared/store/useUiStore'
 import { Button } from '@/shared/ui/Button'
 import { Checkbox } from '@/shared/ui/Checkbox'
 import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/Dialog'
 import { Input } from '@/shared/ui/Input'
 import { Label } from '@/shared/ui/Label'
-import { useUiStore } from '@/shared/store/useUiStore'
-import { routes } from '@/shared/config/routes'
 
 import { usePrepareUploadMutation, useFinishUploadMutation } from '../hooks/useVoiceSampleStorage'
 

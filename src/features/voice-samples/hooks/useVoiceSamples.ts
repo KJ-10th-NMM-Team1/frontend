@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import type { VoiceSamplePayload } from '@/entities/voice-sample/types'
+import type { VoiceSample } from '@/entities/voice-sample/types'
 import { queryKeys } from '@/shared/config/queryKeys'
 
 import {
@@ -10,7 +11,6 @@ import {
   toggleFavorite,
   updateVoiceSample,
 } from '../api/voiceSamplesApi'
-import type { VoiceSample } from '@/entities/voice-sample/types'
 
 export function useVoiceSamples() {
   return useQuery({

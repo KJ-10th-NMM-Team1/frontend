@@ -1,4 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+
+import type { VoiceSample } from '@/entities/voice-sample/types'
+import { queryKeys } from '@/shared/config/queryKeys'
+
 import {
   prepareVoiceSampleUpload,
   finishVoiceSampleUpload,
@@ -6,8 +10,6 @@ import {
   type PrepareUploadResponse,
   type FinishUploadPayload,
 } from '../api/voiceSamplesApi'
-import type { VoiceSample } from '@/entities/voice-sample/types'
-import { queryKeys } from '@/shared/config/queryKeys'
 
 export function usePrepareUploadMutation() {
   return useMutation<PrepareUploadResponse, Error, PrepareUploadPayload>({

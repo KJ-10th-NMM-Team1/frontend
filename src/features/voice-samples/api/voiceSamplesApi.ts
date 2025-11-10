@@ -1,4 +1,3 @@
-import { apiClient, apiGet, apiPost } from '@/shared/api/client'
 import type {
   VoiceSample,
   VoiceSampleApiResponse,
@@ -6,6 +5,7 @@ import type {
   VoiceSamplesApiResponse,
   VoiceSamplesResponse,
 } from '@/entities/voice-sample/types'
+import { apiClient, apiGet, apiPost } from '@/shared/api/client'
 // import { apiClient } from '@/shared/api/client' // TODO: 실제 API 연결 시 사용
 
 // 백엔드 응답을 프론트엔드 타입으로 변환
