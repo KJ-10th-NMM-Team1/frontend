@@ -1,7 +1,7 @@
 import { Play } from 'lucide-react'
 
+import { env } from '@/shared/config/env'
 import { Button } from '@/shared/ui/Button'
-import { resolveMediaUrl } from '@/shared/lib/media'
 
 type StudioVideoPreviewProps = {
   activeLanguage: string
@@ -18,7 +18,7 @@ export function StudioVideoPreview({
   videoSource
 }: StudioVideoPreviewProps) {
 
-  const videoSrc = resolveMediaUrl(videoSource)
+  const videoSrc = `${env.apiBaseUrl}/api/storage/media/${videoSource}`
 
   return (
     <section className="border-surface-3 bg-surface-1 flex flex-col gap-3 rounded-3xl border p-4 shadow-soft">
@@ -35,19 +35,15 @@ export function StudioVideoPreview({
             <Play className="h-5 w-5" />
             재생
           </Button> */}
-          {videoSrc ? (
-            <video
-              controls
-              autoPlay={false}
-              className="h-auto max-h-[32em] min-h-[20em] w-full bg-black"
-              src={videoSrc}
-              preload="metadata"
-            >
-              <track kind="captions" />
-            </video>
-          ) : (
-            <div className="text-muted text-sm">영상 소스를 불러오지 못했습니다.</div>
-          )}
+          <video
+            controls
+            autoPlay={false}
+            className="h-auto max-h-[32em] min-h-[20em] w-full bg-black"
+            src={videoSrc}
+            preload="metadata"
+          >
+            <track kind="captions" />
+          </video>
 
         </div>
       </div>

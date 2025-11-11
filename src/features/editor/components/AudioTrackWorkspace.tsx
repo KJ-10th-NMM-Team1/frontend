@@ -4,26 +4,20 @@ import { AudioTimeline } from './audio-track/AudioTimeline'
 import { AudioTimelineControls } from './audio-track/AudioTimelineControls'
 import { AudioTrackHeader } from './audio-track/AudioTrackHeader'
 import { AudioTrackSidebar } from './audio-track/AudioTrackSidebar'
-import type { WaveformBar } from './audio-track/types'
 import { useAudioTimeline } from './audio-track/useAudioTimeline'
 
 type AudioTrackWorkspaceProps = {
   segments: Segment[]
   duration: number
-  waveformData?: WaveformBar[]
 }
 
-export function AudioTrackWorkspace({
-  segments,
-  duration,
-  waveformData,
-}: AudioTrackWorkspaceProps) {
+export function AudioTrackWorkspace({ segments, duration }: AudioTrackWorkspaceProps) {
   const {
     playbackRate,
     setPlaybackRate,
     trackRows,
     timelineTicks,
-    waveformData: timelineWaveformData,
+    waveformData,
     timelineRef,
     playheadPercent,
     onTimelinePointerDown,
@@ -33,8 +27,7 @@ export function AudioTrackWorkspace({
     isPlaying,
     togglePlayback,
     formatTime,
-  } = useAudioTimeline(segments, duration, waveformData)
-
+  } = useAudioTimeline(segments, duration)
   return (
     <section className="border-surface-3 bg-surface-1 flex flex-col gap-4 rounded-3xl border p-5 shadow-soft">
       <AudioTrackHeader
@@ -56,7 +49,7 @@ export function AudioTrackWorkspace({
           <AudioTimeline
             trackRows={trackRows}
             timelineTicks={timelineTicks}
-            waveformData={timelineWaveformData}
+            waveformData={waveformData}
             timelineRef={timelineRef}
             playheadPercent={playheadPercent}
             onTimelinePointerDown={onTimelinePointerDown}

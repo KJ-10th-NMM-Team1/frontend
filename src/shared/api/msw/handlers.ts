@@ -34,10 +34,6 @@ const mockUser = {
 }
 
 export const handlers = [
-  http.get('/api/storage/media/:key*', () => {
-    return HttpResponse.passthrough()
-  }),
-
   http.get('/api/projects', () => {
     const items = sampleProjects.map((project) => ({
       id: project.id,

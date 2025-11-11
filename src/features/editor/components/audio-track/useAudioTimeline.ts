@@ -6,7 +6,7 @@ import { shallow } from 'zustand/shallow'
 import type { Segment } from '@/entities/segment/types'
 import { useEditorStore } from '@/shared/store/useEditorStore'
 
-import type { TrackRow, WaveformBar } from './types'
+import type { TrackRow } from './types'
 
 const STATIC_TRACKS: TrackRow[] = [
   { id: 'track-original', label: 'Original', color: '#ec4899', type: 'waveform' },
@@ -15,11 +15,7 @@ const STATIC_TRACKS: TrackRow[] = [
 
 const ROW_HEIGHT = 84
 
-export function useAudioTimeline(
-  segments: Segment[],
-  duration: number,
-  externalWaveformData?: WaveformBar[],
-) {
+export function useAudioTimeline(segments: Segment[], duration: number) {
   const timelineRef = useRef<HTMLDivElement>(null)
   const rafRef = useRef<number>()
   const playheadRef = useRef(0)
@@ -157,15 +153,12 @@ export function useAudioTimeline(
   )
 
   const waveformData = useMemo(() => {
-    if (externalWaveformData && externalWaveformData.length > 0) {
-      return externalWaveformData
-    }
     const bars = Math.max(Math.floor(duration) * 6, 48)
     return Array.from({ length: bars }, (_, index) => ({
       id: index,
       height: 30 + Math.random() * 60,
     }))
-  }, [duration, externalWaveformData])
+  }, [duration])
 
   const timelineTicks = useMemo(() => {
     if (duration === 0) return [0]
