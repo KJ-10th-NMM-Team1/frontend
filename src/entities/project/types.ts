@@ -36,7 +36,7 @@ export type ProjectTargetStatus = 'pending' | 'processing' | 'completed' | 'fail
 export interface ProjectTarget {
   id: string
   projectId: string
-  languageCode: string
+  language_code: string
   status: ProjectTargetStatus
   progress: number
 }

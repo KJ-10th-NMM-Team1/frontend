@@ -25,7 +25,7 @@ export function ProjectLanguagePanel({
   assetsByLanguage,
   languageNameMap = {},
 }: ProjectLanguagePanelProps) {
-  const targetLanguageCodes = project.targets?.map((target) => target.languageCode)
+  const targetLanguageCodes = project.targets?.map((target) => target.language_code)
   const uniqueTargetLanguages = Array.from(new Set(targetLanguageCodes))
 
   const assets = assetsByLanguage[activeLanguage] ?? []
@@ -84,7 +84,10 @@ function LanguagePreview({
   const translatedSource = selectedAsset?.file_path
   const previewSource = version === 'original' ? videoSource : (translatedSource ?? videoSource)
   const languageLabel = languageNameMap[language] ?? language
-  const videoSrc = `${env.apiBaseUrl}/api/storage/media/${previewSource}`
+  const isAbsoluteUrl = previewSource?.startsWith('http')
+  const videoSrc = isAbsoluteUrl
+    ? previewSource
+    : `${env.apiBaseUrl}/api/storage/media/${previewSource}`
 
   return (
     <div className="space-y-5">

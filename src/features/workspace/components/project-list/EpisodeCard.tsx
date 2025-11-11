@@ -101,7 +101,7 @@ export function EpisodeCard({ project }: { project: ProjectSummary }) {
   }, [languageItems])
   const sourceLangLabel = languageMap[project.source_language] ?? project.source_language
   const targetLangLabels =
-    project.targets?.map((target) => languageMap[target.languageCode] ?? target.languageCode) ?? []
+    project.targets?.map((target) => languageMap[target.language_code] ?? target.language_code) ?? []
   const thumbnaileUrl =
     project.thumbnail?.kind === 's3'
       ? `https://${env.awsS3Bucket}.s3.${env.awsRegion}.amazonaws.com/${project.thumbnail.key}`
@@ -157,7 +157,7 @@ export function EpisodeCard({ project }: { project: ProjectSummary }) {
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
           {project.targets?.map((t) => {
-            const label = languageMap[t.languageCode] ?? t.languageCode
+            const label = languageMap[t.language_code] ?? t.language_code
             const statusLabel = getProjectTargetStatusLabel(t.status)
             const statusClass = projectTargetStatusClassMap[statusLabel]
             return (

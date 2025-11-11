@@ -63,7 +63,7 @@ export default function ProjectDetailPage() {
 
   const targetLanguageCodes =
     project.targets && project.targets.length > 0
-      ? project.targets.map((target) => target.languageCode)
+      ? project.targets.map((target) => target.language_code)
       : []
   const sourceLanguageLabel = languageNameMap[project.source_language] ?? project.source_language
   const targetLanguageLabels = targetLanguageCodes.map((code) => languageNameMap[code] ?? code)
