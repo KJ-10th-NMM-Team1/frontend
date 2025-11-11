@@ -3,17 +3,9 @@ import type { PointerEvent as ReactPointerEvent, MouseEvent as ReactMouseEvent, 
 import type { Segment } from '@/entities/segment/types'
 import { useEditorStore } from '@/shared/store/useEditorStore'
 
-import type { Segment } from '@/entities/segment/types'
-import { env } from '@/shared/config/env'
-import { useEditorStore } from '@/shared/store/useEditorStore'
-
 import type { TrackRow } from './types'
 
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 419e5817170be518925c1a17886836d9d561c311
 type WaveformBar = {
   id: number
   height: number

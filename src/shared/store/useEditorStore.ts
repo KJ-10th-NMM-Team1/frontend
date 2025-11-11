@@ -12,10 +12,7 @@ type EditorUiState = {
   isPlaying: boolean
   currentAudio: HTMLAudioElement | null
   currentAudioUrl: string | null  
-<<<<<<< HEAD
   segmentEnd: number | null
-=======
->>>>>>> 419e5817170be518925c1a17886836d9d561c311
   setActiveSegment: (id: string | null) => void
   setPlaybackRate: (rate: number) => void
   toggleSplitMode: () => void
@@ -23,14 +20,9 @@ type EditorUiState = {
   setPlayhead: (time: number) => void
   setPlaying: (isPlaying: boolean) => void
   togglePlayback: () => void
-<<<<<<< HEAD
   playSegmentAudio: (url: string, options?: { audioOffset?: number; timelinePosition?: number }) => void
   stopAudio: () => void  
   setSegmentEnd: (time: number | null) => void
-=======
-  playSegmentAudio: (url: string, startTime?: number) => void
-  stopAudio: () => void  
->>>>>>> 419e5817170be518925c1a17886836d9d561c311
 }
 
 
