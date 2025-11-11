@@ -61,6 +61,8 @@ export default function ProjectDetailPage() {
     )
   }
 
+  const projectId = project.id ?? (project as { _id?: string })._id ?? ''
+
   const targetLanguageCodes =
     project.targets && project.targets.length > 0
       ? project.targets.map((target) => target.language_code)
@@ -89,9 +91,9 @@ export default function ProjectDetailPage() {
           <div className="flex flex-wrap gap-3">
             <Button
               asChild
-              onClick={() => trackEvent('enter_editor_click', { projectId: project._id })}
+              onClick={() => trackEvent('enter_editor_click', { projectId })}
             >
-              <Link to={routes.editor(project._id, activeLanguage)}>편집하기</Link>
+              <Link to={routes.editor(projectId, activeLanguage)}>편집하기</Link>
             </Button>
           </div>
         ) : null}
@@ -108,7 +110,7 @@ export default function ProjectDetailPage() {
           languageNameMap={languageNameMap}
         />
         <ProjectStudioPanel
-          projectId={project._id}
+          projectId={projectId}
           selectedLanguageCode={activeLanguage}
           isSourceLanguage={isSourceLanguage}
         />

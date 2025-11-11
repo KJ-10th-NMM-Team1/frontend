@@ -15,7 +15,8 @@ const tabs = [
 ]
 
 export default function ProjectsListPage() {
-  const { data: projects = [], isLoading } = useProjects()
+  const { data: projectsResponse = [], isLoading } = useProjects()
+  const projects = projectsResponse ?? []
   const [query, setQuery] = useState('')
   const [sortKey, setSortKey] = useState<'recent' | 'dueDate' | 'progress'>('recent')
   const [activeTab, setActiveTab] = useState('assigned')
