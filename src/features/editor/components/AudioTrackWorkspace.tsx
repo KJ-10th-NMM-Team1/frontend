@@ -55,6 +55,7 @@ export function AudioTrackWorkspace({ segments, duration }: AudioTrackWorkspaceP
             onTimelinePointerDown={onTimelinePointerDown}
             rowHeight={rowHeight}
             duration={duration}
+            playhead={playhead}
           />
         </div>
       </div>
