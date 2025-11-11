@@ -5,6 +5,8 @@ import { env } from '@/shared/config/env'
 import { trackEvent } from '@/shared/lib/analytics'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/Button'
+import { useAssets } from '@/features/assets/hooks/useAssets'
+import type { AssetEntry } from '@/entities/asset/types'
 
 type ProjectLanguagePanelProps = {
   project: ProjectDetail
@@ -13,7 +15,7 @@ type ProjectLanguagePanelProps = {
   onLanguageChange: (language: string) => void
   version: 'original' | 'translated'
   onVersionChange: (version: 'original' | 'translated') => void
-  assetsByLanguage: Record<string, ProjectAsset[]>
+  // assetsByLanguage: Record<string, ProjectAsset[]>
   languageNameMap?: Record<string, string>
 }
 
@@ -23,7 +25,7 @@ export function ProjectLanguagePanel({
   onLanguageChange,
   version,
   onVersionChange,
-  assetsByLanguage,
+  // assetsByLanguage,
   languageNameMap = {},
 }: ProjectLanguagePanelProps) {
   const targetLanguageCodes = project.targets?.map((target) => target.language_code) ?? []
@@ -34,7 +36,11 @@ export function ProjectLanguagePanel({
       return acc
     }, {}) ?? {}
 
-  const assets = assetsByLanguage[activeLanguage] ?? []
+  const { data: assests } = useAssets(project.id, activeLanguage)
+  const assets = assests ?? []
+
+  // const assets = assetsByLanguage[activeLanguage] ?? []
+
   return (
     <div className="border-surface-3 bg-surface-1 space-y-3 rounded-3xl border p-6 shadow-soft">
       <LanguagePreview
@@ -56,7 +62,7 @@ export function ProjectLanguagePanel({
 
 type LanguagePreviewProps = {
   language: string
-  assets: ProjectAsset[]
+  assets: AssetEntry[]
   version: 'original' | 'translated'
   onVersionChange: (version: 'original' | 'translated') => void
   videoSource?: string
@@ -90,7 +96,7 @@ function LanguagePreview({
     }
   })
 
-  const selectedAsset = assets.find((asset) => asset.type === 'preview_video')
+  const selectedAsset = assets.find((asset) => asset.asset_type === 'preview_video')
   const translatedSource = selectedAsset?.file_path
   const previewSource = version === 'original' ? videoSource : (translatedSource ?? videoSource)
   const languageLabel = languageNameMap[activeLanguage] ?? activeLanguage
@@ -145,31 +151,29 @@ function LanguagePreview({
             <p className="text-sm">더빙 영상 미리보기 (모의)</p>
           </div>
         )}
-        {selectedAsset ? (
+        {/* {selectedAsset ? (
           <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-black/60 px-3 py-1 text-xs text-white">
             <span>{selectedAsset.codec}</span>
             <span>{selectedAsset.resolution}</span>
             <span>{selectedAsset.duration}s</span>
           </div>
-        ) : null}
+        ) : null} */}
       </div>
       <div className="space-y-2">
         <p className="text-foreground mb-3 text-sm font-semibold">결과물</p>
         <div className="space-y-2">
           {assets.map((asset) => (
             <div
-              key={asset.id}
+              key={asset.asset_id}
               className={cn(
                 'border-surface-4 bg-surface-1 text-muted flex items-center justify-between rounded-2xl border px-4 py-3 text-sm',
               )}
             >
               <div>
                 <p className="text-foreground font-medium">
-                  {asset.type === 'preview_video' ? '더빙 영상' : '자막'} • {languageLabel}
+                  {asset.asset_type === 'preview_video' ? '더빙 영상' : '자막'} • {languageLabel}
                 </p>
-                <p className="text-muted text-xs">
-                  {asset.codec} • {asset.resolution} • {asset.sizeMb}MB
-                </p>
+                <p className="text-muted text-xs">{asset.created_at}</p>
               </div>
               <Button
                 variant="outline"
@@ -177,8 +181,8 @@ function LanguagePreview({
                 onClick={() =>
                   trackEvent('asset_download', {
                     lang: languageLabel,
-                    type: asset.type,
-                    assetId: asset.id,
+                    type: asset.asset_type,
+                    assetId: asset.asset_id,
                   })
                 }
               >

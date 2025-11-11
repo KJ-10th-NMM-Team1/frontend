@@ -108,7 +108,6 @@ export default function ProjectDetailPage() {
           onLanguageChange={setLanguage}
           version={version}
           onVersionChange={setVersion}
-          assetsByLanguage={{}}
           languageNameMap={languageNameMap}
         />
         <ProjectStudioPanel

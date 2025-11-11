@@ -15,4 +15,8 @@ export const queryKeys = {
     list: () => ['voice-samples', 'list'] as const,
     detail: (id: string) => ['voice-samples', id] as const,
   },
+  assets: {
+    list: (projectId: string, languageCode?: string) =>
+      ['assets', projectId, languageCode ?? 'all'] as const,
+  },
 }
