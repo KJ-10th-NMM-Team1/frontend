@@ -8,6 +8,8 @@ type EditorUiState = {
   selectedTrackId: string | null
   playhead: number
   isPlaying: boolean
+  currentAudio: HTMLAudioElement | null
+  currentAudioUrl: string | null  
   setActiveSegment: (id: string | null) => void
   setPlaybackRate: (rate: number) => void
   toggleSplitMode: () => void
@@ -15,6 +17,8 @@ type EditorUiState = {
   setPlayhead: (time: number) => void
   setPlaying: (isPlaying: boolean) => void
   togglePlayback: () => void
+  playSegmentAudio: (url: string, startTime?: number) => void
+  stopAudio: () => void  
 }
 
 export const useEditorStore = create<EditorUiState>()(
@@ -25,6 +29,8 @@ export const useEditorStore = create<EditorUiState>()(
     selectedTrackId: null,
     playhead: 0,
     isPlaying: false,
+    currentAudio: null,
+    currentAudioUrl: null,    
     setActiveSegment: (id) =>
       set({ activeSegmentId: id }, false, { type: 'editor/setActiveSegment', payload: id }),
     setPlaybackRate: (rate) =>
@@ -39,5 +45,20 @@ export const useEditorStore = create<EditorUiState>()(
       set({ isPlaying }, false, { type: 'editor/setPlaying', payload: isPlaying }),
     togglePlayback: () =>
       set((state) => ({ isPlaying: !state.isPlaying }), false, { type: 'editor/togglePlayback' }),
+    playSegmentAudio: (url, start = 0) =>
+      set((state) => {
+        const audio = state.currentAudio ?? new Audio()
+        if (state.currentAudioUrl !== url) {
+          audio.src = url
+        }
+        audio.currentTime = start
+        void audio.play()
+        return { currentAudio: audio, currentAudioUrl: url, isPlaying: true, playhead: start }
+      }),
+    stopAudio: () =>
+      set((state) => {
+        state.currentAudio?.pause()
+        return { isPlaying: false }
+      }),
   })),
 )

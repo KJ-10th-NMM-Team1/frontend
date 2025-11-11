@@ -1,6 +1,12 @@
 import type { PointerEvent as ReactPointerEvent, RefObject } from 'react'
 
+import type { Segment } from '@/entities/segment/types'
+import { env } from '@/shared/config/env'
+import { useEditorStore } from '@/shared/store/useEditorStore'
+
 import type { TrackRow } from './types'
+
+
 
 type WaveformBar = {
   id: number
@@ -28,6 +34,7 @@ export function AudioTimeline({
   rowHeight,
   duration,
 }: AudioTimelineProps) {
+  const { playSegmentAudio } = useEditorStore()
   return (
     <div className="bg-surface-1 flex flex-col">
       <div className="border-surface-3 border-b px-4 py-2">
@@ -65,13 +72,22 @@ export function AudioTimeline({
               </div>
             ) : track.type === 'speaker' ? (
               track.segments.map((segment) => {
+
+                const handleSegmentClick = (segment: Segment) => {
+                  if (!segment.segment_audio_url) return
+                  const url = `${env.apiBaseUrl}/api/storage/media/${segment.segment_audio_url}`
+                  if(url) {
+                    playSegmentAudio(url, segment.start)
+                  }
+                }
                 const startPercent = duration > 0 ? (segment.start / duration) * 100 : 0
                 const widthPercent =
                   duration > 0 ? Math.max(((segment.end - segment.start) / duration) * 100, 1) : 0
                 return (
                   <div
                     key={segment.id}
-                    className="absolute top-3 flex h-[60px] items-center justify-between rounded-2xl border px-3 text-xs font-semibold"
+                    className="absolute top-3 flex h-[60px] items-center justify-between rounded-2xl border px-3 text-xs font-semibold cursor-pointer"
+                    onClick={()=> handleSegmentClick(segment)}
                     style={{
                       left: `${startPercent}%`,
                       width: `${widthPercent}%`,
