@@ -12,7 +12,10 @@ export const queryKeys = {
   },
   voiceSamples: {
     all: ['voice-samples'] as const,
-    list: () => ['voice-samples', 'list'] as const,
+    list: (options?: { favoritesOnly?: boolean; mySamplesOnly?: boolean; q?: string }) => {
+      if (!options) return ['voice-samples', 'list'] as const
+      return ['voice-samples', 'list', options] as const
+    },
     detail: (id: string) => ['voice-samples', id] as const,
   },
   assets: {
