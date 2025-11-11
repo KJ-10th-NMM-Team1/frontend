@@ -77,7 +77,6 @@ export function AudioTimeline({
             ) : track.type === 'speaker' ? (
               track.segments.map((segment) => {
 
-
                 const startPercent = duration > 0 ? (segment.start / duration) * 100 : 0
                 const widthPercent =
                   duration > 0 ? Math.max(((segment.end - segment.start) / duration) * 100, 1) : 0   
