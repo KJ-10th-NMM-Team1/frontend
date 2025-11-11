@@ -106,15 +106,16 @@ export function useAudioTimeline(segments: Segment[], duration: number) {
     const palette = ['#f97316', '#0ea5e9', '#8b5cf6', '#22c55e']
     const map = new Map<string, { id: string; label: string; color: string; segments: Segment[] }>()
     segments.forEach((segment, index) => {
-      if (!map.has(segment.speakerId)) {
-        map.set(segment.speakerId, {
-          id: segment.speakerId,
-          label: segment.speakerName,
+      const speakerId = segment.speaker_tag ?? `speaker-${index + 1}`
+      if (!map.has(speakerId)) {
+        map.set(speakerId, {
+          id: segment.speaker_tag ?? '',
+          label: segment.speaker_tag ?? '',
           color: palette[index % palette.length],
           segments: [],
         })
       }
-      map.get(segment.speakerId)?.segments.push(segment)
+      map.get(speakerId)?.segments.push(segment)
     })
     return Array.from(map.values())
   }, [segments])

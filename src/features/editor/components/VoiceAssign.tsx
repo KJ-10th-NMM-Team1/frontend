@@ -23,10 +23,10 @@ export function VoiceAssign({ voices, segments }: VoiceAssignProps) {
         {segments.map((segment) => (
           <div key={segment.id} className="border-surface-4 bg-surface-2 rounded-2xl border p-4">
             <div className="text-muted flex items-center justify-between text-sm">
-              <p className="text-foreground font-medium">{segment.speakerName}</p>
+              <p className="text-foreground font-medium">{segment.speaker_tag}</p>
               <span>
-                {segment.originalText.slice(0, 26)}
-                {segment.originalText.length > 26 ? '…' : ''}
+                {segment.source_text.slice(0, 26)}
+                {segment.source_text.length > 26 ? '…' : ''}
               </span>
             </div>
             <div className="mt-3 flex flex-wrap gap-2">

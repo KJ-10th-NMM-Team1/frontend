@@ -28,7 +28,6 @@ export function AudioTrackWorkspace({ segments, duration }: AudioTrackWorkspaceP
     togglePlayback,
     formatTime,
   } = useAudioTimeline(segments, duration)
-
   return (
     <section className="border-surface-3 bg-surface-1 flex flex-col gap-4 rounded-3xl border p-5 shadow-soft">
       <AudioTrackHeader

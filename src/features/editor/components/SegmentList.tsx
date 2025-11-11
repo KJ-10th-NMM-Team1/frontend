@@ -28,18 +28,13 @@ export function SegmentList({ segments }: SegmentListProps) {
             )}
           >
             <div className="text-muted flex items-center justify-between text-xs">
-              <span>{segment.speakerName}</span>
+              <span>{segment.speaker_tag}</span>
               <span>
                 {secondsToTimestamp(segment.start)} - {secondsToTimestamp(segment.end)}
               </span>
             </div>
-            <p className="text-foreground mt-2 text-sm font-medium">{segment.originalText}</p>
-            <p className="text-muted mt-1 text-sm">{segment.translatedText}</p>
-            {segment.reviewing ? (
-              <span className="bg-warning/15 text-warning-darker mt-2 inline-flex items-center rounded-full px-3 py-1 text-xs font-medium">
-                재검토 필요
-              </span>
-            ) : null}
+            <p className="text-foreground mt-2 text-sm font-medium">{segment.source_text}</p>
+            <p className="text-muted mt-1 text-sm">{segment.target_text}</p>
           </button>
         )
       })}

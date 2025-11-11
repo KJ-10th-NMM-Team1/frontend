@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 
 import { ArrowRight } from 'lucide-react'
 
 import type { Segment } from '@/entities/segment/types'
+import { useLanguage } from '@/features/languages/hooks/useLanguage'
 import { Button } from '@/shared/ui/Button'
+
 
 type TranslationWorkspaceProps = {
   segments: Segment[]
@@ -17,11 +19,20 @@ export function TranslationWorkspace({
   targetLanguage,
 }: TranslationWorkspaceProps) {
   const [drafts, setDrafts] = useState<Record<string, string>>({})
+  const { data: languageData } = useLanguage()
+  const languageNameMap = useMemo(() => {
+    const items = languageData ?? []
+    return items.reduce<Record<string, string>>((acc, item) => {
+      acc[item.language_code] = item.name_ko
+      return acc
+    }, {})
+  }, [languageData])
+
 
   useEffect(() => {
     setDrafts(
       segments.reduce<Record<string, string>>((acc, segment) => {
-        acc[segment.id] = segment.translatedText
+        acc[segment.id] = segment.target_text ?? ''
         return acc
       }, {}),
     )
@@ -37,7 +48,7 @@ export function TranslationWorkspace({
         <div className="text-muted flex items-center gap-2 text-sm font-medium">
           <span>{sourceLanguage}</span>
           <ArrowRight className="h-4 w-4" />
-          <span>{targetLanguage}</span>
+          <span>{languageNameMap[targetLanguage]}</span>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="secondary" size="sm">
@@ -56,13 +67,13 @@ export function TranslationWorkspace({
           >
             <div className="text-muted flex items-center justify-between text-xs font-semibold uppercase tracking-[0.2em]">
               <span>{String(index + 1).padStart(2, '0')}</span>
-              <span>{segment.speakerName}</span>
+              <span>{segment.speaker_tag}</span>
             </div>
             <div className="grid gap-4 lg:grid-cols-2">
               <textarea
                 className="bg-surface-1 text-foreground border-surface-3 h-32 w-full resize-none rounded-2xl border p-3 text-sm shadow-inner"
                 readOnly
-                value={segment.originalText}
+                value={segment.source_text}
               />
               <textarea
                 className="bg-surface-1 text-foreground border-primary/40 focus-visible:outline-hidden focus-visible:ring-primary h-32 w-full resize-none rounded-2xl border p-3 text-sm shadow-inner focus-visible:ring-2"

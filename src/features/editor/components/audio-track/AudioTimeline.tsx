@@ -31,7 +31,7 @@ export function AudioTimeline({
   return (
     <div className="bg-surface-1 flex flex-col">
       <div className="border-surface-3 border-b px-4 py-2">
-        <div className="text-muted flex h-10 items-end gap-6 text-[10px]">
+        <div className="text-muted flex h-10 items-end justify-between text-[10px]">
           {timelineTicks.map((tick) => (
             <div key={tick} className="flex flex-col items-center">
               <span>{tick.toFixed(0).padStart(2, '0')}s</span>
@@ -81,7 +81,7 @@ export function AudioTimeline({
                       color: track.color,
                     }}
                   >
-                    <span>{segment.speakerName}</span>
+                    <span>{segment.speaker_tag}</span>
                     <span>
                       {segment.start.toFixed(1)}s → {segment.end.toFixed(1)}s
                     </span>

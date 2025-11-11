@@ -84,10 +84,7 @@ function LanguagePreview({
   const translatedSource = selectedAsset?.file_path
   const previewSource = version === 'original' ? videoSource : (translatedSource ?? videoSource)
   const languageLabel = languageNameMap[language] ?? language
-  const isAbsoluteUrl = previewSource?.startsWith('http')
-  const videoSrc = isAbsoluteUrl
-    ? previewSource
-    : `${env.apiBaseUrl}/api/storage/media/${previewSource}`
+  const videoSrc = `${env.apiBaseUrl}/api/storage/media/${previewSource}`
 
   return (
     <div className="space-y-5">

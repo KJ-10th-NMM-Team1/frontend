@@ -1,12 +1,39 @@
+// export interface Segment {
+//   id: string
+//   speakerId: string
+//   speakerName: string
+//   start: number
+//   end: number
+//   originalText: string
+//   translatedText: string
+//   reviewing: boolean
+// }
+
 export interface Segment {
-  id: string
-  speakerId: string
-  speakerName: string
+  id: string            // `_id` → `id`로 변환하려면 응답에서 매핑하거나 여기서 alias 처리
+  project_id: string
+  language_code: string
+  speaker_tag?: string
   start: number
   end: number
-  originalText: string
-  translatedText: string
-  reviewing: boolean
+  source_text: string
+  target_text?: string
+  segment_audio_url?: string
+}
+
+export interface EditorPlaybackState {
+  duration: number
+  active_language: string
+  playback_rate: number
+  video_source: string
+}
+
+export interface EditorState {
+  projectId: string
+  segments: Segment[]
+  playback: EditorPlaybackState
+  // voices?: VoiceSample[]
+  // glossaries?: Glossary[]
 }
 
 export const sampleSegments: Segment[] = [

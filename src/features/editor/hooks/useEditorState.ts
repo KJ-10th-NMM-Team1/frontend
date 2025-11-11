@@ -13,8 +13,9 @@ export type EditorState = {
   glossaries: Glossary[]
   playback: {
     duration: number
-    activeLanguage: string
-    playbackRate: number
+    active_language: string
+    playback_rate: number
+    video_source: string
   }
 }
 

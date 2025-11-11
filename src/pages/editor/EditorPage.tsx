@@ -21,7 +21,7 @@ export default function EditorPage() {
   }
 
   const sourceLanguage = '원문'
-  const targetLanguage = data.playback.activeLanguage || '번역본'
+  const targetLanguage = data.playback.active_language || '번역본'
 
   return (
     <div className="bg-surface-1 flex min-h-screen w-full flex-col gap-2 p-2">
@@ -36,7 +36,8 @@ export default function EditorPage() {
           <StudioVideoPreview
             activeLanguage={targetLanguage}
             duration={data.playback.duration}
-            playbackRate={data.playback.playbackRate}
+            playbackRate={data.playback.playback_rate}
+            videoSource={data.playback.video_source}
           />
         </div>
         <AudioTrackWorkspace segments={data.segments} duration={data.playback.duration} />

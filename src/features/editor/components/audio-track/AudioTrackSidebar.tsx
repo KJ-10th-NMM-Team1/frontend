@@ -17,6 +17,7 @@ export function AudioTrackSidebar({ trackRows }: AudioTrackSidebarProps) {
           트랙 추가
         </Button>
       </div>
+      <div className="border-surface-3 border-b h-14 px-4 py-2" />
       {trackRows.map((track) => (
         <div
           key={track.id}

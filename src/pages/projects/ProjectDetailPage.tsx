@@ -89,9 +89,9 @@ export default function ProjectDetailPage() {
           <div className="flex flex-wrap gap-3">
             <Button
               asChild
-              onClick={() => trackEvent('enter_editor_click', { projectId: project.id })}
+              onClick={() => trackEvent('enter_editor_click', { projectId: project._id })}
             >
-              <Link to={routes.editor(project.id, activeLanguage)}>편집하기</Link>
+              <Link to={routes.editor(project._id, activeLanguage)}>편집하기</Link>
             </Button>
           </div>
         ) : null}
@@ -108,7 +108,7 @@ export default function ProjectDetailPage() {
           languageNameMap={languageNameMap}
         />
         <ProjectStudioPanel
-          projectId={project.id}
+          projectId={project._id}
           selectedLanguageCode={activeLanguage}
           isSourceLanguage={isSourceLanguage}
         />

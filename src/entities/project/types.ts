@@ -13,7 +13,7 @@ interface ProjectThumbnail {
 }
 
 export interface ProjectSummary {
-  id: string
+  _id: string
   title: string
   owner_id: string
   source_type: 'file' | 'youtube'
