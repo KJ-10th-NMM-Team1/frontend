@@ -6,7 +6,6 @@ import type {
   VoiceSamplesResponse,
 } from '@/entities/voice-sample/types'
 import { apiClient, apiGet, apiPost } from '@/shared/api/client'
-// import { apiClient } from '@/shared/api/client' // TODO: 실제 API 연결 시 사용
 
 // 백엔드 응답을 프론트엔드 타입으로 변환
 function transformVoiceSample(apiSample: VoiceSampleApiResponse): VoiceSample {
@@ -25,13 +24,30 @@ function transformVoiceSample(apiSample: VoiceSampleApiResponse): VoiceSample {
     file_path_wav: apiSample.file_path_wav,
     audio_sample_url: apiSample.audio_sample_url || undefined,
     createdAt: apiSample.created_at,
-    owner_id: apiSample.owner_id,
+    owner_id: apiSample.owner_id ? String(apiSample.owner_id) : undefined,
   }
 }
 
 // 음성 샘플 목록 조회
-export async function fetchVoiceSamples(): Promise<VoiceSamplesResponse> {
-  const response = await apiGet<VoiceSamplesApiResponse>('api/voice-samples')
+export async function fetchVoiceSamples(options?: {
+  favoritesOnly?: boolean
+  mySamplesOnly?: boolean
+  q?: string
+}): Promise<VoiceSamplesResponse> {
+  const params = new URLSearchParams()
+  if (options?.favoritesOnly) {
+    params.append('favorites_only', 'true')
+  }
+  if (options?.mySamplesOnly) {
+    params.append('my_samples_only', 'true')
+  }
+  if (options?.q) {
+    params.append('q', options.q)
+  }
+
+  const queryString = params.toString()
+  const url = queryString ? `api/voice-samples?${queryString}` : 'api/voice-samples'
+  const response = await apiGet<VoiceSamplesApiResponse>(url)
   return {
     samples: response.samples.map(transformVoiceSample),
     total: response.total,
@@ -99,90 +115,6 @@ export async function uploadVoiceSampleFile({ uploadUrl, file, fields }: UploadF
   }
 }
 
-// export function fetchVoiceSamples() {
-//   // TODO: 실제 API 엔드포인트로 교체 필요
-//   // return apiClient.get('api/voice-samples').json<VoiceSamplesResponse>()
-
-//   // 임시로 목 데이터 반환
-//   return {
-//     samples: [
-//       {
-//         id: '1',
-//         name: 'SunHi',
-//         type: 'Natural',
-//         attributes: 'Youth, Ads, Explainer, Audiobooks, Azure, Female',
-//         isPublic: true,
-//         isFavorite: true,
-//         provider: 'Azure',
-//       },
-//       {
-//         id: '2',
-//         name: 'InJoon',
-//         type: 'Natural',
-//         attributes: 'Middle-Aged, News, Explainer, E-learning, Azure',
-//         isPublic: true,
-//         isFavorite: true,
-//         provider: 'Azure',
-//       },
-//       {
-//         id: '3',
-//         name: 'Allison',
-//         type: 'Natural',
-//         attributes: 'Middle Aged, Energetic, Advertisement, Elevenlabs',
-//         isPublic: true,
-//         isFavorite: false,
-//         provider: 'Elevenlabs',
-//       },
-//       {
-//         id: '4',
-//         name: 'Ivy',
-//         type: 'Natural',
-//         attributes: 'Young, Confident, Social Media, Elevenlabs, Multilingual',
-//         isPublic: true,
-//         isFavorite: false,
-//         provider: 'Elevenlabs',
-//       },
-//       {
-//         id: '5',
-//         name: 'John Doe',
-//         type: 'Natural',
-//         attributes: 'Old, Deep, Voice Over, Elevenlabs, Multilingual',
-//         isPublic: true,
-//         isFavorite: false,
-//         provider: 'Elevenlabs',
-//       },
-//       {
-//         id: '6',
-//         name: 'Chill Brian',
-//         type: 'Natural',
-//         attributes: 'Formal, Narrative story, Middle-Aged, Elevenlabs',
-//         isPublic: true,
-//         isFavorite: false,
-//         provider: 'Elevenlabs',
-//       },
-//       {
-//         id: '7',
-//         name: 'Cassidy',
-//         type: 'Natural',
-//         attributes: 'Middle Aged, Crisp, Podcasts, Elevenlabs, Multilingual',
-//         isPublic: true,
-//         isFavorite: false,
-//         provider: 'Elevenlabs',
-//       },
-//       {
-//         id: '8',
-//         name: 'Ivy',
-//         type: 'Natural',
-//         attributes: 'Young, Confident, Social Media, Elevenlabs, Multilingual',
-//         isPublic: true,
-//         isFavorite: false,
-//         provider: 'Elevenlabs',
-//       },
-//     ] as VoiceSample[],
-//     total: 8,
-//   } as VoiceSamplesResponse
-// }
-
 export function createVoiceSample(payload: VoiceSamplePayload): Promise<VoiceSample> {
   // TODO: 실제 API 엔드포인트로 교체 필요
   // const formData = new FormData()
@@ -203,31 +135,42 @@ export function createVoiceSample(payload: VoiceSamplePayload): Promise<VoiceSam
   } as VoiceSample)
 }
 
-export function updateVoiceSample(
+export async function updateVoiceSample(
   id: string,
   payload: Partial<VoiceSamplePayload>,
 ): Promise<VoiceSample> {
-  // TODO: 실제 API 엔드포인트로 교체 필요
-  // return apiClient.patch(`api/voice-samples/${id}`, { json: payload }).json<VoiceSample>()
-
-  return Promise.resolve({
-    id,
-    ...payload,
-  } as VoiceSample)
+  const response = await apiClient
+    .put(`api/voice-samples/${id}`, {
+      json: {
+        name: payload.name,
+        description: payload.description,
+        is_public: payload.isPublic,
+      },
+    })
+    .json<VoiceSampleApiResponse>()
+  return transformVoiceSample(response)
 }
 
-export function deleteVoiceSample(id: string): Promise<{ id: string }> {
-  // TODO: 실제 API 엔드포인트로 교체 필요
-  // await apiClient.delete(`api/voice-samples/${id}`)
-  return Promise.resolve({ id })
+export async function deleteVoiceSample(id: string): Promise<{ id: string }> {
+  await apiClient.delete(`api/voice-samples/${id}`)
+  return { id }
 }
 
-export function toggleFavorite(id: string, isFavorite: boolean): Promise<Partial<VoiceSample>> {
-  // TODO: 실제 API 엔드포인트로 교체 필요
-  // return apiClient.patch(`api/voice-samples/${id}/favorite`, { json: { isFavorite } }).json<VoiceSample>()
+export async function toggleFavorite(id: string, isFavorite: boolean): Promise<VoiceSample> {
+  // isFavorite가 true면 좋아요 추가 (POST), false면 좋아요 제거 (DELETE)
+  if (isFavorite) {
+    // 좋아요 추가
+    await apiClient.post(`api/me/favorites/voice-samples/${id}`)
+  } else {
+    // 좋아요 제거
+    await apiClient.delete(`api/me/favorites/voice-samples/${id}`)
+  }
 
-  return Promise.resolve({
+  // 업데이트된 샘플 정보를 가져오기 위해 목록을 다시 조회하거나,
+  // 개별 샘플을 조회할 수 있습니다. 여기서는 목록 갱신을 위해 빈 객체 반환
+  // (실제로는 쿼리 무효화로 목록이 자동 갱신됨)
+  return {
     id,
     isFavorite,
-  } as Partial<VoiceSample>)
+  } as VoiceSample
 }
