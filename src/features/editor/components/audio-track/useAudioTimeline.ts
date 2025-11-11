@@ -28,6 +28,8 @@ export function useAudioTimeline(segments: Segment[], duration: number) {
     isPlaying,
     setPlaying,
     togglePlayback,
+    setActiveSegment,
+    segmentEnd,
   } = useEditorStore(
     (state) => ({
       playbackRate: state.playbackRate,
@@ -37,6 +39,8 @@ export function useAudioTimeline(segments: Segment[], duration: number) {
       isPlaying: state.isPlaying,
       setPlaying: state.setPlaying,
       togglePlayback: state.togglePlayback,
+      setActiveSegment: state.setActiveSegment,
+      segmentEnd: state.segmentEnd,
     }),
     shallow,
   )
@@ -52,8 +56,9 @@ export function useAudioTimeline(segments: Segment[], duration: number) {
       const delta = (now - previous) / 1000
       previous = now
       const next = playheadRef.current + delta * playbackRate
-      if (next >= duration) {
-        setPlayhead(duration)
+      const stopAt = segmentEnd ?? duration
+      if (next >= stopAt) {
+        setPlayhead(stopAt)
         setPlaying(false)
         return
       }
@@ -64,9 +69,10 @@ export function useAudioTimeline(segments: Segment[], duration: number) {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
     }
-  }, [isPlaying, playbackRate, duration, setPlayhead, setPlaying])
+  }, [isPlaying, playbackRate, duration, setPlayhead, setPlaying, segmentEnd])
 
   const [isScrubbing, setIsScrubbing] = useState(false)
+  const lastSegmentRef = useRef<string | null>(null)
 
   const scrub = useCallback(
     (clientX: number) => {
@@ -101,6 +107,24 @@ export function useAudioTimeline(segments: Segment[], duration: number) {
     scrub(event.clientX)
     setIsScrubbing(true)
   }
+
+  useEffect(() => {
+    if (!segments.length) {
+      if (lastSegmentRef.current !== null) {
+        lastSegmentRef.current = null
+        setActiveSegment(null)
+      }
+      return
+    }
+    const current =
+      segments.find((segment) => playhead >= segment.start && playhead < segment.end) ??
+      (playhead >= segments[segments.length - 1].end ? segments[segments.length - 1] : null)
+    const nextId = current?.id ?? null
+    if (nextId !== lastSegmentRef.current) {
+      lastSegmentRef.current = nextId
+      setActiveSegment(nextId)
+    }
+  }, [playhead, segments, setActiveSegment])
 
   const speakerTracks = useMemo(() => {
     const palette = ['#f97316', '#0ea5e9', '#8b5cf6', '#22c55e']
