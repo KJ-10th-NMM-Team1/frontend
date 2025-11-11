@@ -48,7 +48,7 @@ type VoiceSampleCardProps = {
   isPlaying?: boolean
   isOwner?: boolean
   onSelect?: (sample: VoiceSample) => void
-  onPlay?: (sample: VoiceSample) => void
+  onPlay?: (sample: VoiceSample) => void | Promise<void>
   onDelete?: (sampleId: string) => void
   onEdit?: (sample: VoiceSample) => void
 }
@@ -79,7 +79,7 @@ function VoiceSampleCardComponent({
 
   const handlePlayClick = (event: React.MouseEvent) => {
     event.stopPropagation()
-    onPlay?.(sample)
+    void onPlay?.(sample)
   }
 
   const handleEditClick = (event: React.MouseEvent) => {
