@@ -20,7 +20,6 @@ type VoiceSampleCardProps = {
   sample: VoiceSample
   isSelected?: boolean
   isPlaying?: boolean
-  isPlaying?: boolean
   onSelect?: (sample: VoiceSample) => void
   onPlay?: (sample: VoiceSample) => void
   onDelete?: (sampleId: string) => void
@@ -129,17 +128,16 @@ function VoiceSampleCardComponent({
               {sample.type && ` - ${sample.type}`}
             </h3>
           </div>
-          {sample.description && (
+          {/* {sample.description && (
             <p className="text-muted line-clamp-2 text-sm">{sample.description}</p>
           )}
-          {sample.attributes && <p className="text-muted text-xs">{sample.attributes}</p>}
+          {sample.attributes && <p className="text-muted text-xs">{sample.attributes}</p>} */}
         </div>
 
         {/* Play Button */}
         <div className="flex items-center gap-2">
           <Button
             type="button"
-            variant={isPlaying ? 'secondary' : 'primary'}
             variant={isPlaying ? 'secondary' : 'primary'}
             size="icon"
             onClick={handlePlayClick}
@@ -158,12 +156,9 @@ function VoiceSampleCardComponent({
           {/* Voice Info - Right Side */}
           <div className="min-w-0 flex-1 space-y-1">
             <h3 className="text-foreground text-base font-semibold">
-              {sample.name}
+              {/* {sample.name} */}
               {sample.type && ` - ${sample.type}`}
             </h3>
-            {sample.attributes && (
-              <p className="text-muted text-sm leading-relaxed">{sample.attributes}</p>
-            )}
             {sample.description && (
               <p className="text-muted line-clamp-2 text-sm">{sample.description}</p>
             )}
