@@ -4,7 +4,6 @@ import { HTTPError } from 'ky'
 import { CloudUpload, Upload } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
-
 import { routes } from '@/shared/config/routes'
 import { cn } from '@/shared/lib/utils'
 import { useUiStore } from '@/shared/store/useUiStore'

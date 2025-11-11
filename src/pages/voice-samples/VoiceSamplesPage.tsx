@@ -7,6 +7,7 @@ import type { VoiceSample } from '@/entities/voice-sample/types'
 import { VoiceSampleCard } from '@/features/voice-samples/components/VoiceSampleCard'
 import { useVoiceSamples } from '@/features/voice-samples/hooks/useVoiceSamples'
 import { VoiceSampleCreationModal } from '@/features/voice-samples/modals/VoiceSampleCreationModal'
+import { VoiceSampleEditModal } from '@/features/voice-samples/modals/VoiceSampleEditModal'
 import { env } from '@/shared/config/env'
 import { useAuthStore } from '@/shared/store/useAuthStore'
 import { Checkbox } from '@/shared/ui/Checkbox'
@@ -15,12 +16,20 @@ import { Label } from '@/shared/ui/Label'
 import { Spinner } from '@/shared/ui/Spinner'
 
 export default function VoiceSamplesPage() {
-  const { data, isLoading } = useVoiceSamples()
   const [searchTerm, setSearchTerm] = useState('')
-  const [showMySamples, setShowMySamples] = useState(true)
-  const [showFavorites, setShowFavorites] = useState(true)
+  const [showMySamplesOnly, setShowMySamplesOnly] = useState(false)
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [selectedSample, setSelectedSample] = useState<VoiceSample | null>(null)
+  const [editingSample, setEditingSample] = useState<VoiceSample | null>(null)
+
+  // 체크박스가 체크되면 해당 필터를 적용하여 API 호출
+  const { data, isLoading } = useVoiceSamples({
+    favoritesOnly: showFavoritesOnly,
+    mySamplesOnly: showMySamplesOnly,
+    q: searchTerm.trim() || undefined,
+  })
 
   // 현재 재생 중인 오디오 추적
   const currentAudioRef = useRef<HTMLAudioElement | null>(null)
@@ -122,34 +131,10 @@ export default function VoiceSamplesPage() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const navigate = useNavigate()
 
+  // API에서 이미 필터링된 데이터를 사용
   const filteredSamples = useMemo(() => {
-    const samples = data?.samples || []
-    let filtered = samples
-
-    // Search filter
-    if (searchTerm.trim()) {
-      const term = searchTerm.trim().toLowerCase()
-      filtered = filtered.filter(
-        (sample) =>
-          sample.name.toLowerCase().includes(term) ||
-          sample.description?.toLowerCase().includes(term) ||
-          sample.attributes?.toLowerCase().includes(term),
-      )
-    }
-
-    // My samples filter (show all if checked)
-    if (!showMySamples) {
-      // TODO: 실제로는 사용자 소유 샘플만 필터링
-      filtered = []
-    }
-
-    // Favorites filter
-    if (!showFavorites) {
-      filtered = filtered.filter((sample) => !sample.isFavorite)
-    }
-
-    return filtered
-  }, [data?.samples, searchTerm, showMySamples, showFavorites])
+    return data?.samples || []
+  }, [data?.samples])
 
   if (!isAuthenticated) {
     navigate('/auth/login', { replace: true })
@@ -192,8 +177,8 @@ export default function VoiceSamplesPage() {
             <div className="flex items-center gap-2">
               <Checkbox
                 id="my-samples"
-                checked={showMySamples}
-                onCheckedChange={(checked) => setShowMySamples(checked === true)}
+                checked={showMySamplesOnly}
+                onCheckedChange={(checked) => setShowMySamplesOnly(checked === true)}
               />
               <Label htmlFor="my-samples" className="cursor-pointer text-sm">
                 내 샘플
@@ -202,8 +187,8 @@ export default function VoiceSamplesPage() {
             <div className="flex items-center gap-2">
               <Checkbox
                 id="favorites"
-                checked={showFavorites}
-                onCheckedChange={(checked) => setShowFavorites(checked === true)}
+                checked={showFavoritesOnly}
+                onCheckedChange={(checked) => setShowFavoritesOnly(checked === true)}
               />
               <Label htmlFor="favorites" className="cursor-pointer text-sm">
                 즐겨찾기
@@ -245,6 +230,10 @@ export default function VoiceSamplesPage() {
                   isPlaying={isPlaying}
                   onSelect={setSelectedSample}
                   onPlay={handlePlay}
+                  onEdit={(sample) => {
+                    setEditingSample(sample)
+                    setIsEditModalOpen(true)
+                  }}
                 />
               )
             })}
@@ -253,6 +242,16 @@ export default function VoiceSamplesPage() {
       </section>
 
       <VoiceSampleCreationModal open={isModalOpen} onOpenChange={setIsModalOpen} />
+      <VoiceSampleEditModal
+        open={isEditModalOpen}
+        onOpenChange={(open) => {
+          setIsEditModalOpen(open)
+          if (!open) {
+            setEditingSample(null)
+          }
+        }}
+        sample={editingSample}
+      />
     </div>
   )
 }
