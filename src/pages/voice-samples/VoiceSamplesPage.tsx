@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
+import { useQuery } from '@tanstack/react-query'
 import { Search, Waves } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 import type { VoiceSample } from '@/entities/voice-sample/types'
+import { getCurrentUser } from '@/features/auth/api/authApi'
 import { VoiceSampleCard } from '@/features/voice-samples/components/VoiceSampleCard'
 import { useVoiceSamples } from '@/features/voice-samples/hooks/useVoiceSamples'
 import { VoiceSampleCreationModal } from '@/features/voice-samples/modals/VoiceSampleCreationModal'
@@ -23,6 +25,13 @@ export default function VoiceSamplesPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [selectedSample, setSelectedSample] = useState<VoiceSample | null>(null)
   const [editingSample, setEditingSample] = useState<VoiceSample | null>(null)
+
+  // 현재 사용자 정보를 부모에서 한 번만 조회
+  const { data: currentUser } = useQuery({
+    queryKey: ['auth', 'current-user'],
+    queryFn: getCurrentUser,
+    staleTime: Infinity,
+  })
 
   // 체크박스가 체크되면 해당 필터를 적용하여 API 호출
   const { data, isLoading } = useVoiceSamples({
@@ -210,10 +219,8 @@ export default function VoiceSamplesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredSamples.map((sample, index) => {
-              // 고유한 key 생성: id가 있으면 사용, 없으면 index 사용
-              const uniqueKey = sample.id ? `${sample.id}-${index}` : `sample-${index}`
-              // id 비교를 위해 문자열로 변환 (id가 없으면 undefined 처리)
+            {filteredSamples.map((sample) => {
+              // id 비교를 위해 문자열로 변환
               const sampleId = sample.id ? String(sample.id).trim() : undefined
               const isSelected =
                 selectedSample?.id && sampleId
@@ -222,12 +229,18 @@ export default function VoiceSamplesPage() {
               const isPlaying =
                 playingSampleId && sampleId ? String(playingSampleId).trim() === sampleId : false
 
+              // owner 여부를 부모에서 계산하여 prop으로 전달
+              const currentUserId = currentUser ? String(currentUser._id || '') : null
+              const ownerId = sample.owner_id ? String(sample.owner_id) : null
+              const isOwner = currentUserId && ownerId && currentUserId === ownerId
+
               return (
                 <VoiceSampleCard
-                  key={uniqueKey}
+                  key={sample.id}
                   sample={sample}
                   isSelected={isSelected}
                   isPlaying={isPlaying}
+                  isOwner={isOwner}
                   onSelect={setSelectedSample}
                   onPlay={handlePlay}
                   onEdit={(sample) => {

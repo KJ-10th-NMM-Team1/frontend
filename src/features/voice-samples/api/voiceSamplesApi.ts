@@ -24,7 +24,7 @@ function transformVoiceSample(apiSample: VoiceSampleApiResponse): VoiceSample {
     file_path_wav: apiSample.file_path_wav,
     audio_sample_url: apiSample.audio_sample_url || undefined,
     createdAt: apiSample.created_at,
-    owner_id: apiSample.owner_id,
+    owner_id: apiSample.owner_id ? String(apiSample.owner_id) : undefined,
   }
 }
 

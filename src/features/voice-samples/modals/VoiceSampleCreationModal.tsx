@@ -1,9 +1,12 @@
 import { useState } from 'react'
 
+import { useQueryClient } from '@tanstack/react-query'
 import { HTTPError } from 'ky'
 import { CloudUpload, Upload } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
+import { env } from '@/shared/config/env'
+import { queryKeys } from '@/shared/config/queryKeys'
 import { routes } from '@/shared/config/routes'
 import { cn } from '@/shared/lib/utils'
 import { useUiStore } from '@/shared/store/useUiStore'
@@ -34,6 +37,7 @@ export function VoiceSampleCreationModal({ open, onOpenChange }: VoiceSampleCrea
 
   const prepareUploadMutation = usePrepareUploadMutation()
   const finishUploadMutation = useFinishUploadMutation()
+  const queryClient = useQueryClient()
   const showToast = useUiStore((state) => state.showToast)
   const navigate = useNavigate()
 
@@ -90,7 +94,7 @@ export function VoiceSampleCreationModal({ open, onOpenChange }: VoiceSampleCrea
       // 3. DB에 저장
       setUploadStage('finalizing')
       setUploadProgress(85)
-      await finishUploadMutation.mutateAsync({
+      const createdSample = await finishUploadMutation.mutateAsync({
         name: name.trim(),
         description: description.trim() || undefined,
         is_public: isPublic,
@@ -101,9 +105,60 @@ export function VoiceSampleCreationModal({ open, onOpenChange }: VoiceSampleCrea
       showToast({
         id: 'voice-sample-created',
         title: '음성 샘플 생성 완료',
+        description: '음성 샘플링 처리 중입니다...',
         autoDismiss: 2500,
       })
       handleClose()
+
+      // SSE로 음성 샘플링 완료 추적
+      if (createdSample.id) {
+        const source = new EventSource(
+          `${env.apiBaseUrl}/api/voice-samples/${createdSample.id}/stream`,
+        )
+
+        source.addEventListener('message', (event) => {
+          try {
+            const eventData = typeof event.data === 'string' ? event.data : String(event.data)
+            const data = JSON.parse(eventData) as {
+              sample_id?: string
+              audio_sample_url?: string | null
+              has_audio_sample?: boolean
+              error?: string
+            }
+
+            if (data.has_audio_sample && data.audio_sample_url) {
+              // 완료!
+              source.close()
+              // 쿼리 무효화하여 최신 데이터 가져오기
+              void queryClient.invalidateQueries({
+                queryKey: queryKeys.voiceSamples.all,
+                exact: false,
+              })
+              showToast({
+                id: 'voice-sample-processed',
+                title: '음성 샘플 처리 완료',
+                description: '음성 샘플링이 완료되었습니다.',
+                autoDismiss: 3000,
+              })
+            } else if (data.error) {
+              source.close()
+              showToast({
+                id: 'voice-sample-stream-error',
+                title: '상태 확인 실패',
+                description: data.error,
+                autoDismiss: 3000,
+              })
+            }
+          } catch (error) {
+            console.error('Failed to parse SSE data:', error)
+          }
+        })
+
+        source.onerror = (error) => {
+          console.error('SSE connection error:', error)
+          source.close()
+        }
+      }
     } catch (error) {
       console.error('Failed to create voice sample:', error)
 
