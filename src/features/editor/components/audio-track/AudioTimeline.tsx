@@ -1,5 +1,11 @@
-import type { PointerEvent as ReactPointerEvent, RefObject } from 'react'
+import type {
+  PointerEvent as ReactPointerEvent,
+  MouseEvent as ReactMouseEvent,
+  RefObject,
+} from 'react'
 
+import type { Segment } from '@/entities/segment/types'
+import { useEditorStore } from '@/shared/store/useEditorStore'
 import type { TrackRow, WaveformBar } from './types'
 
 type AudioTimelineProps = {
@@ -11,6 +17,7 @@ type AudioTimelineProps = {
   onTimelinePointerDown: (event: ReactPointerEvent<HTMLDivElement>) => void
   rowHeight: number
   duration: number
+  playhead: number
 }
 
 export function AudioTimeline({
@@ -22,7 +29,13 @@ export function AudioTimeline({
   onTimelinePointerDown,
   rowHeight,
   duration,
+  playhead,
 }: AudioTimelineProps) {
+  const { playSegmentAudio, setPlayhead, setSegmentEnd } = useEditorStore((state) => ({
+    playSegmentAudio: state.playSegmentAudio,
+    setPlayhead: state.setPlayhead,
+    setSegmentEnd: state.setSegmentEnd,
+  }))
   return (
     <div className="bg-surface-1 flex flex-col">
       <div className="border-surface-3 border-b px-4 py-2">
@@ -72,12 +85,9 @@ export function AudioTimeline({
                     : startIndex + 1
                 const segmentBars =
                   totalBars > 0 ? waveformData.slice(startIndex, endIndex) : waveformData
-                const barsForSegment =
-                  segmentBars.length > 0 ? segmentBars : waveformData
+                const barsForSegment = segmentBars.length > 0 ? segmentBars : waveformData
                 const fallbackBars =
-                  barsForSegment.length > 0
-                    ? barsForSegment
-                    : [{ id: 'empty', height: 5 }]
+                  barsForSegment.length > 0 ? barsForSegment : [{ id: 'empty', height: 5 }]
                 return (
                   <div
                     key={segment.id}
@@ -102,11 +112,11 @@ export function AudioTimeline({
                             style={{ maxWidth: '20px' }}
                           >
                             <span
-                              className="absolute bottom-1 left-1/2 w-[2px] -translate-x-1/2 rounded-full bg-current/50"
+                              className="bg-current/50 absolute bottom-1 left-1/2 w-[2px] -translate-x-1/2 rounded-full"
                               style={{ height: `${barHeight}%` }}
                             />
                             <span
-                              className="absolute top-1 left-1/2 w-[2px] -translate-x-1/2 rounded-full bg-current/30"
+                              className="bg-current/30 absolute left-1/2 top-1 w-[2px] -translate-x-1/2 rounded-full"
                               style={{ height: `${barHeight * 0.6}%` }}
                             />
                           </span>

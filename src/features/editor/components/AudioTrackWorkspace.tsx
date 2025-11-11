@@ -62,6 +62,7 @@ export function AudioTrackWorkspace({
             onTimelinePointerDown={onTimelinePointerDown}
             rowHeight={rowHeight}
             duration={duration}
+            playhead={playhead}
           />
         </div>
       </div>

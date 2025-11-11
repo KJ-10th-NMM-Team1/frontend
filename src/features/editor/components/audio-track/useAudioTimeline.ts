@@ -33,6 +33,7 @@ export function useAudioTimeline(
     setPlaying,
     togglePlayback,
     setActiveSegment,
+    segmentEnd,
   } = useEditorStore(
     (state) => ({
       playbackRate: state.playbackRate,
@@ -43,6 +44,7 @@ export function useAudioTimeline(
       setPlaying: state.setPlaying,
       togglePlayback: state.togglePlayback,
       setActiveSegment: state.setActiveSegment,
+      segmentEnd: state.segmentEnd,
     }),
     shallow,
   )
@@ -58,8 +60,9 @@ export function useAudioTimeline(
       const delta = (now - previous) / 1000
       previous = now
       const next = playheadRef.current + delta * playbackRate
-      if (next >= duration) {
-        setPlayhead(duration)
+      const stopAt = segmentEnd ?? duration
+      if (next >= stopAt) {
+        setPlayhead(stopAt)
         setPlaying(false)
         return
       }
@@ -70,7 +73,7 @@ export function useAudioTimeline(
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
     }
-  }, [isPlaying, playbackRate, duration, setPlayhead, setPlaying])
+  }, [isPlaying, playbackRate, duration, setPlayhead, setPlaying, segmentEnd])
 
   const [isScrubbing, setIsScrubbing] = useState(false)
   const lastSegmentRef = useRef<string | null>(null)
