@@ -19,4 +19,7 @@ export const queryKeys = {
     list: (projectId: string, languageCode?: string) =>
       ['assets', projectId, languageCode ?? 'all'] as const,
   },
+  storage: {
+    presignedUrl: (filePath: string) => ['storage', 'presigned-url', filePath] as const,
+  },
 }
