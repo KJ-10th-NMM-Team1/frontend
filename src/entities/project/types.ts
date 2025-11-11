@@ -24,6 +24,7 @@ export interface ProjectSummary {
   assignedEditor?: string
   createdAt?: string
   video_source?: string
+  audio_source?: string
   // thumbnailUrl?: string
   targets?: ProjectTarget[]
   thumbnail?: ProjectThumbnail
@@ -118,6 +119,8 @@ export const sampleProjects: ProjectDetail[] = [
     sourceLanguage: 'ko',
     status: 'completed',
     video_source: 'https://www.w3schools.com/html/mov_bbb.mp4',
+    audio_source:
+      'voice-samples/6913243bad53809064728021/12f89529-0204-493f-8510-dabf3c0415e0_out.wav',
     dueDate: '2025-02-06',
     assignedEditor: 'translator-amy',
     description:

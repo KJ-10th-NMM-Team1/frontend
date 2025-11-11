@@ -1,15 +1,12 @@
-import type { PointerEvent as ReactPointerEvent, MouseEvent as ReactMouseEvent, RefObject } from 'react'
+import type {
+  PointerEvent as ReactPointerEvent,
+  MouseEvent as ReactMouseEvent,
+  RefObject,
+} from 'react'
 
 import type { Segment } from '@/entities/segment/types'
 import { useEditorStore } from '@/shared/store/useEditorStore'
-
-import type { TrackRow } from './types'
-
-
-type WaveformBar = {
-  id: number
-  height: number
-}
+import type { TrackRow, WaveformBar } from './types'
 
 type AudioTimelineProps = {
   trackRows: TrackRow[]
@@ -37,8 +34,8 @@ export function AudioTimeline({
   const { playSegmentAudio, setPlayhead, setSegmentEnd } = useEditorStore((state) => ({
     playSegmentAudio: state.playSegmentAudio,
     setPlayhead: state.setPlayhead,
-    setSegmentEnd: state.setSegmentEnd
-  }))                
+    setSegmentEnd: state.setSegmentEnd,
+  }))
   return (
     <div className="bg-surface-1 flex flex-col">
       <div className="border-surface-3 border-b px-4 py-2">
@@ -76,34 +73,25 @@ export function AudioTimeline({
               </div>
             ) : track.type === 'speaker' ? (
               track.segments.map((segment) => {
-
-
                 const startPercent = duration > 0 ? (segment.start / duration) * 100 : 0
                 const widthPercent =
-                  duration > 0 ? Math.max(((segment.end - segment.start) / duration) * 100, 1) : 0   
-
-                const handleSegmentClick = (
-                  event: ReactMouseEvent<HTMLDivElement>,
-                  segment: Segment
-                ) => {
-                  if (!segment.segment_audio_url) return
-
-                  const rect = event.currentTarget.getBoundingClientRect()
-                  const segmentDuration = segment.end - segment.start
-                  const clickRatio = rect.width > 0
-                      ? Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1)
-                      : 0
-                  const timelinePosition = segment.start + clickRatio * segmentDuration
-                  const localOffset = clickRatio * segmentDuration
-                  setPlayhead(timelinePosition) // 초록 진행바를 클릭 지점으로 이동     
-                  setSegmentEnd(segment.end)               
-                  playSegmentAudio(segment.segment_audio_url, { audioOffset: localOffset, timelinePosition })  // 세그먼트 오디오를 해당 지점부터 재생
-                }
+                  duration > 0 ? Math.max(((segment.end - segment.start) / duration) * 100, 1) : 0
+                const totalBars = waveformData.length
+                const startIndex =
+                  duration > 0 ? Math.floor((segment.start / duration) * totalBars) : 0
+                const endIndex =
+                  duration > 0
+                    ? Math.max(Math.ceil((segment.end / duration) * totalBars), startIndex + 1)
+                    : startIndex + 1
+                const segmentBars =
+                  totalBars > 0 ? waveformData.slice(startIndex, endIndex) : waveformData
+                const barsForSegment = segmentBars.length > 0 ? segmentBars : waveformData
+                const fallbackBars =
+                  barsForSegment.length > 0 ? barsForSegment : [{ id: 'empty', height: 5 }]
                 return (
                   <div
                     key={segment.id}
-                    className="absolute top-3 flex h-[60px] items-center justify-between rounded-2xl border px-3 text-xs font-semibold cursor-pointer"
-                    onClick={(event)=> handleSegmentClick(event, segment)}
+                    className="absolute top-3 flex h-[60px] items-center rounded-2xl border px-3 text-xs font-semibold"
                     style={{
                       left: `${startPercent}%`,
                       width: `${widthPercent}%`,
@@ -113,10 +101,34 @@ export function AudioTimeline({
                       color: track.color,
                     }}
                   >
-                    <span>{segment.speaker_tag}</span>
-                    <span>
-                      {segment.start.toFixed(1)}s → {segment.end.toFixed(1)}s
-                    </span>
+                    <div className="pointer-events-none absolute inset-2 flex items-center gap-[1px] opacity-70">
+                      {fallbackBars.map((bar) => {
+                        const normalized = Math.min(Math.max(bar.height, 5), 100)
+                        const barHeight = Math.max(6, normalized * 0.8)
+                        return (
+                          <span
+                            key={`${segment.id}-${bar.id}`}
+                            className="relative flex-1"
+                            style={{ maxWidth: '20px' }}
+                          >
+                            <span
+                              className="bg-current/50 absolute bottom-1 left-1/2 w-[2px] -translate-x-1/2 rounded-full"
+                              style={{ height: `${barHeight}%` }}
+                            />
+                            <span
+                              className="bg-current/30 absolute left-1/2 top-1 w-[2px] -translate-x-1/2 rounded-full"
+                              style={{ height: `${barHeight * 0.6}%` }}
+                            />
+                          </span>
+                        )
+                      })}
+                    </div>
+                    <div className="relative z-10 flex w-full items-center justify-between gap-3">
+                      <span>{segment.speaker_tag}</span>
+                      <span>
+                        {segment.start.toFixed(1)}s → {segment.end.toFixed(1)}s
+                      </span>
+                    </div>
                   </div>
                 )
               })

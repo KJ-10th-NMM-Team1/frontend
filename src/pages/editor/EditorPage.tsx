@@ -5,11 +5,21 @@ import { EditorToolbar } from '@/features/editor/components/EditorToolbar'
 import { StudioVideoPreview } from '@/features/editor/components/StudioVideoPreview'
 import { TranslationWorkspace } from '@/features/editor/components/TranslationWorkspace'
 import { useEditorState } from '@/features/editor/hooks/useEditorState'
+import { useWaveformData } from '@/features/editor/hooks/useWaveformData'
 import { Spinner } from '@/shared/ui/Spinner'
 
 export default function EditorPage() {
-  const { projectId = '', languageCode = '' } = useParams<{ projectId: string, languageCode: string }>()
+  const { projectId = '', languageCode = '' } = useParams<{
+    projectId: string
+    languageCode: string
+  }>()
   const { data, isLoading } = useEditorState(projectId, languageCode)
+  const audioSourceKey =
+    data?.playback.audio_source ??
+    // backend typo fallback
+    (data?.playback as { audio_soruce?: string } | undefined)?.audio_soruce ??
+    data?.audio_source
+  const { waveformData } = useWaveformData(audioSourceKey)
 
   if (isLoading || !data) {
     return (
@@ -40,7 +50,11 @@ export default function EditorPage() {
             videoSource={data.playback.video_source}
           />
         </div>
-        <AudioTrackWorkspace segments={data.segments} duration={data.playback.duration} />
+        <AudioTrackWorkspace
+          segments={data.segments}
+          duration={data.playback.duration}
+          waveformData={waveformData}
+        />
       </div>
     </div>
   )
