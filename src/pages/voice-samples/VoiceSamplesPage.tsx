@@ -258,7 +258,7 @@ export default function VoiceSamplesPage() {
               // owner 여부를 부모에서 계산하여 prop으로 전달
               const currentUserId = currentUser ? String(currentUser._id || '') : null
               const ownerId = sample.owner_id ? String(sample.owner_id) : null
-              const isOwner = currentUserId && ownerId && currentUserId === ownerId
+              const isOwner = Boolean(currentUserId && ownerId && currentUserId === ownerId)
 
               return (
                 <VoiceSampleCard
