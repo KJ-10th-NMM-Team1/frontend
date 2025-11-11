@@ -1,8 +1,6 @@
 import type { UseFormRegisterReturn } from 'react-hook-form'
 
-import { Input } from '@/shared/ui/Input'
 import { Label } from '@/shared/ui/Label'
-import { ValidationMessage } from '@/shared/ui/ValidationMessage'
 
 type SpeakerCountFieldProps = {
   registration: UseFormRegisterReturn
@@ -15,8 +13,13 @@ export function AudioSpeakerCountField({ registration, error }: SpeakerCountFiel
       <div className="flex items-center gap-3">
         <Label htmlFor="speaker-count">화자 수</Label>
         {/* <Input id="speaker-count" type="number" min={1} max={10} {...registration} /> */}
-        <select id="seaker-count" className="rounded-md border px-3 py-2" {...registration}>
-          <option value="auto">자동인식</option>
+        <select
+          id="seaker-count"
+          className="rounded-md border px-3 py-2"
+          // defaultValue="auto"
+          {...registration}
+        >
+          {/* <option value="auto">자동인식</option> */}
           <option value="1">1</option>
           <option value="2">2</option>
           <option value="3">3</option>
