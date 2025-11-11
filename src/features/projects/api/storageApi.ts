@@ -67,3 +67,7 @@ export async function uploadFile({ uploadUrl, file, fields }: UploadFileParams) 
     throw new Error(await response.text())
   }
 }
+
+// export async function getPresignedUrl(s3key: string) {
+//   return apiClient.get(`api/storage/media/${s3key}`).json<{ url: string }>()
+// }

@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import type {
   FinishUploadPayload,
@@ -13,6 +13,7 @@ import {
   prepareFileUpload,
   registerYoutubeSource,
 } from '@/features/projects/api/storageApi'
+import { apiGet } from '@/shared/api/client'
 import { queryKeys } from '@/shared/config/queryKeys'
 
 export function usePrepareUploadMutation() {
@@ -42,5 +43,13 @@ export function useFinalizeUploadMutation() {
     onSuccess() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.projects.all })
     },
+  })
+}
+
+export function usePresignedUrl(s3key: string) {
+  return useQuery({
+    queryKey: ['s3-video-source', s3key],
+    queryFn: () => apiGet<{ url: string }>(`api/storage/media/${s3key}`),
+    select: (data) => data.url,
   })
 }

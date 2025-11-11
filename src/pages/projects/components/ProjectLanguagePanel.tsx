@@ -1,12 +1,13 @@
 import { Download, Play } from 'lucide-react'
 
-import type { ProjectAsset, ProjectDetail, ProjectTarget } from '@/entities/project/types'
-import { env } from '@/shared/config/env'
+import type { AssetEntry } from '@/entities/asset/types'
+import type { ProjectDetail, ProjectTarget } from '@/entities/project/types'
+import { useAssets } from '@/features/assets/hooks/useAssets'
+import { usePresignedUrl } from '@/features/projects/hooks/useProjectStorage'
 import { trackEvent } from '@/shared/lib/analytics'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/Button'
-import { useAssets } from '@/features/assets/hooks/useAssets'
-import type { AssetEntry } from '@/entities/asset/types'
+import VideoPlayer from '@/features/projects/components/VideoPlayer'
 
 type ProjectLanguagePanelProps = {
   project: ProjectDetail
@@ -96,14 +97,16 @@ function LanguagePreview({
     }
   })
 
-  const selectedAsset = assets.find((asset) => asset.asset_type === 'preview_video')
-  const translatedSource = selectedAsset?.file_path
+  const previewAsset = assets.find((asset) => asset.asset_type === 'preview_video')
+  const translatedSource = previewAsset?.file_path
   const previewSource = version === 'original' ? videoSource : (translatedSource ?? videoSource)
   const languageLabel = languageNameMap[activeLanguage] ?? activeLanguage
-  const isAbsoluteUrl = previewSource?.startsWith('http')
-  const videoSrc = isAbsoluteUrl
-    ? previewSource
-    : `${env.apiBaseUrl}/api/storage/media/${previewSource}`
+  const { data: videoSrc } = usePresignedUrl(previewSource || '')
+
+  // const isAbsoluteUrl = previewSurce?.startsWith('http')
+  // const videoSrc = isAbsoluteUrl
+  //   ? previewSource
+  //   : `${env.apiBaseUrl}/api/storage/media/${previewSource}`
 
   return (
     <div className="space-y-5">
@@ -134,18 +137,9 @@ function LanguagePreview({
         })}
       </div>
       <div className="border-surface-3 bg-surface-1 relative overflow-hidden rounded-lg border">
-        {previewSource ? (
-          <video
-            key={`${activeLanguage}-${version}`}
-            controls
-            autoPlay={false}
-            className="h-auto max-h-[32em] min-h-[20em] w-full bg-black"
-            src={videoSrc}
-            preload="metadata"
-          >
-            <track kind="captions" />
-          </video>
-        ) : (
+        {videoSrc && <VideoPlayer src={videoSrc} active={true} />}
+
+        {!previewSource && (
           <div className="bg-surface-2 text-muted flex h-64 flex-col items-center justify-center gap-3">
             <Play className="h-8 w-8" />
             <p className="text-sm">더빙 영상 미리보기 (모의)</p>
