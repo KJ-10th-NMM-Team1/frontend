@@ -1,6 +1,6 @@
 import { Download, Play } from 'lucide-react'
 
-import type { ProjectAsset, ProjectDetail } from '@/entities/project/types'
+import type { ProjectAsset, ProjectDetail, ProjectTarget } from '@/entities/project/types'
 import { env } from '@/shared/config/env'
 import { trackEvent } from '@/shared/lib/analytics'
 import { cn } from '@/shared/lib/utils'
@@ -9,6 +9,7 @@ import { Button } from '@/shared/ui/Button'
 type ProjectLanguagePanelProps = {
   project: ProjectDetail
   activeLanguage: string
+  activeTarget?: ProjectTarget
   onLanguageChange: (language: string) => void
   version: 'original' | 'translated'
   onVersionChange: (version: 'original' | 'translated') => void
@@ -25,8 +26,13 @@ export function ProjectLanguagePanel({
   assetsByLanguage,
   languageNameMap = {},
 }: ProjectLanguagePanelProps) {
-  const targetLanguageCodes = project.targets?.map((target) => target.language_code)
+  const targetLanguageCodes = project.targets?.map((target) => target.language_code) ?? []
   const uniqueTargetLanguages = Array.from(new Set(targetLanguageCodes))
+  const targetStatusMap =
+    project.targets?.reduce<Record<string, ProjectTarget['status']>>((acc, target) => {
+      acc[target.language_code] = target.status
+      return acc
+    }, {}) ?? {}
 
   const assets = assetsByLanguage[activeLanguage] ?? []
   return (
@@ -39,6 +45,7 @@ export function ProjectLanguagePanel({
         videoSource={project.video_source}
         sourceLanguage={project.source_language}
         targetLanguages={uniqueTargetLanguages}
+        targetStatusMap={targetStatusMap}
         onLanguageChange={onLanguageChange}
         activeLanguage={activeLanguage}
         languageNameMap={languageNameMap}
@@ -55,35 +62,38 @@ type LanguagePreviewProps = {
   videoSource?: string
   sourceLanguage: string
   targetLanguages: string[]
+  targetStatusMap: Record<string, ProjectTarget['status']>
   onLanguageChange: (language: string) => void
   activeLanguage: string
   languageNameMap: Record<string, string>
 }
 
 function LanguagePreview({
-  language,
   assets,
   version,
   onVersionChange,
   videoSource,
   sourceLanguage,
   targetLanguages,
+  targetStatusMap,
   onLanguageChange,
   activeLanguage,
   languageNameMap,
 }: LanguagePreviewProps) {
   const languageButtons = [sourceLanguage, ...targetLanguages].map((lang) => {
     const displayName = languageNameMap[lang] ?? lang
+    const isCompleted = lang === sourceLanguage ? true : targetStatusMap[lang] === 'completed'
     return {
       label: lang === sourceLanguage ? `${displayName}(원본)` : displayName,
       language: lang,
+      disabled: !isCompleted,
     }
   })
 
   const selectedAsset = assets.find((asset) => asset.type === 'preview_video')
   const translatedSource = selectedAsset?.file_path
   const previewSource = version === 'original' ? videoSource : (translatedSource ?? videoSource)
-  const languageLabel = languageNameMap[language] ?? language
+  const languageLabel = languageNameMap[activeLanguage] ?? activeLanguage
   const isAbsoluteUrl = previewSource?.startsWith('http')
   const videoSrc = isAbsoluteUrl
     ? previewSource
@@ -92,7 +102,7 @@ function LanguagePreview({
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap gap-2">
-        {languageButtons.map(({ label, language: buttonLang }) => {
+        {languageButtons.map(({ label, language: buttonLang, disabled }) => {
           const isActive = buttonLang === activeLanguage
           const buttonClass = cn('rounded-full px-3 py-1 text-xs transition')
           return (
@@ -101,6 +111,7 @@ function LanguagePreview({
               variant={isActive ? 'primary' : 'ghost'}
               size="sm"
               className={buttonClass}
+              disabled={disabled}
               aria-pressed={isActive}
               onClick={() => {
                 onLanguageChange(buttonLang)
@@ -119,7 +130,7 @@ function LanguagePreview({
       <div className="border-surface-3 bg-surface-1 relative overflow-hidden rounded-lg border">
         {previewSource ? (
           <video
-            key={`${language}-${version}`}
+            key={`${activeLanguage}-${version}`}
             controls
             autoPlay={false}
             className="h-auto max-h-[32em] min-h-[20em] w-full bg-black"

@@ -23,16 +23,6 @@ export default function ProjectDetailPage() {
   const [version, setVersion] = useState<'original' | 'translated'>('translated')
   const canEdit = roles.includes('editor')
 
-  const assetsByLanguage = useMemo(() => {
-    if (!project) return {}
-    return (project.assets ?? []).reduce<Record<string, typeof project.assets>>((acc, asset) => {
-      acc[asset.languageCode] = acc[asset.languageCode]
-        ? [...acc[asset.languageCode], asset]
-        : [asset]
-      return acc
-    }, {})
-  }, [project])
-
   const languageNameMap = useMemo(() => {
     const items = languageData ?? []
     return items.reduce<Record<string, string>>((acc, item) => {
@@ -63,15 +53,30 @@ export default function ProjectDetailPage() {
 
   const projectId = project.id ?? (project as { _id?: string })._id ?? ''
 
-  const targetLanguageCodes =
-    project.targets && project.targets.length > 0
-      ? project.targets.map((target) => target.language_code)
-      : []
+  const projectTargets = project.targets ?? []
+  const allTargetLanguageCodes = projectTargets.map((target) => target.language_code)
+  const completedTargetLanguageCodes = projectTargets
+    .filter((target) => target.status === 'completed')
+    .map((target) => target.language_code)
   const sourceLanguageLabel = languageNameMap[project.source_language] ?? project.source_language
-  const targetLanguageLabels = targetLanguageCodes.map((code) => languageNameMap[code] ?? code)
+  const targetLanguageLabels = allTargetLanguageCodes.map((code) => languageNameMap[code] ?? code)
 
-  const activeLanguage = language ?? targetLanguageCodes[0] ?? project.source_language
+  const isSelectableLanguage =
+    language &&
+    (language === project.source_language || completedTargetLanguageCodes.includes(language))
+  const activeLanguage =
+    (isSelectableLanguage && language) || completedTargetLanguageCodes[0] || project.source_language
   const isSourceLanguage = activeLanguage === project.source_language
+
+  // useEffect(() => {
+  //   if (isSourceLanguage && version !== 'original') {
+  //     setVersion('original')
+  //   }
+
+  //   if (!isSourceLanguage && version !== 'translated') {
+  //     setVersion('translated')
+  //   }
+  // }, [isSourceLanguage, version, setVersion])
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-12">
@@ -89,10 +94,7 @@ export default function ProjectDetailPage() {
         </div>
         {canEdit ? (
           <div className="flex flex-wrap gap-3">
-            <Button
-              asChild
-              onClick={() => trackEvent('enter_editor_click', { projectId })}
-            >
+            <Button asChild onClick={() => trackEvent('enter_editor_click', { projectId })}>
               <Link to={routes.editor(projectId, activeLanguage)}>편집하기</Link>
             </Button>
           </div>
@@ -106,7 +108,7 @@ export default function ProjectDetailPage() {
           onLanguageChange={setLanguage}
           version={version}
           onVersionChange={setVersion}
-          assetsByLanguage={assetsByLanguage}
+          assetsByLanguage={{}}
           languageNameMap={languageNameMap}
         />
         <ProjectStudioPanel
