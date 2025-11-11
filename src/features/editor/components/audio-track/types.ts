@@ -14,3 +14,8 @@ export type TrackRow =
       type: 'speaker'
       segments: Segment[]
     }
+
+export type WaveformBar = {
+  id: number | string
+  height: number
+}
