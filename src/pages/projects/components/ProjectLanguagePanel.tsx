@@ -3,11 +3,11 @@ import { Download, Play } from 'lucide-react'
 import type { AssetEntry } from '@/entities/asset/types'
 import type { ProjectDetail, ProjectTarget } from '@/entities/project/types'
 import { useAssets } from '@/features/assets/hooks/useAssets'
+import VideoPlayer from '@/features/projects/components/VideoPlayer'
 import { usePresignedUrl } from '@/features/projects/hooks/useProjectStorage'
 import { trackEvent } from '@/shared/lib/analytics'
 import { cn } from '@/shared/lib/utils'
 import { Button } from '@/shared/ui/Button'
-import VideoPlayer from '@/features/projects/components/VideoPlayer'
 
 type ProjectLanguagePanelProps = {
   project: ProjectDetail
