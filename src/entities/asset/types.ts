@@ -1,4 +1,4 @@
-export type AssetType = 'preview_video' | 'subtitle_srt' | 'dubbed_audio'
+export type AssetType = 'preview_video' | 'subtitle_srt' | 'dubbed_audio' // | 'dubbed_video'
 
 export interface AssetEntry {
   project_id: string
