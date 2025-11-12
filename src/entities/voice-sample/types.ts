@@ -9,6 +9,7 @@ export interface VoiceSampleApiResponse {
   is_public: boolean
   file_path_wav: string
   audio_sample_url?: string | null
+  prompt_text?: string | null
   created_at: string
   is_favorite: boolean
 }
@@ -25,6 +26,7 @@ export interface VoiceSample {
   previewUrl?: string
   audio_sample_url?: string
   file_path_wav?: string
+  prompt_text?: string
   isPublic: boolean
   isFavorite: boolean
   provider?: string
