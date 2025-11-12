@@ -268,7 +268,9 @@ export default function VoiceSamplesPage() {
                   isPlaying={isPlaying}
                   isOwner={isOwner}
                   onSelect={setSelectedSample}
-                  onPlay={handlePlay}
+                  onPlay={(sample) => {
+                    void handlePlay(sample)
+                  }}
                   onEdit={(sample) => {
                     setEditingSample(sample)
                     setIsEditModalOpen(true)
