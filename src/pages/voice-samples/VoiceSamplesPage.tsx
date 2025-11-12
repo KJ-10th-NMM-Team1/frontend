@@ -59,7 +59,7 @@ export default function VoiceSamplesPage() {
     audio.load()
   }
 
-  const handlePlay = (sample: VoiceSample) => {
+  const handlePlay = async (sample: VoiceSample) => {
     // id가 없으면 재생 불가
     if (!sample.id) {
       console.warn('음성 샘플 ID가 없습니다:', sample)
@@ -87,15 +87,41 @@ export default function VoiceSamplesPage() {
     // 음성 파일 URL 결정: audio_sample_url > file_path_wav (storage API) > previewUrl
     let audioUrl: string | undefined
 
+    // presigned URL을 가져오는 헬퍼 함수
+    const getPresignedUrl = async (path: string): Promise<string | undefined> => {
+      try {
+        const apiBase = env.apiBaseUrl.startsWith('http')
+          ? `${env.apiBaseUrl}/api`
+          : env.apiBaseUrl || '/api'
+        const pathSegments = path.split('/')
+        const encodedPath = pathSegments.map((segment) => encodeURIComponent(segment)).join('/')
+        const response = await fetch(`${apiBase}/storage/media/${encodedPath}`)
+        if (!response.ok) {
+          throw new Error(`Failed to get presigned URL: ${response.statusText}`)
+        }
+        const data = (await response.json()) as { url: string }
+        return data.url
+      } catch (error) {
+        console.error('Presigned URL 가져오기 실패:', error)
+        return undefined
+      }
+    }
+
     if (sample.audio_sample_url) {
-      audioUrl = sample.audio_sample_url
+      // audio_sample_url이 /api/storage/media/로 시작하면 presigned URL 가져오기
+      if (
+        sample.audio_sample_url.startsWith('/api/storage/media/') ||
+        sample.audio_sample_url.includes('/storage/media/')
+      ) {
+        const path = sample.audio_sample_url.replace(/^.*\/storage\/media\//, '')
+        audioUrl = await getPresignedUrl(path)
+      } else {
+        // 이미 presigned URL이거나 직접 접근 가능한 URL
+        audioUrl = sample.audio_sample_url
+      }
     } else if (sample.file_path_wav) {
-      const apiBase = env.apiBaseUrl.startsWith('http')
-        ? `${env.apiBaseUrl}/api`
-        : env.apiBaseUrl || '/api'
-      const pathSegments = sample.file_path_wav.split('/')
-      const encodedPath = pathSegments.map((segment) => encodeURIComponent(segment)).join('/')
-      audioUrl = `${apiBase}/storage/media/${encodedPath}`
+      // storage/media 엔드포인트에서 presigned URL 가져오기
+      audioUrl = await getPresignedUrl(sample.file_path_wav)
     } else if (sample.previewUrl) {
       audioUrl = sample.previewUrl
     }
@@ -232,7 +258,7 @@ export default function VoiceSamplesPage() {
               // owner 여부를 부모에서 계산하여 prop으로 전달
               const currentUserId = currentUser ? String(currentUser._id || '') : null
               const ownerId = sample.owner_id ? String(sample.owner_id) : null
-              const isOwner = currentUserId && ownerId && currentUserId === ownerId
+              const isOwner = Boolean(currentUserId && ownerId && currentUserId === ownerId)
 
               return (
                 <VoiceSampleCard
