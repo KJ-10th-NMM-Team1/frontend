@@ -24,9 +24,6 @@ export type EditorState = {
 export function useEditorState(projectId: string, languageCode: string) {
   const editorStateKey = (projectId: string, languageCode: string) =>
     ['editor', 'state', projectId, languageCode] as const
-export function useEditorState(projectId: string, languageCode: string) {
-  const editorStateKey = (projectId: string, languageCode: string) =>
-    ['editor', 'state', projectId, languageCode] as const
   return useQuery({
     queryKey: editorStateKey(projectId, languageCode),
     queryFn: () => apiGet<EditorState>(`api/projects/${projectId}/languages/${languageCode}`),
