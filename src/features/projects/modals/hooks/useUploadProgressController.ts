@@ -137,7 +137,7 @@ export function useUploadProgressController({
     return () => {
       source.close()
     }
-  }, [projectCreationOpen, activeProjectId, handleProgressError, onComplete])
+  }, [projectCreationOpen, activeProjectId, handleProgressError, onComplete, showToast])
 
   const startTrackingProject = useCallback((projectId: string) => {
     setActiveProjectId(projectId)
