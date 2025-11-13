@@ -1,14 +1,15 @@
 import { useEffect, useMemo } from 'react'
 
 import { useQuery } from '@tanstack/react-query'
-import { Bell, CalendarDays, KeyRound, Mail, PenSquare, Shield, UserRound } from 'lucide-react'
+import { CalendarDays, KeyRound, Mail, PenSquare, Shield } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 import { getCurrentUser, type UserOut } from '@/features/auth/api/authApi'
+import { routes } from '@/shared/config/routes'
 import { useAuthStore } from '@/shared/store/useAuthStore'
 import { Badge } from '@/shared/ui/Badge'
 import { Button } from '@/shared/ui/Button'
-import { Card, CardDescription, CardHeader, CardTitle } from '@/shared/ui/Card'
+import { Card } from '@/shared/ui/Card'
 import { Spinner } from '@/shared/ui/Spinner'
 
 const fallbackUser: UserOut = {
@@ -97,7 +98,7 @@ export default function MyInfoPage() {
             <PenSquare className="h-4 w-4" />
             프로필 편집
           </Button>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => navigate(routes.changePassword)}>
             <KeyRound className="h-4 w-4" />
             비밀번호 변경
           </Button>
@@ -147,7 +148,7 @@ export default function MyInfoPage() {
           </div>
 
           <div className="space-y-6">
-            <Card>
+            {/* <Card>
               <CardHeader>
                 <CardTitle>유튜브</CardTitle>
                 <CardDescription>최근 30일 기준 사용량 지표입니다.</CardDescription>
@@ -177,7 +178,7 @@ export default function MyInfoPage() {
                   </div>
                 ))}
               </div>
-            </Card>
+            </Card> */}
           </div>
         </section>
       )}

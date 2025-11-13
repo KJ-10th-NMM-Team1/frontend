@@ -7,6 +7,7 @@ export const routes = {
   projectDetail: (id: string) => `/projects/${id}`,
   voiceSamples: '/voice-samples',
   myinfo: '/myinfo',
+  changePassword: '/myinfo/change-password',
   editor: (projectId: string, languageCode: string) => `/editor/${projectId}/${languageCode}`,
 }
 
