@@ -4,6 +4,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 
 import { changePassword, type ChangePasswordPayload } from '@/features/auth/api/authApi'
+import { routes } from '@/shared/config/routes'
 import { useAuthStore } from '@/shared/store/useAuthStore'
 import { useUiStore } from '@/shared/store/useUiStore'
 import { Button } from '@/shared/ui/Button'
@@ -11,7 +12,10 @@ import { Card, CardDescription, CardHeader, CardTitle } from '@/shared/ui/Card'
 import { Input } from '@/shared/ui/Input'
 
 export default function ChangedPasswordPage() {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const { isAuthenticated, signOut } = useAuthStore((state) => ({
+    isAuthenticated: state.isAuthenticated,
+    signOut: state.signOut,
+  }))
   const navigate = useNavigate()
   const showToast = useUiStore((state) => state.showToast)
   const [form, setForm] = useState({
@@ -59,6 +63,8 @@ export default function ChangedPasswordPage() {
         description: '새 비밀번호로 다시 로그인해 주세요.',
       })
       setForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      signOut()
+      navigate(routes.login, { replace: true })
     } catch (err) {
       console.error(err)
       setError('비밀번호 변경에 실패했습니다. 다시 시도해주세요.')
