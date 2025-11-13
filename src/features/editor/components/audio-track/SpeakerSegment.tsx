@@ -1,5 +1,6 @@
 import type { Segment } from '@/entities/segment/types'
 import { useAudioWaveform } from '@/features/editor/hooks/useAudioWaveform'
+import { useSegmentDrag } from '@/features/editor/hooks/useSegmentDrag'
 import { timeToPixel } from '@/features/editor/utils/timeline-scale'
 import { usePresignedUrl } from '@/shared/api/hooks'
 import { useIntersectionObserverOnce } from '@/shared/lib/hooks/useIntersectionObserver'
@@ -16,10 +17,22 @@ type SpeakerSegmentProps = {
 
 /**
  * 개별 스피커 세그먼트를 표시하는 컴포넌트
+ * z-index: z-10 (트랙 레이어 위, PlayheadIndicator 아래)
+ *
+ * Features:
+ * - Draggable to reposition on timeline
+ * - Lazy loading for waveform
  */
 export function SpeakerSegment({ segment, duration, scale, color }: SpeakerSegmentProps) {
   const startPx = timeToPixel(segment.start, duration, scale)
   const widthPx = Math.max(timeToPixel(segment.end - segment.start, duration, scale), 64)
+
+  // Drag functionality
+  const { onPointerDown, isDragging } = useSegmentDrag({
+    segment,
+    duration,
+    scale,
+  })
 
   // Lazy loading for waveform visualization (뷰포트에 진입했을 때만 파형 로드)
   const [ref, isVisible] = useIntersectionObserverOnce<HTMLDivElement>({
@@ -49,9 +62,12 @@ export function SpeakerSegment({ segment, duration, scale, color }: SpeakerSegme
   return (
     <div
       ref={ref}
+      onPointerDown={onPointerDown}
       className={cn(
         'absolute top-3 z-10 flex h-[60px] items-center justify-between rounded-2xl border px-3 text-xs font-semibold transition-opacity',
         isLoading && 'opacity-60',
+        isDragging && 'cursor-grabbing opacity-80',
+        !isDragging && 'cursor-grab',
       )}
       style={{
         left: `${startPx}px`,
