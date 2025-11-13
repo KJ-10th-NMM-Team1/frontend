@@ -49,7 +49,7 @@ export function TranslationWorkspace({
     setDrafts((prev) => ({ ...prev, [segmentId]: value }))
   }
 
-  const segmentRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const segmentRefs = useRef<Record<string, HTMLElement | null>>({})
 
   const handleSegmentAreaClick = (segment: Segment) => {
     setPlaying(false)

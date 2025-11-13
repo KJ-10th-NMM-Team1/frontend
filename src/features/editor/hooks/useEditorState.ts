@@ -16,10 +16,14 @@ export type EditorState = {
     active_language: string
     playback_rate: number
     video_source: string
+    video_only_source?: string
     audio_source?: string
   }
 }
 
+export function useEditorState(projectId: string, languageCode: string) {
+  const editorStateKey = (projectId: string, languageCode: string) =>
+    ['editor', 'state', projectId, languageCode] as const
 export function useEditorState(projectId: string, languageCode: string) {
   const editorStateKey = (projectId: string, languageCode: string) =>
     ['editor', 'state', projectId, languageCode] as const
