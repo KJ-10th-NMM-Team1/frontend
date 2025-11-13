@@ -70,6 +70,8 @@ export function useAudioTimeline(segments: Segment[], duration: number) {
     audioUrls,
   })
 
+  const [isScrubbing, setIsScrubbing] = useState(false)
+
   useEffect(() => {
     playheadRef.current = playhead
   }, [playhead])
@@ -97,7 +99,6 @@ export function useAudioTimeline(segments: Segment[], duration: number) {
     }
   }, [isPlaying, playbackRate, duration, setPlayhead, setPlaying, segmentEnd])
 
-  const [isScrubbing, setIsScrubbing] = useState(false)
   const lastSegmentRef = useRef<string | null>(null)
 
   const scrub = useCallback(

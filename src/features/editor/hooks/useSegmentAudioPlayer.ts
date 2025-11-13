@@ -28,6 +28,7 @@ export function useSegmentAudioPlayer({
 }: UseSegmentAudioPlayerOptions) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const currentSegmentIdRef = useRef<string | null>(null)
+  const lastPlayheadRef = useRef<number>(0)
 
   useEffect(() => {
     if (!isPlaying) {
@@ -95,18 +96,35 @@ export function useSegmentAudioPlayer({
         audio.addEventListener('canplay', playAudio, { once: true })
       }
     } else {
-      // Same segment - update playback rate if changed
-      if (audioRef.current && audioRef.current.playbackRate !== playbackRate) {
-        audioRef.current.playbackRate = playbackRate
-      }
+      // Same segment - check if playhead jumped (not continuous playback)
+      const PLAYHEAD_JUMP_THRESHOLD = 0.5 // If playhead jumped more than 0.5s, seek audio
+      const playheadDelta = Math.abs(playhead - lastPlayheadRef.current)
 
-      // Resume playback if paused
-      if (audioRef.current && audioRef.current.paused) {
-        void audioRef.current.play().catch((error) => {
-          console.error('Audio resume failed:', error)
-        })
+      if (audioRef.current) {
+        // Calculate expected audio position
+        const expectedAudioTime = playhead - currentSegment.start
+
+        // If playhead jumped (e.g., user pressed arrow keys), update audio position
+        if (playheadDelta > PLAYHEAD_JUMP_THRESHOLD) {
+          audioRef.current.currentTime = expectedAudioTime
+        }
+
+        // Update playback rate if changed
+        if (audioRef.current.playbackRate !== playbackRate) {
+          audioRef.current.playbackRate = playbackRate
+        }
+
+        // Resume playback if paused
+        if (audioRef.current.paused) {
+          void audioRef.current.play().catch((error) => {
+            console.error('Audio resume failed:', error)
+          })
+        }
       }
     }
+
+    // Update last playhead position
+    lastPlayheadRef.current = playhead
   }, [segments, playhead, isPlaying, playbackRate, audioUrls])
 
   // Cleanup on unmount
