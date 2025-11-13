@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-
+import { useUiStore } from '@/shared/store/useUiStore'
 import { env } from '@/shared/config/env'
 
 import type { UploadProgressState, UploadStage } from '../types'
+import { Description } from '@radix-ui/react-dialog'
 
 interface UploadProgressEvent {
   job_id?: string
@@ -60,6 +61,7 @@ export function useUploadProgressController({
   projectCreationOpen,
   onComplete,
 }: UseUploadProgressControllerOptions) {
+  const showToast = useUiStore((state) => state.showToast)
   const [uploadProgress, setUploadProgress] = useState<UploadProgressState>(
     initialUploadProgressState,
   )
@@ -105,6 +107,7 @@ export function useUploadProgressController({
           const isDone = parsed.stage === 'done'
           const nextProgress = typeof parsed.progress === 'number' ? parsed.progress : prev.progress
           const localizedStatus = toLocalizedStatus(parsed.status)
+
           return {
             stage: isDone ? 'done' : nextStage,
             progress: isDone ? 100 : nextProgress,
@@ -113,6 +116,11 @@ export function useUploadProgressController({
         })
 
         if (parsed.stage === 'done') {
+          showToast({
+            title: '영상 업로드 완료',
+            description: '파일 전송과 처리가 모두 끝났습니다.',
+            autoDismiss: 3000,
+          })
           source.close()
           onComplete()
         }
