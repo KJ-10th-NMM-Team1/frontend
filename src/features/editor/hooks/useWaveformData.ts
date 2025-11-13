@@ -5,6 +5,15 @@ import { resolveMediaUrl } from '@/shared/lib/media'
 
 const BAR_COUNT = 256
 
+type SignedAudioPayload = Partial<Record<'url' | 'signedUrl' | 'audio_url', unknown>>
+
+const extractSignedAudioUrl = (payload: SignedAudioPayload | null): string | null => {
+  if (!payload) return null
+  const candidates = [payload.url, payload.signedUrl, payload.audio_url]
+  const url = candidates.find((candidate): candidate is string => typeof candidate === 'string')
+  return url ?? null
+}
+
 const buildWaveform = (channelData: Float32Array): WaveformBar[] => {
   if (channelData.length === 0) return []
   const samplesPerBar = Math.max(1, Math.floor(channelData.length / BAR_COUNT))
@@ -43,11 +52,11 @@ async function fetchAudioData(
 
   const contentType = response.headers.get('content-type') ?? ''
   if (contentType.includes('application/json')) {
-    const payload = await response
+    const payload = (await response
       .clone()
       .json()
-      .catch(() => null)
-    const signedUrl = payload?.url ?? payload?.signedUrl ?? payload?.audio_url
+      .catch(() => null)) as SignedAudioPayload | null
+    const signedUrl = extractSignedAudioUrl(payload)
     if (!signedUrl) {
       throw new Error('Signed audio URL is missing in the response body')
     }
@@ -117,7 +126,7 @@ export function useWaveformData(sourceKey?: string) {
       }
     }
 
-    loadWaveform()
+    void loadWaveform()
     return () => {
       cancelled = true
       controller.abort()

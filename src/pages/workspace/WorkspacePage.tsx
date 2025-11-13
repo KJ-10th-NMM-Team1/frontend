@@ -3,16 +3,16 @@ import { useEffect, useMemo, useState, useCallback } from 'react'
 import { Search } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
+import type { ProjectSummary } from '@/entities/project/types'
 import { useProjects, useDeleteProjectMutation } from '@/features/projects/hooks/useProjects'
 import { ProjectCreationModal } from '@/features/projects/modals/ProjectCreationModal'
 import { ProjectList } from '@/features/workspace/components/project-list/ProjectList'
 import { UploadCard } from '@/features/workspace/components/upload-card/UploadCard'
+import { routes } from '@/shared/config/routes'
 import { useAuthStore } from '@/shared/store/useAuthStore'
 import { useUiStore } from '@/shared/store/useUiStore'
 import { Input } from '@/shared/ui/Input'
 import { Spinner } from '@/shared/ui/Spinner'
-import type { ProjectSummary } from '@/entities/project/types'
-import { routes } from '@/shared/config/routes'
 
 const stepMap = {
   source: 'source',

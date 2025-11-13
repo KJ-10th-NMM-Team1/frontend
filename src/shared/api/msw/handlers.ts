@@ -1,4 +1,4 @@
-﻿import { HttpResponse, http } from 'msw'
+﻿import { HttpResponse, http, passthrough } from 'msw'
 
 import type { ExampleItem, ExampleItemPayload } from '../../../entities/example/types'
 import { sampleGlossaries } from '../../../entities/glossary/types'
@@ -34,9 +34,7 @@ const mockUser = {
 }
 
 export const handlers = [
-  http.get('/api/storage/media/:key*', () => {
-    return HttpResponse.passthrough()
-  }),
+  http.get('/api/storage/media/:key*', () => passthrough()),
 
   http.get('/api/projects', () => {
     const items = sampleProjects.map((project) => ({

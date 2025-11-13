@@ -14,11 +14,13 @@ export default function EditorPage() {
     languageCode: string
   }>()
   const { data, isLoading } = useEditorState(projectId, languageCode)
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const audioSourceKey =
     data?.playback.audio_source ??
     // backend typo fallback
     (data?.playback as { audio_soruce?: string } | undefined)?.audio_soruce ??
     data?.audio_source
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   const { waveformData } = useWaveformData(audioSourceKey)
 
   if (isLoading || !data) {

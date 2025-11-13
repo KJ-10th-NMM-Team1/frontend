@@ -1,11 +1,6 @@
 import { useMemo, type MouseEvent } from 'react'
+
 import { MoreVertical } from 'lucide-react'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/shared/ui/Dropdown'
 import { Link } from 'react-router-dom'
 
 import type { Language } from '@/entities/language/types'
@@ -14,6 +9,12 @@ import { useLanguage } from '@/features/languages/hooks/useLanguage'
 import { env } from '@/shared/config/env'
 import { routes } from '@/shared/config/routes'
 import { formatPercent } from '@/shared/lib/utils'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/shared/ui/Dropdown'
 import { Progress } from '@/shared/ui/Progress'
 
 const EMPTY_LANGUAGES: Language[] = []

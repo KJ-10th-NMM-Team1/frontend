@@ -1,6 +1,11 @@
 import { useState, useCallback } from 'react'
+
 import { Search, SlidersHorizontal } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+
+import type { ProjectSummary } from '@/entities/project/types'
+import { routes } from '@/shared/config/routes'
+import { useUiStore } from '@/shared/store/useUiStore'
 
 import { useProjects, useDeleteProjectMutation } from '../../features/projects/hooks/useProjects'
 import { ProjectList } from '../../features/workspace/components/project-list/ProjectList'
@@ -8,9 +13,6 @@ import { Button } from '../../shared/ui/Button'
 import { Input } from '../../shared/ui/Input'
 import { Spinner } from '../../shared/ui/Spinner'
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from '../../shared/ui/Tabs'
-import { routes } from '@/shared/config/routes'
-import { useUiStore } from '@/shared/store/useUiStore'
-import type { ProjectSummary } from '@/entities/project/types'
 
 const tabs = [
   { value: 'assigned', label: '할당됨' },

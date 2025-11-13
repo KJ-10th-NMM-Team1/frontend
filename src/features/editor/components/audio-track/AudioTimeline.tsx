@@ -6,6 +6,7 @@ import type {
 
 import type { Segment } from '@/entities/segment/types'
 import { useEditorStore } from '@/shared/store/useEditorStore'
+
 import type { TrackRow, WaveformBar } from './types'
 
 type AudioTimelineProps = {

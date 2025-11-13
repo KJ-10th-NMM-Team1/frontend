@@ -1,7 +1,7 @@
 import { Play } from 'lucide-react'
 
-import { Button } from '@/shared/ui/Button'
 import { resolveMediaUrl } from '@/shared/lib/media'
+import { Button } from '@/shared/ui/Button'
 
 type StudioVideoPreviewProps = {
   activeLanguage: string
