@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useUiStore } from '@/shared/store/useUiStore'
+
 import { env } from '@/shared/config/env'
+import { useUiStore } from '@/shared/store/useUiStore'
 
 import type { UploadProgressState, UploadStage } from '../types'
-import { Description } from '@radix-ui/react-dialog'
 
 interface UploadProgressEvent {
   job_id?: string
