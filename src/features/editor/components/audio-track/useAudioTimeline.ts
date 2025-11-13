@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { shallow } from 'zustand/shallow'
 
 import type { Segment } from '@/entities/segment/types'
+import { usePreloadSegmentAudios } from '@/features/editor/hooks/usePreloadSegmentAudios'
+import { useSegmentAudioPlayer } from '@/features/editor/hooks/useSegmentAudioPlayer'
 import { pixelToTime } from '@/features/editor/utils/timeline-scale'
 import { useEditorStore } from '@/shared/store/useEditorStore'
 
@@ -55,6 +57,18 @@ export function useAudioTimeline(segments: Segment[], duration: number) {
     }),
     shallow,
   )
+
+  // Preload all segment audio URLs for seamless playback
+  const { audioUrls } = usePreloadSegmentAudios(segments)
+
+  // Audio playback synchronized with playhead
+  useSegmentAudioPlayer({
+    segments,
+    playhead,
+    isPlaying,
+    playbackRate,
+    audioUrls,
+  })
 
   useEffect(() => {
     playheadRef.current = playhead
