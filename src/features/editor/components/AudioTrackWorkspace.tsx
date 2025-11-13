@@ -26,6 +26,7 @@ export function AudioTrackWorkspace({ segments, duration }: AudioTrackWorkspaceP
     playhead,
     setPlayhead,
     isPlaying,
+    setPlaying,
     togglePlayback,
     formatTime,
   } = useAudioTimeline(segments, duration)
@@ -35,6 +36,7 @@ export function AudioTrackWorkspace({ segments, duration }: AudioTrackWorkspaceP
     playhead,
     setPlayhead,
     duration,
+    setPlaying,
     togglePlayback,
   })
   return (

@@ -227,6 +227,7 @@ export function useAudioTimeline(segments: Segment[], duration: number) {
     playhead,
     setPlayhead,
     isPlaying,
+    setPlaying,
     togglePlayback,
     trackRows,
     timelineTicks,
