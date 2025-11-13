@@ -85,7 +85,7 @@ export default function ChangedPasswordPage() {
           <CardTitle>보안 확인</CardTitle>
           <CardDescription>아래 정보를 입력한 후 비밀번호를 변경할 수 있습니다.</CardDescription>
         </CardHeader>
-        <form className="space-y-5" onSubmit={handleSubmit}>
+        <form className="space-y-5" onSubmit={(event) => void handleSubmit(event)}>
           <div className="space-y-2">
             <label className="text-muted text-xs font-semibold uppercase tracking-wide">
               현재 비밀번호
