@@ -24,6 +24,11 @@ export interface LoginResponse {
   message: string
 }
 
+export interface ChangePasswordPayload {
+  current_password: string
+  new_password: string
+}
+
 export type SignupResponse = UserOut
 
 export async function signup(payload: SignupPayload): Promise<SignupResponse> {
@@ -44,4 +49,8 @@ export async function refreshToken(): Promise<{ message: string }> {
 
 export async function getCurrentUser(): Promise<UserOut> {
   return apiClient.get('api/users/me').json<UserOut>()
+}
+
+export async function changePassword(payload: ChangePasswordPayload): Promise<{ message: string }> {
+  return apiClient.post('api/auth/change-password', { json: payload }).json<{ message: string }>()
 }

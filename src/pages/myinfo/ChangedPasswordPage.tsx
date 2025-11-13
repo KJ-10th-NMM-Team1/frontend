@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 
+import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 
+import { changePassword, type ChangePasswordPayload } from '@/features/auth/api/authApi'
 import { useAuthStore } from '@/shared/store/useAuthStore'
 import { useUiStore } from '@/shared/store/useUiStore'
 import { Button } from '@/shared/ui/Button'
@@ -18,7 +20,9 @@ export default function ChangedPasswordPage() {
     confirmPassword: '',
   })
   const [error, setError] = useState<string | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const changePasswordMutation = useMutation({
+    mutationFn: (payload: ChangePasswordPayload) => changePassword(payload),
+  })
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -45,18 +49,19 @@ export default function ChangedPasswordPage() {
       setError('새 비밀번호가 일치하지 않습니다.')
       return
     }
-    setIsSubmitting(true)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800))
+      await changePasswordMutation.mutateAsync({
+        current_password: form.currentPassword,
+        new_password: form.newPassword,
+      })
       showToast({
         title: '비밀번호 변경 완료',
         description: '새 비밀번호로 다시 로그인해 주세요.',
       })
       setForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
-    } catch {
+    } catch (err) {
+      console.error(err)
       setError('비밀번호 변경에 실패했습니다. 다시 시도해주세요.')
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
@@ -116,8 +121,8 @@ export default function ChangedPasswordPage() {
               {error}
             </p>
           )}
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? '변경 중…' : '비밀번호 변경'}
+          <Button type="submit" className="w-full" disabled={changePasswordMutation.isPending}>
+            {changePasswordMutation.isPending ? '변경 중…' : '비밀번호 변경'}
           </Button>
         </form>
       </Card>
