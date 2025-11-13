@@ -5,11 +5,11 @@ import { Bell, CalendarDays, KeyRound, Mail, PenSquare, Shield, UserRound } from
 import { useNavigate } from 'react-router-dom'
 
 import { getCurrentUser, type UserOut } from '@/features/auth/api/authApi'
+import { useAuthStore } from '@/shared/store/useAuthStore'
 import { Badge } from '@/shared/ui/Badge'
 import { Button } from '@/shared/ui/Button'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/shared/ui/Card'
 import { Spinner } from '@/shared/ui/Spinner'
-import { useAuthStore } from '@/shared/store/useAuthStore'
 
 const fallbackUser: UserOut = {
   username: '게스트',

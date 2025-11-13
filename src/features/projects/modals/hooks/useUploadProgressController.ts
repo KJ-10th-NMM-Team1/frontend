@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useUiStore } from '@/shared/store/useUiStore'
+
 import { env } from '@/shared/config/env'
+import { useUiStore } from '@/shared/store/useUiStore'
 
 import type { UploadProgressState, UploadStage } from '../types'
-import { Description } from '@radix-ui/react-dialog'
 
 interface UploadProgressEvent {
   job_id?: string
@@ -137,7 +137,7 @@ export function useUploadProgressController({
     return () => {
       source.close()
     }
-  }, [projectCreationOpen, activeProjectId, handleProgressError, onComplete])
+  }, [projectCreationOpen, activeProjectId, handleProgressError, onComplete, showToast])
 
   const startTrackingProject = useCallback((projectId: string) => {
     setActiveProjectId(projectId)
