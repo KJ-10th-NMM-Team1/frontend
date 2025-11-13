@@ -4,9 +4,11 @@ import { EpisodeCard } from './EpisodeCard'
 
 type ProjectListProps = {
   projects: ProjectSummary[]
+  onEditProject?: (project: ProjectSummary) => void
+  onDeleteProject?: (project: ProjectSummary) => void
 }
 
-export function ProjectList({ projects }: ProjectListProps) {
+export function ProjectList({ projects, onEditProject, onDeleteProject }: ProjectListProps) {
   if (projects.length === 0) {
     return (
       <div className="border-surface-4 bg-surface-2 rounded-3xl border border-dashed p-10 text-center">
@@ -18,7 +20,12 @@ export function ProjectList({ projects }: ProjectListProps) {
   return (
     <div className="grid grid-cols-2 gap-4 xl:grid-cols-3">
       {projects.map((project) => (
-        <EpisodeCard key={project.id} project={project} />
+        <EpisodeCard
+          key={project.id}
+          project={project}
+          onEdit={onEditProject}
+          onDelete={onDeleteProject}
+        />
       ))}
     </div>
   )

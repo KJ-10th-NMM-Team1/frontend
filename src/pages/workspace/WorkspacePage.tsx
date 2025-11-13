@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 
 import { Search } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
-import { useProjects } from '@/features/projects/hooks/useProjects'
+import { useProjects, useDeleteProjectMutation } from '@/features/projects/hooks/useProjects'
 import { ProjectCreationModal } from '@/features/projects/modals/ProjectCreationModal'
 import { ProjectList } from '@/features/workspace/components/project-list/ProjectList'
 import { UploadCard } from '@/features/workspace/components/upload-card/UploadCard'
@@ -11,6 +11,8 @@ import { useAuthStore } from '@/shared/store/useAuthStore'
 import { useUiStore } from '@/shared/store/useUiStore'
 import { Input } from '@/shared/ui/Input'
 import { Spinner } from '@/shared/ui/Spinner'
+import type { ProjectSummary } from '@/entities/project/types'
+import { routes } from '@/shared/config/routes'
 
 const stepMap = {
   source: 'source',
@@ -21,6 +23,7 @@ const stepMap = {
 
 export default function WorkspacePage() {
   const { data: projects = [], isLoading } = useProjects()
+  const deleteProjectMutation = useDeleteProjectMutation()
   const [searchTerm, setSearchTerm] = useState('')
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -29,6 +32,7 @@ export default function WorkspacePage() {
   const modalStep = useUiStore((state) => state.projectCreation.step)
   const openProjectCreation = useUiStore((state) => state.openProjectCreation)
   const closeProjectCreation = useUiStore((state) => state.closeProjectCreation)
+  const showToast = useUiStore((state) => state.showToast)
 
   const stepParam = searchParams.get('create')
   const derivedStep = stepParam ? stepMap[stepParam as keyof typeof stepMap] : null
@@ -38,6 +42,33 @@ export default function WorkspacePage() {
       openProjectCreation(derivedStep)
     }
   }, [derivedStep, openProjectCreation])
+
+  const handleEditProject = useCallback(
+    (project: ProjectSummary) => {
+      navigate(routes.projectDetail(project.id)) // 수정은 상세 페이지로 이동
+    },
+    [navigate],
+  )
+
+  const handleDeleteProject = useCallback(
+    (project: ProjectSummary) => {
+      if (!window.confirm(`"${project.title}" 에피소드를 삭제할까요?`)) return
+
+      deleteProjectMutation.mutate(project.id, {
+        onSuccess: () =>
+          showToast({
+            title: '에피소드가 삭제됐습니다.',
+            description: '목록에서 항목이 곧 사라집니다.',
+          }),
+        onError: () =>
+          showToast({
+            title: '삭제에 실패했습니다.',
+            description: '잠시 후 다시 시도해주세요.',
+          }),
+      })
+    },
+    [deleteProjectMutation, showToast],
+  )
 
   useEffect(() => {
     setSearchParams((prev) => {
@@ -108,7 +139,11 @@ export default function WorkspacePage() {
               <span className="text-muted ml-3 text-sm">프로젝트 불러오는 중…</span>
             </div>
           ) : (
-            <ProjectList projects={filteredProjects} />
+            <ProjectList
+              projects={filteredProjects}
+              onEditProject={handleEditProject}
+              onDeleteProject={handleDeleteProject}
+            />
           )}
         </div>
       </section>

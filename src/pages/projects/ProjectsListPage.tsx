@@ -1,13 +1,16 @@
-import { useState } from 'react'
-
+import { useState, useCallback } from 'react'
 import { Search, SlidersHorizontal } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
-import { useProjects } from '../../features/projects/hooks/useProjects'
+import { useProjects, useDeleteProjectMutation } from '../../features/projects/hooks/useProjects'
 import { ProjectList } from '../../features/workspace/components/project-list/ProjectList'
 import { Button } from '../../shared/ui/Button'
 import { Input } from '../../shared/ui/Input'
 import { Spinner } from '../../shared/ui/Spinner'
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from '../../shared/ui/Tabs'
+import { routes } from '@/shared/config/routes'
+import { useUiStore } from '@/shared/store/useUiStore'
+import type { ProjectSummary } from '@/entities/project/types'
 
 const tabs = [
   { value: 'assigned', label: '할당됨' },
@@ -20,6 +23,36 @@ export default function ProjectsListPage() {
   const [query, setQuery] = useState('')
   const [sortKey, setSortKey] = useState<'recent' | 'dueDate' | 'progress'>('recent')
   const [activeTab, setActiveTab] = useState('assigned')
+  const deleteProjectMutation = useDeleteProjectMutation()
+  const showToast = useUiStore((state) => state.showToast)
+  const navigate = useNavigate()
+
+  const handleEditProject = useCallback(
+    (project: ProjectSummary) => {
+      navigate(routes.projectDetail(project.id)) // 수정은 상세 페이지로 이동
+    },
+    [navigate],
+  )
+
+  const handleDeleteProject = useCallback(
+    (project: ProjectSummary) => {
+      if (!window.confirm(`"${project.title}" 에피소드를 삭제할까요?`)) return
+
+      deleteProjectMutation.mutate(project.id, {
+        onSuccess: () =>
+          showToast({
+            title: '에피소드가 삭제됐습니다.',
+            description: '목록에서 항목이 곧 사라집니다.',
+          }),
+        onError: () =>
+          showToast({
+            title: '삭제에 실패했습니다.',
+            description: '잠시 후 다시 시도해주세요.',
+          }),
+      })
+    },
+    [deleteProjectMutation, showToast],
+  )
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-12">
@@ -84,7 +117,11 @@ export default function ProjectsListPage() {
               <span className="text-muted ml-3 text-sm">목록을 불러오는 중…</span>
             </div>
           ) : (
-            <ProjectList projects={projects} />
+            <ProjectList
+              projects={projects}
+              onEditProject={handleEditProject}
+              onDeleteProject={handleDeleteProject}
+            />
           )}
         </TabsContent>
       </TabsRoot>
