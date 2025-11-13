@@ -10,14 +10,12 @@ type StudioVideoPreviewProps = {
   videoSource?: string
 }
 
-
 export function StudioVideoPreview({
   activeLanguage,
   duration,
   playbackRate,
-  videoSource
+  videoSource,
 }: StudioVideoPreviewProps) {
-
   const videoSrc = `${env.apiBaseUrl}/api/storage/media/${videoSource}`
 
   return (
@@ -44,7 +42,6 @@ export function StudioVideoPreview({
           >
             <track kind="captions" />
           </video>
-
         </div>
       </div>
     </section>

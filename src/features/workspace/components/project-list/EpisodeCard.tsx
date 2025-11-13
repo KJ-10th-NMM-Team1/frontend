@@ -1,5 +1,6 @@
-import { useMemo } from 'react'
+import { useMemo, type MouseEvent } from 'react'
 
+import { MoreVertical } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import type { Language } from '@/entities/language/types'
@@ -8,6 +9,12 @@ import { useLanguage } from '@/features/languages/hooks/useLanguage'
 import { env } from '@/shared/config/env'
 import { routes } from '@/shared/config/routes'
 import { formatPercent } from '@/shared/lib/utils'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/shared/ui/Dropdown'
 import { Progress } from '@/shared/ui/Progress'
 
 const EMPTY_LANGUAGES: Language[] = []
@@ -81,13 +88,32 @@ export function getProjectProgressFromTargets(targets: ProjectTarget[] = []) {
   return Math.round(sum / targets.length)
 }
 
-export function EpisodeCard({ project }: { project: ProjectSummary }) {
+type EpisodeCardProps = {
+  project: ProjectSummary
+  onEdit?: (project: ProjectSummary) => void
+  onDelete?: (project: ProjectSummary) => void
+}
+
+export function EpisodeCard({ project, onEdit, onDelete }: EpisodeCardProps) {
+  const showActions = Boolean(onEdit || onDelete)
   const gradient = gradients[Math.abs(project.id.charCodeAt(0)) % gradients.length]
   const statusLabel = getProjectStatusLabel(project.status)
   const statusClass = projectStatusClassMap[statusLabel]
   const registeredLabel = formatRegisteredAt(project.createdAt)
   const overallProgress = getProjectProgressFromTargets(project.targets ?? [])
   const overlayWidth = 100 - Math.min(Math.max(overallProgress, 0), 100)
+
+  const handleEditClick = (event: MouseEvent) => {
+    event.preventDefault()
+    event.stopPropagation()
+    onEdit?.(project)
+  }
+
+  const handleDeleteClick = (event: MouseEvent) => {
+    event.preventDefault()
+    event.stopPropagation()
+    onDelete?.(project)
+  }
 
   // 타겟 언어
   const { data } = useLanguage()
@@ -101,7 +127,8 @@ export function EpisodeCard({ project }: { project: ProjectSummary }) {
   }, [languageItems])
   const sourceLangLabel = languageMap[project.source_language] ?? project.source_language
   const targetLangLabels =
-    project.targets?.map((target) => languageMap[target.language_code] ?? target.language_code) ?? []
+    project.targets?.map((target) => languageMap[target.language_code] ?? target.language_code) ??
+    []
   const thumbnaileUrl =
     project.thumbnail?.kind === 's3'
       ? `https://${env.awsS3Bucket}.s3.${env.awsRegion}.amazonaws.com/${project.thumbnail.key}`
@@ -113,6 +140,32 @@ export function EpisodeCard({ project }: { project: ProjectSummary }) {
       className="border-surface-3 bg-surface-1/95 focus-visible:outline-hidden hover:border-primary/60 block overflow-hidden rounded-3xl border shadow-soft transition hover:-translate-y-0.5 hover:shadow-xl"
     >
       <div className="relative aspect-video overflow-hidden">
+        {showActions && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label="에피소드 작업"
+                className="focus-visible:outline-hidden focus-visible:ring-primary/40 absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/85 text-gray-900 shadow hover:bg-white focus-visible:ring-2"
+                onClick={(event) => {
+                  event.preventDefault()
+                  event.stopPropagation()
+                }}
+              >
+                <MoreVertical className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {onEdit && <DropdownMenuItem onClick={handleEditClick}>수정</DropdownMenuItem>}
+              {onDelete && (
+                <DropdownMenuItem className="text-danger" onClick={handleDeleteClick}>
+                  삭제
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+
         {project.thumbnail ? (
           <img
             src={thumbnaileUrl}

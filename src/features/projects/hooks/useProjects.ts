@@ -1,11 +1,11 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import type { ProjectDetail, ProjectPayload, ProjectsResponse } from '@/entities/project/types'
 import { apiGet } from '@/shared/api/client'
 import { queryKeys } from '@/shared/config/queryKeys'
 // import { useUiStore } from '@/shared/store/useUiStore'
 
-import { createProject } from '../api/projectsApi'
+import { createProject, deleteProject, updateProject } from '../api/projectsApi'
 
 export function useProjects() {
   return useQuery({
@@ -39,6 +39,35 @@ export function useCreateProjectMutation() {
       //   title: '프로젝트 생성 후 업로드 진행 중',
       //   autoDismiss: 2500,
       // })
+    },
+  })
+}
+
+export function useDeleteProjectMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationKey: ['projects', 'delete'],
+    mutationFn: (projectId: string) => deleteProject(projectId), // 실제 API 호출
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.projects.all })
+    },
+    onError: (error) => {
+      console.error(error)
+    },
+  })
+}
+
+export function useUpdateProjectMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationKey: ['projects', 'update'],
+    mutationFn: ({ id, payload }: { id: string; payload: ProjectPayload }) =>
+      updateProject(id, payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.projects.all })
+      // 필요하면 상세 캐시도 갱신: queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(id) })
     },
   })
 }

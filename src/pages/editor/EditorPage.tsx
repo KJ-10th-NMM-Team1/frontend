@@ -8,7 +8,10 @@ import { useEditorState } from '@/features/editor/hooks/useEditorState'
 import { Spinner } from '@/shared/ui/Spinner'
 
 export default function EditorPage() {
-  const { projectId = '', languageCode = '' } = useParams<{ projectId: string, languageCode: string }>()
+  const { projectId = '', languageCode = '' } = useParams<{
+    projectId: string
+    languageCode: string
+  }>()
   const { data, isLoading } = useEditorState(projectId, languageCode)
 
   if (isLoading || !data) {

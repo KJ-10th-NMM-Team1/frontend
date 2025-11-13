@@ -1,4 +1,4 @@
-import { LogOut, Waves } from 'lucide-react'
+import { LogOut, User, Waves } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import { useLogoutMutation } from '@/features/auth/hooks/useAuthMutations'
@@ -32,6 +32,10 @@ export function AppHeader() {
 
   const handleVoiceSamples = () => {
     navigate(routes.voiceSamples)
+  }
+
+  const handleMyInfo = () => {
+    navigate(routes.myinfo)
   }
 
   const handleSignOut = () => {
@@ -81,6 +85,10 @@ export function AppHeader() {
                 <p className="text-foreground mt-1 text-sm font-semibold">{userName ?? '미등록'}</p>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={handleMyInfo}>
+                <User className="text-muted h-4 w-4" />내 정보
+              </DropdownMenuItem>
+
               <DropdownMenuItem onSelect={handleVoiceSamples}>
                 <Waves className="text-muted h-4 w-4" />
                 음성 샘플
