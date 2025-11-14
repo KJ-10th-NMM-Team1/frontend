@@ -33,6 +33,7 @@ export default function EditorPage() {
         <div className="grid min-h-0 flex-1 gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
           <div className="overflow-y-auto">
             <TranslationWorkspace
+              projectId={projectId}
               segments={data.segments}
               sourceLanguage={sourceLanguage}
               targetLanguage={targetLanguage}
@@ -43,7 +44,6 @@ export default function EditorPage() {
             duration={data.playback.duration}
             playbackRate={data.playback.playback_rate}
             videoSource={data.playback.video_source}
-            videoOnlySource={data.playback.video_only_source}
           />
         </div>
         <div className="h-[400px] min-h-0">
