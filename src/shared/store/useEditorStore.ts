@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 
+type AudioGenerationMode = 'fixed' | 'dynamic'
+
 type EditorUiState = {
   // Timeline state
   playhead: number
@@ -28,6 +30,7 @@ type EditorUiState = {
   setSegmentEnd: (time: number | null) => void
   setScale: (scale: number) => void
   setDuration: (duration: number) => void
+  generateSegmentAudio: (segmentId: string, mode: AudioGenerationMode) => void
 }
 
 const MIN_SCALE = 0.35
@@ -75,5 +78,12 @@ export const useEditorStore = create<EditorUiState>()(
 
     setDuration: (duration) =>
       set({ duration }, false, { type: 'editor/setDuration', payload: duration }),
+
+    generateSegmentAudio: (segmentId, mode) => {
+      console.log(`[EditorStore] Generate ${mode} audio for segment:`, segmentId)
+      // TODO: Implement API call for voice generation
+      // - Fixed mode: Use assigned voice sample
+      // - Dynamic mode: Use AI-generated voice cloning
+    },
   })),
 )

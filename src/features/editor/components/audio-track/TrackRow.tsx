@@ -9,8 +9,6 @@ type TrackRowProps = {
   scale: number
   height: number
   waveformData?: Array<{ id: number; height: number }>
-  onGenerateFixed?: (segmentId: string) => void
-  onGenerateDynamic?: (segmentId: string) => void
 }
 
 /**
@@ -22,16 +20,7 @@ type TrackRowProps = {
  * - speaker: 스피커별 세그먼트 표시 (높이: 84px)
  * - muted/fx: FX 플레이스홀더 (높이: 28px)
  */
-export function TrackRow({
-  track,
-  index,
-  duration,
-  scale,
-  height,
-  waveformData,
-  onGenerateFixed,
-  onGenerateDynamic,
-}: TrackRowProps) {
+export function TrackRow({ track, index, duration, scale, height, waveformData }: TrackRowProps) {
   const backgroundColor = index % 2 === 0 ? 'rgba(15,23,42,0.02)' : 'transparent'
 
   return (
@@ -50,8 +39,6 @@ export function TrackRow({
               duration={duration}
               scale={scale}
               color={track.color}
-              onGenerateFixed={onGenerateFixed}
-              onGenerateDynamic={onGenerateDynamic}
             />
           ))}
         </>

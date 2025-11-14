@@ -1,5 +1,3 @@
-import { useCallback } from 'react'
-
 import type { Segment } from '@/entities/segment/types'
 
 import { useEditorHotkeys } from '../hooks/useEditorHotkeys'
@@ -16,17 +14,6 @@ type AudioTrackWorkspaceProps = {
 
 export function AudioTrackWorkspace({ segments, duration }: AudioTrackWorkspaceProps) {
   // Segments are now managed directly in tracks store via useAudioTimeline
-
-  // Generate audio handlers
-  const handleGenerateFixed = useCallback((segmentId: string) => {
-    console.log('[AudioTrackWorkspace] Generate Fixed Audio for segment:', segmentId)
-    // TODO: Implement fixed voice generation API call
-  }, [])
-
-  const handleGenerateDynamic = useCallback((segmentId: string) => {
-    console.log('[AudioTrackWorkspace] Generate Dynamic Audio for segment:', segmentId)
-    // TODO: Implement dynamic voice generation API call
-  }, [])
 
   const {
     // playbackRate,
@@ -87,8 +74,6 @@ export function AudioTrackWorkspace({ segments, duration }: AudioTrackWorkspaceP
               getTrackRowHeight={getTrackRowHeight}
               duration={duration}
               playhead={playhead}
-              onGenerateFixed={handleGenerateFixed}
-              onGenerateDynamic={handleGenerateDynamic}
             />
           </div>
         </div>

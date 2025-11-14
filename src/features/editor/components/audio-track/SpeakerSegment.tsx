@@ -8,6 +8,7 @@ import { timeToPixel } from '@/features/editor/utils/timeline-scale'
 import { usePresignedUrl } from '@/shared/api/hooks'
 import { useIntersectionObserverOnce } from '@/shared/lib/hooks/useIntersectionObserver'
 import { cn } from '@/shared/lib/utils'
+import { useEditorStore } from '@/shared/store/useEditorStore'
 
 import { SegmentContextMenu } from './SegmentContextMenu'
 import { SegmentResizeHandle } from './SegmentResizeHandle'
@@ -18,18 +19,10 @@ type SpeakerSegmentProps = {
   duration: number
   scale: number
   color: string
-  onGenerateFixed?: (segmentId: string) => void
-  onGenerateDynamic?: (segmentId: string) => void
 }
 
-export function SpeakerSegment({
-  segment,
-  duration,
-  scale,
-  color,
-  onGenerateFixed,
-  onGenerateDynamic,
-}: SpeakerSegmentProps) {
+export function SpeakerSegment({ segment, duration, scale, color }: SpeakerSegmentProps) {
+  const generateSegmentAudio = useEditorStore((state) => state.generateSegmentAudio)
   const startPx = timeToPixel(segment.start, duration, scale)
   const widthPx = Math.max(timeToPixel(segment.end - segment.start, duration, scale), 64)
 
@@ -50,8 +43,8 @@ export function SpeakerSegment({
     handleGenerateDynamic,
   } = useSegmentContextMenu({
     segmentId: segment.id,
-    onGenerateFixed: onGenerateFixed ? () => onGenerateFixed(segment.id) : undefined,
-    onGenerateDynamic: onGenerateDynamic ? () => onGenerateDynamic(segment.id) : undefined,
+    onGenerateFixed: () => generateSegmentAudio(segment.id, 'fixed'),
+    onGenerateDynamic: () => generateSegmentAudio(segment.id, 'dynamic'),
   })
 
   // Lazy loading for waveform visualization (뷰포트에 진입했을 때만 파형 로드)
