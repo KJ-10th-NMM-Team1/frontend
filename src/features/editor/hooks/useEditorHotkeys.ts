@@ -16,10 +16,11 @@ type EditorHotkeysOptions = {
   playhead: number
   setPlayhead: (time: number) => void
   duration: number
+  setPlaying: (playing: boolean) => void
   togglePlayback: () => void
 }
 
-const JUMP_TIME = 5 // seconds
+const JUMP_TIME = 1 // seconds
 
 /**
  * Registers all editor hotkeys
@@ -28,6 +29,7 @@ export function useEditorHotkeys({
   playhead,
   setPlayhead,
   duration,
+  setPlaying,
   togglePlayback,
 }: EditorHotkeysOptions) {
   const { scale, setScale } = useEditorStore((state) => ({
@@ -38,11 +40,13 @@ export function useEditorHotkeys({
   // Playback handlers
   const handleJumpBackward = useCallback(() => {
     setPlayhead(Math.max(0, playhead - JUMP_TIME))
-  }, [playhead, setPlayhead])
+    setPlaying(false)
+  }, [playhead, setPlaying, setPlayhead])
 
   const handleJumpForward = useCallback(() => {
     setPlayhead(Math.min(duration, playhead + JUMP_TIME))
-  }, [playhead, setPlayhead, duration])
+    setPlaying(false)
+  }, [playhead, setPlaying, setPlayhead, duration])
 
   const handleJumpToStart = useCallback(() => {
     setPlayhead(0)

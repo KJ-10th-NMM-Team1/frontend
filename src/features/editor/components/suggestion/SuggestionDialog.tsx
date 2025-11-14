@@ -15,6 +15,10 @@ type SuggestionDialogProps = {
   onOpenChange: (open: boolean) => void
   onRequestSuggestion: (context: SuggestionContext) => void
   suggestionText: string
+  currentPage: number
+  totalPages: number
+  onPageChange: (page: number) => void
+  languageLabel: string
 }
 
 export function SuggestionDialog({
@@ -22,6 +26,10 @@ export function SuggestionDialog({
   onOpenChange,
   onRequestSuggestion,
   suggestionText,
+  currentPage,
+  totalPages,
+  onPageChange,
+  languageLabel,
 }: SuggestionDialogProps) {
   const suggestionOptions = [
     { code: SuggestionContext.Short, label: '짧게', icon: ChevronsLeftRight },
@@ -34,7 +42,10 @@ export function SuggestionDialog({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogTitle>AI 제안 받기</DialogTitle>
+        <div className="flex items-center justify-between gap-4">
+          <DialogTitle>AI 제안 받기</DialogTitle>
+          <DialogTitle className="text-muted mr-5 text-sm font-medium">{languageLabel}</DialogTitle>
+        </div>
         <DialogDescription asChild>
           <div className="flex flex-wrap items-center gap-2">
             {suggestionOptions.map(({ code, label, icon: Icon }) => (
@@ -50,9 +61,29 @@ export function SuggestionDialog({
                 {label}
               </Button>
             ))}
-            <span className="text-muted ml-auto text-sm font-medium">
-              한국어 <span className="text-foreground font-semibold">&lt;1/1&gt;</span>
-            </span>
+            <div className="ml-auto flex items-center gap-2">
+              <Button
+                type="button"
+                size="xs"
+                variant="ghost"
+                disabled={currentPage <= 1}
+                onClick={() => onPageChange(currentPage - 1)}
+              >
+                이전
+              </Button>
+              <span className="text-muted text-sm font-medium">
+                {currentPage} / {totalPages}
+              </span>
+              <Button
+                type="button"
+                size="xs"
+                variant="ghost"
+                disabled={currentPage >= totalPages}
+                onClick={() => onPageChange(currentPage + 1)}
+              >
+                다음
+              </Button>
+            </div>
           </div>
         </DialogDescription>
         {suggestionText && (

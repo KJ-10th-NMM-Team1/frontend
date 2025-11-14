@@ -2,25 +2,31 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { fetchSuggestion } from '@/features/editor/api/suggestionApi'
 import { SuggestionDialog } from './suggestion/SuggestionDialog'
-import { SuggestionContext } from '@/entities/suggestion/types'
+import type { SuggestionContext } from '@/entities/suggestion/types'
+import { useSuggestionStore } from '@/shared/store/useSuggestionStore'
 
 import type { Segment } from '@/entities/segment/types'
 import { useLanguage } from '@/features/languages/hooks/useLanguage'
 import { useEditorStore } from '@/shared/store/useEditorStore'
+import { useSegmentsStore } from '@/shared/store/useSegmentsStore'
 import { Button } from '@/shared/ui/Button'
+import { apiPost } from '@/shared/api/client'
+
+import { TranslationSegmentCard } from './TranslationSegmentCard'
 
 type TranslationWorkspaceProps = {
+  projectId: string
   segments: Segment[]
   sourceLanguage: string
   targetLanguage: string
 }
 
 export function TranslationWorkspace({
+  projectId,
   segments,
   sourceLanguage,
   targetLanguage,
 }: TranslationWorkspaceProps) {
-  const [drafts, setDrafts] = useState<Record<string, string>>({})
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false)
   const [suggestionResult, setSuggestionResult] = useState<string>('')
   const { data: languageData } = useLanguage()
@@ -32,6 +38,15 @@ export function TranslationWorkspace({
       activeSegmentId: state.activeSegmentId,
     }),
   )
+  const {
+    segments: storeSegments,
+    setSegments,
+    updateSegment,
+  } = useSegmentsStore((state) => ({
+    segments: state.segments,
+    setSegments: state.setSegments,
+    updateSegment: state.updateSegment,
+  }))
 
   const languageNameMap = useMemo(() => {
     const items = languageData ?? []
@@ -41,17 +56,17 @@ export function TranslationWorkspace({
     }, {})
   }, [languageData])
 
+  // segments가 변경되면 store에 반영
   useEffect(() => {
-    setDrafts(
-      segments.reduce<Record<string, string>>((acc, segment) => {
-        acc[segment.id] = segment.target_text ?? ''
-        return acc
-      }, {}),
-    )
-  }, [segments])
+    setSegments(segments)
+  }, [segments, setSegments])
 
   const handleChange = (segmentId: string, value: string) => {
-    setDrafts((prev) => ({ ...prev, [segmentId]: value }))
+    updateSegment(segmentId, { target_text: value })
+  }
+
+  const handleSourceChange = (segmentId: string, value: string) => {
+    updateSegment(segmentId, { source_text: value })
   }
 
   const segmentRefs = useRef<Record<string, HTMLElement | null>>({})
@@ -62,6 +77,70 @@ export function TranslationWorkspace({
     setPlayhead(segment.start)
   }
 
+  const [translatingSegments, setTranslatingSegments] = useState<Set<string>>(new Set())
+
+  const handleTranslate = async (segment: Segment) => {
+    // 이미 번역 중이면 무시
+    if (translatingSegments.has(segment.id)) {
+      return
+    }
+
+    // store의 최신 source_text 사용 (사용자가 수정한 내용 반영)
+    const currentSegment = storeSegments.find((s) => s.id === segment.id) ?? segment
+
+    const sourceText = currentSegment.source_text ?? segment.source_text ?? ''
+    if (!sourceText.trim()) {
+      console.warn('Source text is empty, cannot translate')
+      return
+    }
+
+    // 번역 중 상태 추가
+    setTranslatingSegments((prev) => new Set(prev).add(segment.id))
+
+    try {
+      const response = await apiPost<{
+        segment_id: string
+        translation_id: string
+        source_text: string
+        target_text: string
+        language_code: string
+        src_lang: string | null
+      }>(
+        `api/segments/${segment.id}/translate`,
+        {
+          target_lang: targetLanguage,
+          src_lang: sourceLanguage || undefined,
+          source_text: sourceText, // 수정한 source_text 전달
+        },
+        {
+          timeout: 60_000, // 번역은 시간이 걸릴 수 있으므로 60초로 설정
+        },
+      )
+
+      // 번역 결과를 store에 반영
+      updateSegment(segment.id, { target_text: response.target_text })
+
+      console.log('Translation completed:', response)
+    } catch (error) {
+      console.error('Translation failed:', error)
+      // 에러 발생 시 사용자에게 알림 (선택사항)
+      // alert('번역에 실패했습니다. 다시 시도해주세요.')
+    } finally {
+      // 번역 중 상태 제거
+      setTranslatingSegments((prev) => {
+        const next = new Set(prev)
+        next.delete(segment.id)
+        return next
+      })
+    }
+  }
+
+  const handleGenerateAudio = (segment: Segment) => {
+    // TODO: Generate Audio API 호출 구현
+    console.log('Generate Audio for segment:', segment.id)
+    // 예: await apiPost(`/api/segments/${segment.id}/generate-audio`, { ... })
+  }
+
   useEffect(() => {
     if (!activeSegmentId) return
     const node = segmentRefs.current[activeSegmentId]
@@ -69,14 +148,75 @@ export function TranslationWorkspace({
     // node.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }, [activeSegmentId])
 
+  const displaySegments = segments.map((seg) => {
+    const storeSegment = storeSegments.find((s) => s.id === seg.id)
+    return storeSegment ?? seg
+  })
+
+  const currentActiveSegment = useMemo(() => {
+    if (!activeSegmentId) return null
+    return displaySegments.find((segment) => segment.id === activeSegmentId) ?? null
+  }, [activeSegmentId, displaySegments])
+
+  const { items: suggestionsBySegment, addSuggestion, clearAll } = useSuggestionStore()
+  const segmentSuggestions = activeSegmentId ? suggestionsBySegment[activeSegmentId] ?? [] : []
+  const [suggestionPage, setSuggestionPage] = useState(1)
+
+  useEffect(() => {
+    setSuggestionPage(segmentSuggestions.length || 1)
+    setSuggestionResult(
+      segmentSuggestions.length > 0
+        ? segmentSuggestions[segmentSuggestions.length - 1].text
+        : currentActiveSegment?.target_text ?? '',
+    )
+  }, [activeSegmentId, segmentSuggestions.length, currentActiveSegment])
+
+  const PAGE_SIZE = 6
+  const [currentPage, setCurrentPage] = useState(1)
+  const totalPages = Math.max(1, Math.ceil(displaySegments.length / PAGE_SIZE))
+  const paginatedSegments = displaySegments.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  )
+
   const handleRequestSuggestion = async (context: SuggestionContext) => {
     if (!activeSegmentId) return
     try {
       const response = await fetchSuggestion({ segmentId: activeSegmentId, context })
+      const nextPage = segmentSuggestions.length + 1
+      addSuggestion(activeSegmentId, {
+        id: crypto.randomUUID?.() ?? `${Date.now()}`,
+        context,
+        text: response,
+        createdAt: Date.now(),
+      })
+      setSuggestionPage(nextPage)
       setSuggestionResult(response)
       setIsAiDialogOpen(true)
     } catch (error) {
       console.error('Suggestion fetch failed', error)
+    }
+  }
+
+  const suggestionTotalPages = Math.max(1, segmentSuggestions.length || 1)
+
+  const handleSuggestionPageChange = (page: number) => {
+    if (!segmentSuggestions.length) {
+      setSuggestionPage(1)
+      setSuggestionResult(currentActiveSegment?.target_text ?? '')
+      return
+    }
+    const safePage = Math.min(Math.max(1, page), suggestionTotalPages)
+    setSuggestionPage(safePage)
+    setSuggestionResult(segmentSuggestions[safePage - 1].text)
+  }
+
+  const handleDialogOpenChange = (open: boolean) => {
+    setIsAiDialogOpen(open)
+    if (!open) {
+      clearAll()
+      setSuggestionPage(1)
+      setSuggestionResult('')
     }
   }
 
@@ -95,11 +235,7 @@ export function TranslationWorkspace({
               variant="secondary"
               size="sm"
               onClick={() => {
-                if (activeSegmentId) {
-                  setSuggestionResult(drafts[activeSegmentId] ?? '')
-                } else {
-                  setSuggestionResult('')
-                }
+                setSuggestionResult(currentActiveSegment?.target_text ?? '')
                 setIsAiDialogOpen(true)
               }}
             >
@@ -111,45 +247,42 @@ export function TranslationWorkspace({
           </div>
         </header>
         <div className="mt-4 flex-1 space-y-4 overflow-y-auto pr-2">
-          {segments.map((segment, index) => {
+          {displaySegments.map((segment, index) => {
             const isActive = activeSegmentId === segment.id
+            const isTranslating = translatingSegments.has(segment.id)
             return (
-              <article
+              <TranslationSegmentCard
                 key={segment.id}
-                ref={(node) => {
+                segment={segment}
+                index={index}
+                isActive={isActive}
+                sourceText={segment.source_text ?? ''}
+                targetText={segment.target_text ?? ''}
+                isTranslating={isTranslating}
+                onSourceChange={(value) => handleSourceChange(segment.id, value)}
+                onTargetChange={(value) => handleChange(segment.id, value)}
+                onTranscribeAudio={() => {
+                  void handleTranslate(segment)
+                }}
+                onGenerateAudio={() => handleGenerateAudio(segment)}
+                onSegmentClick={() => handleSegmentAreaClick(segment)}
+                cardRef={(node) => {
                   segmentRefs.current[segment.id] = node
                 }}
-                className={`bg-surface-2 hover:border-primary/40 border-surface-3 space-y-3 rounded-2xl border p-4 shadow-inner transition ${
-                  isActive ? 'border-primary bg-primary/5 shadow-primary/20' : ''
-                }`}
-              >
-                <div className="text-muted flex items-center justify-between text-xs font-semibold uppercase tracking-[0.2em]">
-                  <span>{String(index + 1).padStart(2, '0')}</span>
-                  <span>{segment.speaker_tag}</span>
-                </div>
-                <div className="grid gap-4 lg:grid-cols-2">
-                  <textarea
-                    className="bg-surface-1 text-foreground border-surface-3 h-32 w-full resize-none rounded-2xl border p-3 text-sm shadow-inner"
-                    readOnly
-                    value={segment.source_text}
-                  />
-                  <textarea
-                    className="bg-surface-1 text-foreground border-primary/40 focus-visible:outline-hidden focus-visible:ring-primary h-32 w-full resize-none rounded-2xl border p-3 text-sm shadow-inner focus-visible:ring-2"
-                    value={drafts[segment.id] ?? ''}
-                    onClick={() => handleSegmentAreaClick(segment)}
-                    onChange={(event) => handleChange(segment.id, event.target.value)}
-                  />
-                </div>
-              </article>
+              />
             )
           })}
         </div>
       </section>
       <SuggestionDialog
         isOpen={isAiDialogOpen}
-        onOpenChange={setIsAiDialogOpen}
+        onOpenChange={handleDialogOpenChange}
         onRequestSuggestion={handleRequestSuggestion}
         suggestionText={suggestionResult}
+        currentPage={suggestionPage}
+        totalPages={suggestionTotalPages}
+        onPageChange={handleSuggestionPageChange}
+        languageLabel={languageNameMap[targetLanguage] ?? targetLanguage}
       />
     </>
   )

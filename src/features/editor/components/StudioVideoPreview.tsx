@@ -12,7 +12,6 @@ type StudioVideoPreviewProps = {
   duration: number
   playbackRate: number
   videoSource?: string
-  videoOnlySource?: string
 }
 
 export function StudioVideoPreview({
@@ -20,10 +19,9 @@ export function StudioVideoPreview({
   duration,
   playbackRate,
   videoSource,
-  videoOnlySource,
 }: StudioVideoPreviewProps) {
   // video_only_source가 있으면 우선 사용, 없으면 video_source 사용
-  const sourcePath = videoOnlySource || videoSource
+  const sourcePath = videoSource
 
   // Presigned URL 가져오기
   const { data: videoSrc } = useQuery({
@@ -156,11 +154,12 @@ export function StudioVideoPreview({
           {videoSrc ? (
             <video
               ref={videoRef}
-              controls
+              controls={false}
               autoPlay={false}
               className="h-auto max-h-[32em] min-h-[20em] w-full bg-black"
               src={videoSrc}
               preload="metadata"
+              muted
             >
               <track kind="captions" />
             </video>
