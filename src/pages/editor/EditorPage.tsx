@@ -39,7 +39,7 @@ export default function EditorPage() {
               targetLanguage={targetLanguage}
             />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 items-stretch">
             <StudioVideoPreview
               activeLanguage={targetLanguage}
               duration={data.playback.duration}

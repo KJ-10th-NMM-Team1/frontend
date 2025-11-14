@@ -137,7 +137,7 @@ export function StudioVideoPreview({
   }, [playbackRate])
 
   return (
-    <section className="border-surface-3 bg-surface-1 flex flex-col gap-3 rounded-3xl border p-4 shadow-soft">
+    <section className="border-surface-3 bg-surface-1 flex h-full flex-col gap-3 rounded-3xl border p-4 shadow-soft">
       <header className="flex items-center justify-between text-sm">
         <span className="text-muted font-medium">{activeLanguage} 영상</span>
         <span className="text-muted">
