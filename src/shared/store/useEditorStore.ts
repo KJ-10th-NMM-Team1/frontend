@@ -30,7 +30,7 @@ type EditorUiState = {
   setDuration: (duration: number) => void
 }
 
-const MIN_SCALE = 0.1
+const MIN_SCALE = 0.35
 const MAX_SCALE = 2
 
 export const useEditorStore = create<EditorUiState>()(
