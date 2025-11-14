@@ -156,11 +156,12 @@ export function StudioVideoPreview({
           {videoSrc ? (
             <video
               ref={videoRef}
-              controls
+              controls={false}
               autoPlay={false}
               className="h-auto max-h-[32em] min-h-[20em] w-full bg-black"
               src={videoSrc}
               preload="metadata"
+              muted
             >
               <track kind="captions" />
             </video>
