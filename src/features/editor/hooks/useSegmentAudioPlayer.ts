@@ -64,25 +64,6 @@ function createAndPlayAudio(
 }
 
 /**
- * 기존 오디오의 playbackRate와 offset을 업데이트합니다.
- * (resize/move 시 호출됨)
- */
-function updateAudio(
-  audio: HTMLAudioElement,
-  segmentData: SegmentData,
-  playheadRef: React.MutableRefObject<number>,
-) {
-  // playbackRate 업데이트
-  if (audio.playbackRate !== segmentData.playbackRate) {
-    audio.playbackRate = segmentData.playbackRate
-  }
-
-  // offset 계산 및 업데이트
-  const expectedOffset = playheadRef.current - segmentData.start
-  audio.currentTime = expectedOffset
-}
-
-/**
  * Hook to manage audio playback synchronized with timeline playhead
  *
  * 최적화 전략:
