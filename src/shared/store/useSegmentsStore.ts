@@ -12,6 +12,7 @@ type SegmentsState = {
   setSegments: (segments: Segment[]) => void
   updateSegment: (id: string, updates: Partial<Segment>) => void
   updateSegmentPosition: (id: string, start: number, end: number) => void
+  updateSegmentSize: (id: string, start: number, end: number, originalDuration: number) => void
   resetSegments: () => void
   hasChanges: () => boolean
 }
@@ -53,6 +54,28 @@ export const useSegmentsStore = create<SegmentsState>()(
         }),
         false,
         { type: 'segments/updateSegmentPosition', payload: { id, start, end } },
+      ),
+
+    updateSegmentSize: (id, start, end, originalDuration) =>
+      set(
+        (state) => ({
+          segments: state.segments.map((segment) =>
+            segment.id === id
+              ? {
+                  ...segment,
+                  start,
+                  end,
+                  // 배속 자동 계산: 원본 오디오 길이 / 새 세그먼트 길이
+                  playbackRate: originalDuration / (end - start),
+                }
+              : segment,
+          ),
+        }),
+        false,
+        {
+          type: 'segments/updateSegmentSize',
+          payload: { id, start, end, originalDuration },
+        },
       ),
 
     resetSegments: () =>

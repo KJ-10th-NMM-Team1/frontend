@@ -121,7 +121,7 @@ export function clampSegmentStartResize(
   currentEnd: number,
   previousSegment: Segment | null,
   minDuration: number = 0.5,
-  gap: number = 0.1,
+  gap: number = 0,
 ): number {
   let clampedStart = newStart
 
@@ -164,7 +164,7 @@ export function clampSegmentEndResize(
   duration: number,
   nextSegment: Segment | null,
   minDuration: number = 0.5,
-  gap: number = 0.1,
+  gap: number = 0,
 ): number {
   let clampedEnd = newEnd
 

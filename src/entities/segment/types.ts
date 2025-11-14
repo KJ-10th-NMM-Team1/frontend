@@ -14,11 +14,12 @@ export interface Segment {
   project_id: string
   language_code: string
   speaker_tag?: string
-  start: number
-  end: number
+  start: number         // 타임라인 상 시작 위치 (초)
+  end: number           // 타임라인 상 종료 위치 (초)
   source_text: string
   target_text?: string
   segment_audio_url?: string
+  playbackRate?: number // 재생 속도 배율 (기본값: 1.0)
 }
 
 export interface EditorPlaybackState {

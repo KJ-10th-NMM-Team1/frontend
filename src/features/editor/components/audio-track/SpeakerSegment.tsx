@@ -6,6 +6,7 @@ import { usePresignedUrl } from '@/shared/api/hooks'
 import { useIntersectionObserverOnce } from '@/shared/lib/hooks/useIntersectionObserver'
 import { cn } from '@/shared/lib/utils'
 
+import { SegmentResizeHandle } from './SegmentResizeHandle'
 import { SegmentLoadingSpinner, SegmentWaveform } from './SegmentWaveform'
 
 type SpeakerSegmentProps = {
@@ -15,14 +16,6 @@ type SpeakerSegmentProps = {
   color: string
 }
 
-/**
- * 개별 스피커 세그먼트를 표시하는 컴포넌트
- * z-index: z-10 (트랙 레이어 위, PlayheadIndicator 아래)
- *
- * Features:
- * - Draggable to reposition on timeline
- * - Lazy loading for waveform
- */
 export function SpeakerSegment({ segment, duration, scale, color }: SpeakerSegmentProps) {
   const startPx = timeToPixel(segment.start, duration, scale)
   const widthPx = Math.max(timeToPixel(segment.end - segment.start, duration, scale), 64)
@@ -64,7 +57,7 @@ export function SpeakerSegment({ segment, duration, scale, color }: SpeakerSegme
       ref={ref}
       onPointerDown={onPointerDown}
       className={cn(
-        'absolute top-3 z-10 flex h-[60px] items-center justify-between rounded-2xl border px-3 text-xs font-semibold transition-opacity',
+        'group absolute top-3 z-10 flex h-[60px] items-center justify-between rounded-2xl border px-3 text-xs font-semibold transition-opacity',
         isLoading && 'opacity-60',
         isDragging && 'cursor-grabbing opacity-60',
         !isDragging && 'cursor-grab',
@@ -77,6 +70,15 @@ export function SpeakerSegment({ segment, duration, scale, color }: SpeakerSegme
         color: color,
       }}
     >
+      {/* Left resize handle */}
+      <SegmentResizeHandle
+        segment={segment}
+        duration={duration}
+        scale={scale}
+        edge="start"
+        color={color}
+      />
+
       {/* Waveform visualization */}
       {!isVisible ? null : isLoading ? ( // 뷰포트 밖: 플레이스홀더 (아무것도 표시 안함)
         // 로딩 중: 스피너
@@ -86,13 +88,14 @@ export function SpeakerSegment({ segment, duration, scale, color }: SpeakerSegme
         <SegmentWaveform waveformData={waveformData} color={color} height={40} />
       ) : null}
 
-      {/* Segment labels */}
-      <div className="relative z-10 flex w-full items-center justify-between">
-        {/* <span className="text-xs">{segment.speaker_tag}</span> */}
-        {/* <div className="text-nowrap text-[10px]">
-          {segment.start.toFixed(1)}s ~ {segment.end.toFixed(1)}s
-        </div> */}
-      </div>
+      {/* Right resize handle */}
+      <SegmentResizeHandle
+        segment={segment}
+        duration={duration}
+        scale={scale}
+        edge="end"
+        color={color}
+      />
     </div>
   )
 }

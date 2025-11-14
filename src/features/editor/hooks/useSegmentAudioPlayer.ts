@@ -10,6 +10,13 @@ type UseSegmentAudioPlayerOptions = {
   audioUrls: Map<string, string> // segmentId -> presigned URL
 }
 
+type SegmentData = {
+  id: string
+  start: number
+  end: number
+  playbackRate: number
+}
+
 /**
  * Hook to manage audio playback synchronized with timeline playhead
  *
@@ -28,14 +35,14 @@ export function useSegmentAudioPlayer({
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const currentSegmentIdRef = useRef<string | null>(null)
   const lastPlayheadRef = useRef<number>(0)
-  const prevSegmentDataRef = useRef<{ id: string; start: number; end: number } | null>(null)
-  const playbackRateRef = useRef<number>(playbackRate)
+  const prevSegmentDataRef = useRef<SegmentData | null>(null)
+  // const playbackRateRef = useRef<number>(playbackRate)
   const isPlayingRef = useRef<boolean>(isPlaying)
 
   // Refs를 최신 상태로 유지 (가벼운 연산)
-  useEffect(() => {
-    playbackRateRef.current = playbackRate
-  }, [playbackRate])
+  // useEffect(() => {
+  //   playbackRateRef.current = playbackRate
+  // }, [playbackRate])
 
   useEffect(() => {
     isPlayingRef.current = isPlaying
@@ -57,6 +64,7 @@ export function useSegmentAudioPlayer({
       id: segment.id,
       start: segment.start,
       end: segment.end,
+      playbackRate: segment.playbackRate ?? 1,
     }
 
     // prev와 같으면 그대로 반환 (참조 안정성)
@@ -65,7 +73,8 @@ export function useSegmentAudioPlayer({
       prev &&
       prev.id === newData.id &&
       prev.start === newData.start &&
-      prev.end === newData.end
+      prev.end === newData.end &&
+      prev.playbackRate === newData.playbackRate
     ) {
       return prev
     }
@@ -77,29 +86,20 @@ export function useSegmentAudioPlayer({
   // Effect 1: Segment 변경 시에만 새 오디오 생성 및 재생
   // Dependency: currentSegmentData (segment 변경시에만 트리거)
   useEffect(() => {
-    if (!isPlayingRef.current || !currentSegmentData) {
-      return
-    }
+    if (!isPlayingRef.current || !currentSegmentData) return
 
     // Segment가 변경되었는지 확인
     const segmentChanged = currentSegmentIdRef.current !== currentSegmentData.id
-
-    if (!segmentChanged) {
-      return
-    }
+    if (!segmentChanged) return
 
     currentSegmentIdRef.current = currentSegmentData.id
 
     // Stop previous audio if any
-    if (audioRef.current) {
-      audioRef.current.pause()
-    }
+    if (audioRef.current) audioRef.current.pause()
 
     // Get the presigned URL for this segment
     const audioUrl = audioUrls.get(currentSegmentData.id)
-    if (!audioUrl) {
-      return
-    }
+    if (!audioUrl) return
 
     // Calculate audio offset using ref (최신 playhead 값)
     const segmentOffset = lastPlayheadRef.current - currentSegmentData.start
@@ -107,7 +107,7 @@ export function useSegmentAudioPlayer({
     // Create and play new audio
     const audio = new Audio(audioUrl)
     audio.crossOrigin = 'anonymous'
-    audio.playbackRate = playbackRateRef.current
+    audio.playbackRate = currentSegmentData.playbackRate
     audio.currentTime = segmentOffset
 
     audioRef.current = audio
