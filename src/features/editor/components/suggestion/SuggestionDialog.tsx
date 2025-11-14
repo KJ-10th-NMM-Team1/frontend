@@ -6,7 +6,7 @@ import {
   RefreshCw,
 } from 'lucide-react'
 
-import type { SuggestionContext } from '@/entities/suggestion/types'
+import { SuggestionContext } from '@/entities/suggestion/types'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/shared/ui/Dialog'
 import { Button } from '@/shared/ui/Button'
 
@@ -19,6 +19,7 @@ type SuggestionDialogProps = {
   totalPages: number
   onPageChange: (page: number) => void
   languageLabel: string
+  onApply: () => void
 }
 
 export function SuggestionDialog({
@@ -30,6 +31,7 @@ export function SuggestionDialog({
   totalPages,
   onPageChange,
   languageLabel,
+  onApply,
 }: SuggestionDialogProps) {
   const suggestionOptions = [
     { code: SuggestionContext.Short, label: '짧게', icon: ChevronsLeftRight },
@@ -99,9 +101,12 @@ export function SuggestionDialog({
             />
           </div>
         )}
-        <div className="mt-4 flex justify-end">
-          <Button type="button" onClick={() => onOpenChange(false)}>
+        <div className="mt-6 flex justify-end gap-2">
+          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
             닫기
+          </Button>
+          <Button type="button" variant="primary" onClick={onApply}>
+            적용
           </Button>
         </div>
       </DialogContent>

@@ -225,6 +225,13 @@ export function TranslationWorkspace({
     }
   }
 
+  const handleApplySuggestion = () => {
+    if (activeSegmentId) {
+      updateSegment(activeSegmentId, { target_text: suggestionResult })
+    }
+    handleDialogOpenChange(false)
+  }
+
   return (
     <>
       <section className="border-surface-3 bg-surface-1 flex h-full flex-col rounded-3xl border p-3 shadow-soft">
@@ -288,6 +295,7 @@ export function TranslationWorkspace({
         totalPages={suggestionTotalPages}
         onPageChange={handleSuggestionPageChange}
         languageLabel={languageNameMap[targetLanguage] ?? targetLanguage}
+        onApply={handleApplySuggestion}
       />
     </>
   )
