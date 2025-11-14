@@ -14,23 +14,40 @@ import { SegmentContextMenu } from './SegmentContextMenu'
 import { SegmentResizeHandle } from './SegmentResizeHandle'
 import { SegmentLoadingSpinner, SegmentWaveform } from './SegmentWaveform'
 
+type TrackLayout = {
+  trackId: string
+  yStart: number
+  yEnd: number
+}
+
 type SpeakerSegmentProps = {
   segment: Segment
   duration: number
   scale: number
   color: string
+  currentTrackId: string
+  trackLayouts?: TrackLayout[]
 }
 
-export function SpeakerSegment({ segment, duration, scale, color }: SpeakerSegmentProps) {
+export function SpeakerSegment({
+  segment,
+  duration,
+  scale,
+  color,
+  currentTrackId,
+  trackLayouts,
+}: SpeakerSegmentProps) {
   const generateSegmentAudio = useEditorStore((state) => state.generateSegmentAudio)
   const startPx = timeToPixel(segment.start, duration, scale)
   const widthPx = Math.max(timeToPixel(segment.end - segment.start, duration, scale), 64)
 
-  // Drag functionality
-  const { onPointerDown, isDragging } = useSegmentDrag({
+  // Drag functionality (supports both horizontal and vertical movement)
+  const { onPointerDown, isDragging, verticalOffset } = useSegmentDrag({
     segment,
     duration,
     scale,
+    currentTrackId,
+    trackLayouts,
   })
 
   // Context menu functionality
@@ -87,10 +104,10 @@ export function SpeakerSegment({ segment, duration, scale, color }: SpeakerSegme
         onPointerDown={onPointerDown}
         onContextMenu={handleContextMenu}
         className={cn(
-          'group absolute top-3 z-10 flex h-[60px] items-center justify-between rounded-2xl border px-3 text-xs font-semibold transition-opacity',
+          'group absolute top-3 z-10 flex h-[60px] items-center justify-between rounded-2xl border px-3 text-xs font-semibold',
           isLoading && 'opacity-60',
-          isDragging && 'cursor-grabbing opacity-60',
-          !isDragging && 'cursor-grab',
+          isDragging && 'cursor-grabbing opacity-60 shadow-lg',
+          !isDragging && 'cursor-grab transition-opacity',
         )}
         style={{
           left: `${startPx}px`,
@@ -98,6 +115,9 @@ export function SpeakerSegment({ segment, duration, scale, color }: SpeakerSegme
           backgroundColor: `${color}20`,
           borderColor: color,
           color: color,
+          // Y축 드래그 시 마우스를 따라 이동
+          transform: verticalOffset !== 0 ? `translateY(${verticalOffset}px)` : undefined,
+          transition: verticalOffset !== 0 ? 'none' : undefined,
         }}
       >
         {/* Left resize handle */}
@@ -115,7 +135,12 @@ export function SpeakerSegment({ segment, duration, scale, color }: SpeakerSegme
           <SegmentLoadingSpinner color={color} size="sm" />
         ) : waveformData ? (
           // 로드 완료: 파형 표시
-          <SegmentWaveform waveformData={waveformData} color={color} widthPx={widthPx} height={60} />
+          <SegmentWaveform
+            waveformData={waveformData}
+            color={color}
+            widthPx={widthPx}
+            height={60}
+          />
         ) : null}
 
         {/* Right resize handle */}

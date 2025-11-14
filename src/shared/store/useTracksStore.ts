@@ -32,6 +32,7 @@ type TracksState = {
   updateSegment: (segmentId: string, updates: Partial<Segment>) => void
   updateSegmentPosition: (segmentId: string, start: number, end: number) => void
   updateSegmentSize: (segmentId: string, start: number, end: number, originalDuration: number) => void
+  moveSegmentToTrack: (segmentId: string, targetTrackId: string) => void
   getAllSegments: () => Segment[]
 }
 
@@ -204,6 +205,58 @@ export const useTracksStore = create<TracksState>()(
         },
       )
     },
+
+    moveSegmentToTrack: (segmentId, targetTrackId) =>
+      set(
+        (state) => {
+          let segmentToMove: Segment | null = null
+          let sourceTrackId: string | null = null
+
+          // Find the segment and its source track
+          for (const track of state.tracks) {
+            if (track.type !== 'speaker') continue
+            const segment = track.segments.find((s) => s.id === segmentId)
+            if (segment) {
+              segmentToMove = segment
+              sourceTrackId = track.id
+              break
+            }
+          }
+
+          if (!segmentToMove || !sourceTrackId || sourceTrackId === targetTrackId) {
+            return state // No change needed
+          }
+
+          // Update segment's trackId and move it to target track
+          const updatedSegment = { ...segmentToMove, trackId: targetTrackId }
+
+          return {
+            tracks: state.tracks.map((track) => {
+              if (track.type !== 'speaker') return track
+
+              // Remove from source track
+              if (track.id === sourceTrackId) {
+                return {
+                  ...track,
+                  segments: track.segments.filter((s) => s.id !== segmentId),
+                }
+              }
+
+              // Add to target track
+              if (track.id === targetTrackId) {
+                return {
+                  ...track,
+                  segments: [...track.segments, updatedSegment].sort((a, b) => a.start - b.start),
+                }
+              }
+
+              return track
+            }),
+          }
+        },
+        false,
+        { type: 'tracks/moveSegmentToTrack', payload: { segmentId, targetTrackId } },
+      ),
 
     getAllSegments: () => {
       const state = get()

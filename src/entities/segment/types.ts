@@ -20,6 +20,7 @@ export interface Segment {
   target_text?: string
   segment_audio_url?: string
   playbackRate?: number // 재생 속도 배율 (기본값: 1.0)
+  trackId?: string // 현재 세그먼트가 속한 트랙 ID (UI 상태용, 트랙 간 이동 시 업데이트)
 }
 
 export interface EditorPlaybackState {

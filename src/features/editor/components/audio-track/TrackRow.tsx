@@ -1,6 +1,14 @@
+import { forwardRef } from 'react'
+
 import { SpeakerSegment } from './SpeakerSegment'
 import type { TrackRow as TrackRowType } from './types'
 import { WaveformTrack } from './WaveformTrack'
+
+type TrackLayout = {
+  trackId: string
+  yStart: number
+  yEnd: number
+}
 
 type TrackRowProps = {
   track: TrackRowType
@@ -9,6 +17,7 @@ type TrackRowProps = {
   scale: number
   height: number
   waveformData?: Array<{ id: number; height: number }>
+  trackLayouts?: TrackLayout[]
 }
 
 /**
@@ -20,11 +29,15 @@ type TrackRowProps = {
  * - speaker: 스피커별 세그먼트 표시 (높이: 84px)
  * - muted/fx: FX 플레이스홀더 (높이: 28px)
  */
-export function TrackRow({ track, index, duration, scale, height, waveformData }: TrackRowProps) {
+export const TrackRow = forwardRef<HTMLDivElement, TrackRowProps>(function TrackRow(
+  { track, index, duration, scale, height, waveformData, trackLayouts },
+  ref,
+) {
   const backgroundColor = index % 2 === 0 ? 'rgba(15,23,42,0.02)' : 'transparent'
 
   return (
     <div
+      ref={ref}
       className="border-surface-3 relative overflow-visible border-b px-4 py-3"
       style={{ backgroundColor, height: `${height}px` }}
     >
@@ -39,6 +52,8 @@ export function TrackRow({ track, index, duration, scale, height, waveformData }
               duration={duration}
               scale={scale}
               color={track.color}
+              currentTrackId={track.id}
+              trackLayouts={trackLayouts}
             />
           ))}
         </>
@@ -49,4 +64,4 @@ export function TrackRow({ track, index, duration, scale, height, waveformData }
       )}
     </div>
   )
-}
+})
