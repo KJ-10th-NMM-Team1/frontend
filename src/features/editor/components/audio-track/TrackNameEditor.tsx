@@ -72,10 +72,12 @@ export function TrackNameEditor({ trackId, trackLabel, trackColor }: TrackNameEd
     <button
       type="button"
       onClick={handleStartEdit}
-      className="hover:bg-surface-3/50 group flex items-center gap-1.5 rounded px-1 py-0.5 transition-colors"
+      className="hover:bg-surface-3/50 group flex items-center gap-1.5 overflow-hidden rounded px-1 py-0.5 transition-colors"
     >
       <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: trackColor }} />
-      <span className="text-foreground text-sm font-medium">{trackLabel}</span>
+      <span className="text-foreground w-full overflow-hidden text-ellipsis whitespace-nowrap text-sm font-medium">
+        {trackLabel}
+      </span>
       <Pencil
         className={cn(
           'text-muted h-3 w-3 opacity-0 transition-opacity group-hover:opacity-60',

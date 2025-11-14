@@ -84,6 +84,7 @@ export const useTracksStore = create<TracksState>()(
         color: TRACK_COLORS[colorIndex],
         segments: [],
         size: 'medium',
+        voiceSampleId: 'clone', // 기본 clone 모델로 설정
       }
 
       set(
