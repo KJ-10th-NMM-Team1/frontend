@@ -61,15 +61,16 @@ export function useAudioTimeline(segments: Segment[], duration: number) {
   // Preload all segment audio URLs for seamless playback
   const { audioUrls } = usePreloadSegmentAudios(segments)
 
+  const [isScrubbing, setIsScrubbing] = useState(false)
+
   // Audio playback synchronized with playhead
   useSegmentAudioPlayer({
     segments,
     playhead,
     isPlaying,
+    isScrubbing,
     audioUrls,
   })
-
-  const [isScrubbing, setIsScrubbing] = useState(false)
 
   useEffect(() => {
     playheadRef.current = playhead
@@ -100,6 +101,20 @@ export function useAudioTimeline(segments: Segment[], duration: number) {
 
   const lastSegmentRef = useRef<string | null>(null)
 
+  /**
+   * playhead를 수동으로 이동시키는 함수
+   * 재생 중이면 자동으로 정지시킨다
+   */
+  const movePlayhead = useCallback(
+    (time: number) => {
+      if (isPlaying) {
+        setPlaying(false)
+      }
+      setPlayhead(Math.min(Math.max(time, 0), duration))
+    },
+    [isPlaying, setPlaying, setPlayhead, duration],
+  )
+
   const scrub = useCallback(
     (clientX: number) => {
       const node = timelineRef.current
@@ -110,9 +125,9 @@ export function useAudioTimeline(segments: Segment[], duration: number) {
       // Convert pixel position to time using utility function
       const pixelPosition = clientX - rect.left + scrollLeft
       const time = pixelToTime(pixelPosition, duration, scale)
-      setPlayhead(Math.min(Math.max(time, 0), duration))
+      movePlayhead(time)
     },
-    [duration, scale, setPlayhead],
+    [duration, scale, movePlayhead],
   )
 
   useEffect(() => {
@@ -134,7 +149,6 @@ export function useAudioTimeline(segments: Segment[], duration: number) {
   const onTimelinePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     event.preventDefault()
 
-    setPlaying(false)
     scrub(event.clientX)
     setIsScrubbing(true)
   }

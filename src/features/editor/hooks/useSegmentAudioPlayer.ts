@@ -6,6 +6,7 @@ type UseSegmentAudioPlayerOptions = {
   segments: Segment[]
   playhead: number
   isPlaying: boolean
+  isScrubbing: boolean
   audioUrls: Map<string, string> // segmentId -> presigned URL
 }
 
@@ -93,6 +94,7 @@ export function useSegmentAudioPlayer({
   segments,
   playhead,
   isPlaying,
+  isScrubbing,
   audioUrls,
 }: UseSegmentAudioPlayerOptions) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -100,6 +102,7 @@ export function useSegmentAudioPlayer({
   const lastPlayheadRef = useRef<number>(0)
   const prevSegmentDataRef = useRef<SegmentData | null>(null)
   const isPlayingRef = useRef<boolean>(isPlaying)
+  const lastOffsetUpdateTimeRef = useRef<number>(0)
 
   // Refs를 최신 상태로 유지 (가벼운 연산)
   useEffect(() => {
@@ -192,15 +195,35 @@ export function useSegmentAudioPlayer({
     // 세그먼트 변경은 Effect 2에서 처리, 여기서는 속성 변경만 처리
     if (segmentChanged) return
 
-    // playbackRate 업데이트
+    // playbackRate 업데이트 (즉시)
     if (audio.playbackRate !== currentSegmentData.playbackRate) {
       audio.playbackRate = currentSegmentData.playbackRate
     }
 
-    // offset 계산 및 업데이트
-    const expectedOffset = lastPlayheadRef.current - currentSegmentData.start
-    audio.currentTime = expectedOffset
+    // offset 계산 및 업데이트 (1초에 한 번으로 throttle)
+    const now = performance.now()
+    const timeSinceLastUpdate = now - lastOffsetUpdateTimeRef.current
+
+    if (timeSinceLastUpdate >= 1000) {
+      const expectedOffset = lastPlayheadRef.current - currentSegmentData.start
+      audio.currentTime = expectedOffset
+      lastOffsetUpdateTimeRef.current = now
+    }
   }, [currentSegmentData])
+
+  // Effect 4: scrubbing 시 offset 동기화
+  // Dependency: playhead, isScrubbing
+  useEffect(() => {
+    if (!isScrubbing) return
+    if (!audioRef.current) return
+    if (!currentSegmentData) return
+
+    // playhead가 현재 세그먼트 범위 내에 있을 때만 offset 업데이트
+    if (playhead >= currentSegmentData.start && playhead < currentSegmentData.end) {
+      const expectedOffset = playhead - currentSegmentData.start
+      audioRef.current.currentTime = expectedOffset
+    }
+  }, [playhead, isScrubbing, currentSegmentData])
 
   // Cleanup on unmount
   useEffect(() => {
