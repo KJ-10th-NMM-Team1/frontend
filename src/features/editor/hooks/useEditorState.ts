@@ -17,6 +17,7 @@ export type EditorState = {
     playback_rate: number
     video_source: string
     audio_source?: string
+    video_only_source?: string
   }
 }
 
