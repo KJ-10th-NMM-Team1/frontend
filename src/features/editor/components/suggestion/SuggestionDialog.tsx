@@ -6,14 +6,14 @@ import {
   RefreshCw,
 } from 'lucide-react'
 
-import { SuggestionContext } from '@/entities/suggestion/types'
+import type { SuggestionContext } from '@/entities/suggestion/types'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/shared/ui/Dialog'
 import { Button } from '@/shared/ui/Button'
 
 type SuggestionDialogProps = {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
-  onRequestSuggestion: (context: SuggestionContext) => void
+  onRequestSuggestion: (context: SuggestionContext) => Promise<void> | void
   suggestionText: string
   currentPage: number
   totalPages: number
@@ -55,7 +55,9 @@ export function SuggestionDialog({
                 variant="outline"
                 size="sm"
                 className="flex items-center gap-2"
-                onClick={() => onRequestSuggestion(code)}
+                onClick={() => {
+                  void onRequestSuggestion(code)
+                }}
               >
                 <Icon className="h-4 w-4" />
                 {label}

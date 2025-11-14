@@ -1,18 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+
 import { ArrowRight } from 'lucide-react'
-import { fetchSuggestion } from '@/features/editor/api/suggestionApi'
-import { SuggestionDialog } from './suggestion/SuggestionDialog'
-import type { SuggestionContext } from '@/entities/suggestion/types'
-import { useSuggestionStore } from '@/shared/store/useSuggestionStore'
 
 import type { Segment } from '@/entities/segment/types'
+import type { SuggestionContext } from '@/entities/suggestion/types'
+import { fetchSuggestion } from '@/features/editor/api/suggestionApi'
 import { useLanguage } from '@/features/languages/hooks/useLanguage'
+import { apiPost } from '@/shared/api/client'
 import { useEditorStore } from '@/shared/store/useEditorStore'
 import { useSegmentsStore } from '@/shared/store/useSegmentsStore'
+import { useSuggestionStore } from '@/shared/store/useSuggestionStore'
 import { Button } from '@/shared/ui/Button'
-import { apiPost } from '@/shared/api/client'
 
 import { TranslationSegmentCard } from './TranslationSegmentCard'
+import { SuggestionDialog } from './suggestion/SuggestionDialog'
 
 type TranslationWorkspaceProps = {
   projectId: string
@@ -159,17 +160,21 @@ export function TranslationWorkspace({
   }, [activeSegmentId, displaySegments])
 
   const { items: suggestionsBySegment, addSuggestion, clearAll } = useSuggestionStore()
-  const segmentSuggestions = activeSegmentId ? suggestionsBySegment[activeSegmentId] ?? [] : []
+  const segmentSuggestions = useMemo(
+    () => (activeSegmentId ? suggestionsBySegment[activeSegmentId] ?? [] : []),
+    [activeSegmentId, suggestionsBySegment],
+  )
   const [suggestionPage, setSuggestionPage] = useState(1)
 
   useEffect(() => {
-    setSuggestionPage(segmentSuggestions.length || 1)
+    const nextLength = segmentSuggestions.length || 1
+    setSuggestionPage(nextLength)
     setSuggestionResult(
       segmentSuggestions.length > 0
         ? segmentSuggestions[segmentSuggestions.length - 1].text
         : currentActiveSegment?.target_text ?? '',
     )
-  }, [activeSegmentId, segmentSuggestions.length, currentActiveSegment])
+  }, [activeSegmentId, segmentSuggestions, currentActiveSegment])
 
   const PAGE_SIZE = 6
   const [currentPage, setCurrentPage] = useState(1)
