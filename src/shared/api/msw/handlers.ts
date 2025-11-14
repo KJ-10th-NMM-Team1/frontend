@@ -120,9 +120,9 @@ export const handlers = [
     return HttpResponse.json({ success: true })
   }),
 
-  http.get('/api/languages', () => {
-    return HttpResponse.json({ items: sampleLanguages })
-  }),
+  // http.get('/api/languages', () => {
+  //   return HttpResponse.json({ items: sampleLanguages })
+  // }),
 
   http.post('/api/auth/login', async ({ request }) => {
     const body = (await request.json()) as { email: string; password: string }

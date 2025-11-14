@@ -6,11 +6,7 @@ import { apiGet } from '@/shared/api/client'
 export function useLanguage() {
   return useQuery<LanguageResponse>({
     queryKey: ['languages'],
-    queryFn: () => {
-      const result = apiGet<LanguageResponse>('api/languages')
-      console.log('api/languages response:', result)
-      return result
-    },
+    queryFn: () => apiGet<LanguageResponse>('api/languages'),
     staleTime: Infinity,
     gcTime: Infinity,
   })
