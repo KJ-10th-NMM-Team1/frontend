@@ -25,6 +25,8 @@ type AudioTimelineProps = {
   getTrackRowHeight: (track: TrackRow) => number
   duration: number
   playhead: number
+  onGenerateFixed?: (segmentId: string) => void
+  onGenerateDynamic?: (segmentId: string) => void
 }
 
 /**
@@ -51,6 +53,8 @@ export function AudioTimeline({
   getTrackRowHeight,
   duration,
   playhead,
+  onGenerateFixed,
+  onGenerateDynamic,
 }: AudioTimelineProps) {
   const { scale, setDuration } = useEditorStore((state) => ({
     scale: state.scale,
@@ -104,6 +108,8 @@ export function AudioTimeline({
             scale={scale}
             height={getTrackRowHeight(track)}
             waveformData={track.type === 'waveform' ? waveformData : undefined}
+            onGenerateFixed={onGenerateFixed}
+            onGenerateDynamic={onGenerateDynamic}
           />
         ))}
       </div>

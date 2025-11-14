@@ -2,12 +2,14 @@ import { useRef } from 'react'
 
 import type { Segment } from '@/entities/segment/types'
 import { useAudioWaveform } from '@/features/editor/hooks/useAudioWaveform'
+import { useSegmentContextMenu } from '@/features/editor/hooks/useSegmentContextMenu'
 import { useSegmentDrag } from '@/features/editor/hooks/useSegmentDrag'
 import { timeToPixel } from '@/features/editor/utils/timeline-scale'
 import { usePresignedUrl } from '@/shared/api/hooks'
 import { useIntersectionObserverOnce } from '@/shared/lib/hooks/useIntersectionObserver'
 import { cn } from '@/shared/lib/utils'
 
+import { SegmentContextMenu } from './SegmentContextMenu'
 import { SegmentResizeHandle } from './SegmentResizeHandle'
 import { SegmentLoadingSpinner, SegmentWaveform } from './SegmentWaveform'
 
@@ -16,9 +18,18 @@ type SpeakerSegmentProps = {
   duration: number
   scale: number
   color: string
+  onGenerateFixed?: (segmentId: string) => void
+  onGenerateDynamic?: (segmentId: string) => void
 }
 
-export function SpeakerSegment({ segment, duration, scale, color }: SpeakerSegmentProps) {
+export function SpeakerSegment({
+  segment,
+  duration,
+  scale,
+  color,
+  onGenerateFixed,
+  onGenerateDynamic,
+}: SpeakerSegmentProps) {
   const startPx = timeToPixel(segment.start, duration, scale)
   const widthPx = Math.max(timeToPixel(segment.end - segment.start, duration, scale), 64)
 
@@ -27,6 +38,20 @@ export function SpeakerSegment({ segment, duration, scale, color }: SpeakerSegme
     segment,
     duration,
     scale,
+  })
+
+  // Context menu functionality
+  const {
+    isOpen: isContextMenuOpen,
+    position: contextMenuPosition,
+    handleContextMenu,
+    handleClose: handleContextMenuClose,
+    handleGenerateFixed,
+    handleGenerateDynamic,
+  } = useSegmentContextMenu({
+    segmentId: segment.id,
+    onGenerateFixed: onGenerateFixed ? () => onGenerateFixed(segment.id) : undefined,
+    onGenerateDynamic: onGenerateDynamic ? () => onGenerateDynamic(segment.id) : undefined,
   })
 
   // Lazy loading for waveform visualization (뷰포트에 진입했을 때만 파형 로드)
@@ -63,49 +88,61 @@ export function SpeakerSegment({ segment, duration, scale, color }: SpeakerSegme
   const isLoading = isVisible && (urlLoading || waveformLoading)
 
   return (
-    <div
-      ref={ref}
-      onPointerDown={onPointerDown}
-      className={cn(
-        'group absolute top-3 z-10 flex h-[60px] items-center justify-between rounded-2xl border px-3 text-xs font-semibold transition-opacity',
-        isLoading && 'opacity-60',
-        isDragging && 'cursor-grabbing opacity-60',
-        !isDragging && 'cursor-grab',
-      )}
-      style={{
-        left: `${startPx}px`,
-        width: `${widthPx}px`,
-        backgroundColor: `${color}20`,
-        borderColor: color,
-        color: color,
-      }}
-    >
-      {/* Left resize handle */}
-      <SegmentResizeHandle
-        segment={segment}
-        duration={duration}
-        scale={scale}
-        edge="start"
-        color={color}
-      />
+    <>
+      <div
+        ref={ref}
+        onPointerDown={onPointerDown}
+        onContextMenu={handleContextMenu}
+        className={cn(
+          'group absolute top-3 z-10 flex h-[60px] items-center justify-between rounded-2xl border px-3 text-xs font-semibold transition-opacity',
+          isLoading && 'opacity-60',
+          isDragging && 'cursor-grabbing opacity-60',
+          !isDragging && 'cursor-grab',
+        )}
+        style={{
+          left: `${startPx}px`,
+          width: `${widthPx}px`,
+          backgroundColor: `${color}20`,
+          borderColor: color,
+          color: color,
+        }}
+      >
+        {/* Left resize handle */}
+        <SegmentResizeHandle
+          segment={segment}
+          duration={duration}
+          scale={scale}
+          edge="start"
+          color={color}
+        />
 
-      {/* Waveform visualization */}
-      {!isVisible ? null : isLoading ? ( // 뷰포트 밖: 플레이스홀더 (아무것도 표시 안함)
-        // 로딩 중: 스피너
-        <SegmentLoadingSpinner color={color} size="sm" />
-      ) : waveformData ? (
-        // 로드 완료: 파형 표시
-        <SegmentWaveform waveformData={waveformData} color={color} widthPx={widthPx} height={60} />
-      ) : null}
+        {/* Waveform visualization */}
+        {!isVisible ? null : isLoading ? ( // 뷰포트 밖: 플레이스홀더 (아무것도 표시 안함)
+          // 로딩 중: 스피너
+          <SegmentLoadingSpinner color={color} size="sm" />
+        ) : waveformData ? (
+          // 로드 완료: 파형 표시
+          <SegmentWaveform waveformData={waveformData} color={color} widthPx={widthPx} height={60} />
+        ) : null}
 
-      {/* Right resize handle */}
-      <SegmentResizeHandle
-        segment={segment}
-        duration={duration}
-        scale={scale}
-        edge="end"
-        color={color}
+        {/* Right resize handle */}
+        <SegmentResizeHandle
+          segment={segment}
+          duration={duration}
+          scale={scale}
+          edge="end"
+          color={color}
+        />
+      </div>
+
+      {/* Context Menu */}
+      <SegmentContextMenu
+        isOpen={isContextMenuOpen}
+        position={contextMenuPosition}
+        onClose={handleContextMenuClose}
+        onGenerateFixed={handleGenerateFixed}
+        onGenerateDynamic={handleGenerateDynamic}
       />
-    </div>
+    </>
   )
 }
