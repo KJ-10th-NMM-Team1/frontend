@@ -6,7 +6,6 @@ type UseSegmentAudioPlayerOptions = {
   segments: Segment[]
   playhead: number
   isPlaying: boolean
-  playbackRate: number
   audioUrls: Map<string, string> // segmentId -> presigned URL
 }
 
@@ -15,6 +14,71 @@ type SegmentData = {
   start: number
   end: number
   playbackRate: number
+}
+
+/**
+ * 새 오디오를 생성하고 재생을 시작합니다.
+ */
+function createAndPlayAudio(
+  segmentData: SegmentData,
+  audioUrls: Map<string, string>,
+  audioRef: React.MutableRefObject<HTMLAudioElement | null>,
+  playheadRef: React.MutableRefObject<number>,
+) {
+  // 이전 오디오 정지
+  if (audioRef.current) {
+    audioRef.current.pause()
+  }
+
+  // presigned URL 가져오기
+  const audioUrl = audioUrls.get(segmentData.id)
+  if (!audioUrl) {
+    console.warn(`No audio URL found for segment ${segmentData.id}`)
+    return
+  }
+
+  // 현재 playhead 기준으로 오디오 offset 계산
+  const offset = playheadRef.current - segmentData.start
+
+  // 새 오디오 생성
+  const audio = new Audio(audioUrl)
+  audio.crossOrigin = 'anonymous'
+  audio.currentTime = offset
+  audio.playbackRate = segmentData.playbackRate
+
+  audioRef.current = audio
+
+  // 재생 시작
+  const playAudio = () => {
+    void audio.play().catch((error) => {
+      console.error('Audio playback failed:', error)
+    })
+  }
+
+  if (audio.readyState >= 2) {
+    playAudio()
+  } else {
+    audio.addEventListener('canplay', playAudio, { once: true })
+  }
+}
+
+/**
+ * 기존 오디오의 playbackRate와 offset을 업데이트합니다.
+ * (resize/move 시 호출됨)
+ */
+function updateAudio(
+  audio: HTMLAudioElement,
+  segmentData: SegmentData,
+  playheadRef: React.MutableRefObject<number>,
+) {
+  // playbackRate 업데이트
+  if (audio.playbackRate !== segmentData.playbackRate) {
+    audio.playbackRate = segmentData.playbackRate
+  }
+
+  // offset 계산 및 업데이트
+  const expectedOffset = playheadRef.current - segmentData.start
+  audio.currentTime = expectedOffset
 }
 
 /**
@@ -29,21 +93,15 @@ export function useSegmentAudioPlayer({
   segments,
   playhead,
   isPlaying,
-  playbackRate,
   audioUrls,
 }: UseSegmentAudioPlayerOptions) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const currentSegmentIdRef = useRef<string | null>(null)
   const lastPlayheadRef = useRef<number>(0)
   const prevSegmentDataRef = useRef<SegmentData | null>(null)
-  // const playbackRateRef = useRef<number>(playbackRate)
   const isPlayingRef = useRef<boolean>(isPlaying)
 
   // Refs를 최신 상태로 유지 (가벼운 연산)
-  // useEffect(() => {
-  //   playbackRateRef.current = playbackRate
-  // }, [playbackRate])
-
   useEffect(() => {
     isPlayingRef.current = isPlaying
   }, [isPlaying])
@@ -83,50 +141,7 @@ export function useSegmentAudioPlayer({
     return newData
   }, [segments, playhead])
 
-  // Effect 1: Segment 변경 시에만 새 오디오 생성 및 재생
-  // Dependency: currentSegmentData (segment 변경시에만 트리거)
-  useEffect(() => {
-    if (!isPlayingRef.current || !currentSegmentData) return
-
-    // Segment가 변경되었는지 확인
-    const segmentChanged = currentSegmentIdRef.current !== currentSegmentData.id
-    if (!segmentChanged) return
-
-    currentSegmentIdRef.current = currentSegmentData.id
-
-    // Stop previous audio if any
-    if (audioRef.current) audioRef.current.pause()
-
-    // Get the presigned URL for this segment
-    const audioUrl = audioUrls.get(currentSegmentData.id)
-    if (!audioUrl) return
-
-    // Calculate audio offset using ref (최신 playhead 값)
-    const segmentOffset = lastPlayheadRef.current - currentSegmentData.start
-
-    // Create and play new audio
-    const audio = new Audio(audioUrl)
-    audio.crossOrigin = 'anonymous'
-    audio.playbackRate = currentSegmentData.playbackRate
-    audio.currentTime = segmentOffset
-
-    audioRef.current = audio
-
-    // Start playback when audio is ready
-    const playAudio = () => {
-      void audio.play().catch((error) => {
-        console.error('Audio playback failed:', error)
-      })
-    }
-
-    if (audio.readyState >= 2) {
-      playAudio()
-    } else {
-      audio.addEventListener('canplay', playAudio, { once: true })
-    }
-  }, [currentSegmentData, audioUrls])
-
-  // Effect 2: isPlaying 변경 시 재생/일시정지 처리
+  // Effect 1: isPlaying 변경 시 재생/일시정지 처리
   // Dependency: isPlaying
   useEffect(() => {
     if (!audioRef.current) return
@@ -144,70 +159,47 @@ export function useSegmentAudioPlayer({
     }
   }, [isPlaying])
 
-  // Effect 3: playbackRate 변경 시 속도 업데이트
-  // Dependency: playbackRate
-  useEffect(() => {
-    if (!audioRef.current) return
-
-    if (audioRef.current.playbackRate !== playbackRate) {
-      audioRef.current.playbackRate = playbackRate
-    }
-  }, [playbackRate])
-
-  // Effect 4: playhead jump 감지 및 오디오 동기화
-  // RAF 기반으로 주기적 체크 (초당 10회로 제한)
-  // Dependency: isPlaying, currentSegmentData
-  useEffect(() => {
-    if (!isPlaying || !currentSegmentData) return
-
-    const PLAYHEAD_JUMP_THRESHOLD = 0.5 // 0.5초 이상 차이나면 동기화
-    const SYNC_CHECK_INTERVAL = 100 // 100ms마다 체크 (초당 10회)
-
-    let lastCheckTime = performance.now()
-    let rafId: number
-
-    const checkSync = () => {
-      const now = performance.now()
-      const elapsed = now - lastCheckTime
-
-      // 100ms마다만 체크 (초당 60회 → 10회로 감소)
-      if (elapsed >= SYNC_CHECK_INTERVAL) {
-        lastCheckTime = now
-
-        const currentPlayhead = lastPlayheadRef.current
-        const audio = audioRef.current
-
-        if (audio && currentSegmentData) {
-          const expectedAudioTime = currentPlayhead - currentSegmentData.start
-          const actualAudioTime = audio.currentTime
-          const drift = Math.abs(expectedAudioTime - actualAudioTime)
-
-          // drift가 임계값을 넘으면 동기화
-          if (drift > PLAYHEAD_JUMP_THRESHOLD) {
-            audio.currentTime = expectedAudioTime
-          }
-        }
-      }
-
-      if (isPlayingRef.current) {
-        rafId = requestAnimationFrame(checkSync)
-      }
-    }
-
-    rafId = requestAnimationFrame(checkSync)
-
-    return () => {
-      cancelAnimationFrame(rafId)
-    }
-  }, [isPlaying, currentSegmentData])
-
-  // Effect 5: Segment가 없을 때 오디오 정지
+  // Effect 2: segmentChanged시 새 오디오 생성 및 재생
   // Dependency: currentSegmentData
   useEffect(() => {
-    if (currentSegmentData === null && audioRef.current) {
-      audioRef.current.pause()
+    // 재생 중이 아니면 아무것도 안함
+    if (!isPlayingRef.current) return
+
+    // currentSegmentData가 null이면 오디오 정지
+    if (!currentSegmentData) {
       currentSegmentIdRef.current = null
+      audioRef.current?.pause()
+      return
     }
+
+    const segmentChanged = currentSegmentIdRef.current !== currentSegmentData.id
+    if (!segmentChanged) return
+
+    // 새로운 세그먼트: 새 오디오 생성
+    createAndPlayAudio(currentSegmentData, audioUrls, audioRef, lastPlayheadRef)
+    currentSegmentIdRef.current = currentSegmentData.id
+  }, [currentSegmentData, audioUrls])
+
+  // Effect 3: currentSegmentData 실행 중 변경 (resize/move)
+  // Dependency: currentSegmentData
+  useEffect(() => {
+    if (!currentSegmentData) return
+    if (!audioRef.current) return
+
+    const audio = audioRef.current
+    const segmentChanged = currentSegmentIdRef.current !== currentSegmentData.id
+
+    // 세그먼트 변경은 Effect 2에서 처리, 여기서는 속성 변경만 처리
+    if (segmentChanged) return
+
+    // playbackRate 업데이트
+    if (audio.playbackRate !== currentSegmentData.playbackRate) {
+      audio.playbackRate = currentSegmentData.playbackRate
+    }
+
+    // offset 계산 및 업데이트
+    const expectedOffset = lastPlayheadRef.current - currentSegmentData.start
+    audio.currentTime = expectedOffset
   }, [currentSegmentData])
 
   // Cleanup on unmount

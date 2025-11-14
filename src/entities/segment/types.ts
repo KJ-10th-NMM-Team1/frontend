@@ -10,12 +10,12 @@
 // }
 
 export interface Segment {
-  id: string            // `_id` → `id`로 변환하려면 응답에서 매핑하거나 여기서 alias 처리
+  id: string // `_id` → `id`로 변환하려면 응답에서 매핑하거나 여기서 alias 처리
   project_id: string
   language_code: string
   speaker_tag?: string
-  start: number         // 타임라인 상 시작 위치 (초)
-  end: number           // 타임라인 상 종료 위치 (초)
+  start: number // 타임라인 상 시작 위치 (초)
+  end: number // 타임라인 상 종료 위치 (초)
   source_text: string
   target_text?: string
   segment_audio_url?: string
@@ -45,7 +45,7 @@ export const sampleSegments: Segment[] = [
     start: 0,
     end: 4.5,
     originalText: 'Welcome to the future of localisation.',
-    translatedText:  '현지화의 미래에 오신 것을 환영합니다.',
+    translatedText: '현지화의 미래에 오신 것을 환영합니다.',
     reviewing: false,
   },
   {

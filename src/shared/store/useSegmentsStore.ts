@@ -56,8 +56,11 @@ export const useSegmentsStore = create<SegmentsState>()(
         { type: 'segments/updateSegmentPosition', payload: { id, start, end } },
       ),
 
-    updateSegmentSize: (id, start, end, originalDuration) =>
-      set(
+    updateSegmentSize: (id, start, end, originalDuration) => {
+      const newDuration = end - start
+      const playbackRate = originalDuration / newDuration
+
+      return set(
         (state) => ({
           segments: state.segments.map((segment) =>
             segment.id === id
@@ -66,7 +69,7 @@ export const useSegmentsStore = create<SegmentsState>()(
                   start,
                   end,
                   // 배속 자동 계산: 원본 오디오 길이 / 새 세그먼트 길이
-                  playbackRate: originalDuration / (end - start),
+                  playbackRate,
                 }
               : segment,
           ),
@@ -76,7 +79,8 @@ export const useSegmentsStore = create<SegmentsState>()(
           type: 'segments/updateSegmentSize',
           payload: { id, start, end, originalDuration },
         },
-      ),
+      )
+    },
 
     resetSegments: () =>
       set(

@@ -66,7 +66,6 @@ export function useAudioTimeline(segments: Segment[], duration: number) {
     segments,
     playhead,
     isPlaying,
-    playbackRate,
     audioUrls,
   })
 

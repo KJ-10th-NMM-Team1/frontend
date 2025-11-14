@@ -68,8 +68,19 @@ export function useSegmentResize({
       event.preventDefault()
       event.stopPropagation()
 
-      // 초기 상태 저장
-      const originalDuration = segment.end - segment.start
+      // 실제 원본 오디오 길이 계산
+      const currentDuration = segment.end - segment.start
+      const currentRate = segment.playbackRate ?? 1.0
+      const originalDuration = currentDuration * currentRate
+
+      console.log('[Resize] 리사이즈 시작:', {
+        segmentId: segment.id,
+        currentDuration,
+        currentPlaybackRate: currentRate,
+        originalDuration, // 실제 원본 오디오 길이
+        start: segment.start,
+        end: segment.end,
+      })
 
       setIsResizing(true)
       resizeStateRef.current = {
