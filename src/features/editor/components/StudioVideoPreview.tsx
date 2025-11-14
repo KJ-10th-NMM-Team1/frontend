@@ -90,44 +90,44 @@ export function StudioVideoPreview({
 
     if (isPlaying && !isVideoPlaying) {
       void video.play().catch(console.error)
-    } else if (!isPlaying && isVideoPlaying) {
+    } else if (!isPlaying) {
       video.pause()
     }
   }, [isPlaying])
 
   // 비디오의 timeupdate 이벤트로 playhead 업데이트 (video -> playhead)
-  useEffect(() => {
-    const video = videoRef.current
-    if (!video) return
+  // useEffect(() => {
+  //   const video = videoRef.current
+  //   if (!video) return
 
-    const handleTimeUpdate = () => {
-      // 비디오가 실제로 재생 중일 때만 playhead 업데이트
-      const isVideoPlaying = !video.paused && !video.ended
-      if (isVideoPlaying) {
-        // 차이가 0.05초 이상일 때만 업데이트 (너무 자주 업데이트 방지)
-        const timeDiff = Math.abs(video.currentTime - playhead)
-        if (timeDiff > 0.05) {
-          setPlayhead(video.currentTime)
-        }
-      }
-    }
+  //   const handleTimeUpdate = () => {
+  //     // 비디오가 실제로 재생 중일 때만 playhead 업데이트
+  //     const isVideoPlaying = !video.paused && !video.ended
+  //     if (isVideoPlaying) {
+  //       // 차이가 0.05초 이상일 때만 업데이트 (너무 자주 업데이트 방지)
+  //       const timeDiff = Math.abs(video.currentTime - playhead)
+  //       if (timeDiff > 0.05) {
+  //         setPlayhead(video.currentTime)
+  //       }
+  //     }
+  //   }
 
-    // 비디오의 재생바를 드래그했을 때 (seeked 이벤트)
-    const handleSeeked = () => {
-      // 재생바를 드래그했을 때는 즉시 playhead 업데이트
-      const timeDiff = Math.abs(video.currentTime - playhead)
-      if (timeDiff > 0.05) {
-        setPlayhead(video.currentTime)
-      }
-    }
+  //   // 비디오의 재생바를 드래그했을 때 (seeked 이벤트)
+  //   const handleSeeked = () => {
+  //     // 재생바를 드래그했을 때는 즉시 playhead 업데이트
+  //     const timeDiff = Math.abs(video.currentTime - playhead)
+  //     if (timeDiff > 0.05) {
+  //       setPlayhead(video.currentTime)
+  //     }
+  //   }
 
-    video.addEventListener('timeupdate', handleTimeUpdate)
-    video.addEventListener('seeked', handleSeeked)
-    return () => {
-      video.removeEventListener('timeupdate', handleTimeUpdate)
-      video.removeEventListener('seeked', handleSeeked)
-    }
-  }, [playhead, setPlayhead])
+  //   video.addEventListener('timeupdate', handleTimeUpdate)
+  //   video.addEventListener('seeked', handleSeeked)
+  //   return () => {
+  //     video.removeEventListener('timeupdate', handleTimeUpdate)
+  //     video.removeEventListener('seeked', handleSeeked)
+  //   }
+  // }, [playhead, setPlayhead])
 
   // playbackRate 동기화
   useEffect(() => {
@@ -137,7 +137,7 @@ export function StudioVideoPreview({
   }, [playbackRate])
 
   return (
-    <section className="border-surface-3 bg-surface-1 flex flex-col gap-3 rounded-3xl border p-4 shadow-soft">
+    <section className="border-surface-3 bg-surface-1 flex h-full flex-col gap-3 rounded-3xl border p-4 shadow-soft">
       <header className="flex items-center justify-between text-sm">
         <span className="text-muted font-medium">{activeLanguage} 영상</span>
         <span className="text-muted">

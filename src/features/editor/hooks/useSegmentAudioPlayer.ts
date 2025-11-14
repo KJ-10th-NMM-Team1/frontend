@@ -64,25 +64,6 @@ function createAndPlayAudio(
 }
 
 /**
- * 기존 오디오의 playbackRate와 offset을 업데이트합니다.
- * (resize/move 시 호출됨)
- */
-function updateAudio(
-  audio: HTMLAudioElement,
-  segmentData: SegmentData,
-  playheadRef: React.MutableRefObject<number>,
-) {
-  // playbackRate 업데이트
-  if (audio.playbackRate !== segmentData.playbackRate) {
-    audio.playbackRate = segmentData.playbackRate
-  }
-
-  // offset 계산 및 업데이트
-  const expectedOffset = playheadRef.current - segmentData.start
-  audio.currentTime = expectedOffset
-}
-
-/**
  * Hook to manage audio playback synchronized with timeline playhead
  *
  * 최적화 전략:
@@ -224,6 +205,28 @@ export function useSegmentAudioPlayer({
       audioRef.current.currentTime = expectedOffset
     }
   }, [playhead, isScrubbing, currentSegmentData])
+
+  // Effect 5: 같은 세그먼트 내에서 playhead 점프 시 offset 동기화
+  // (키보드 단축키로 5초 이동 등)
+  // Dependency: playhead
+  useEffect(() => {
+    if (!audioRef.current) return
+    if (!currentSegmentData) return
+    if (isPlayingRef.current) return // 재생 중일 때는 자동으로 동기화됨
+    if (isScrubbing) return // 스크러빙 중일 때는 Effect 4에서 처리
+
+    // 같은 세그먼트 내에 있는지 확인
+    if (playhead >= currentSegmentData.start && playhead < currentSegmentData.end) {
+      const expectedOffset = playhead - currentSegmentData.start
+      const currentOffset = audioRef.current.currentTime
+
+      // offset 차이가 4초 이상일 때만 업데이트 (미세한 차이 무시)
+      if (Math.abs(currentOffset - expectedOffset) > 0.1) {
+        audioRef.current.currentTime = expectedOffset
+        lastPlayheadRef.current = playhead
+      }
+    }
+  }, [playhead, currentSegmentData, isScrubbing])
 
   // Cleanup on unmount
   useEffect(() => {
