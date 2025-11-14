@@ -33,6 +33,7 @@ export default function EditorPage() {
         <div className="grid min-h-0 flex-1 gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
           <div className="overflow-y-auto">
             <TranslationWorkspace
+              projectId={projectId}
               segments={data.segments}
               sourceLanguage={sourceLanguage}
               targetLanguage={targetLanguage}
