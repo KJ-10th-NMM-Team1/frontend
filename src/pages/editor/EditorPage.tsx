@@ -43,7 +43,6 @@ export default function EditorPage() {
             duration={data.playback.duration}
             playbackRate={data.playback.playback_rate}
             videoSource={data.playback.video_source}
-            videoOnlySource={data.playback.video_only_source}
           />
         </div>
         <div className="h-[400px] min-h-0">
