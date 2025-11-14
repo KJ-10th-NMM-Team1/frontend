@@ -34,8 +34,6 @@ export function SpeakerSegment({ segment, duration, scale, color }: SpeakerSegme
     scale,
   })
 
-  console.log(isDragging)
-
   // Lazy loading for waveform visualization (뷰포트에 진입했을 때만 파형 로드)
   const [ref, isVisible] = useIntersectionObserverOnce<HTMLDivElement>({
     rootMargin: '300px', // 뷰포트 진입 300px 전부터 로드 시작

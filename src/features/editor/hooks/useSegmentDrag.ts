@@ -1,7 +1,11 @@
 import type { PointerEvent as ReactPointerEvent } from 'react'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useRef, useState, useMemo } from 'react'
 
 import type { Segment } from '@/entities/segment/types'
+import {
+  clampSegmentPosition,
+  findAdjacentSegments,
+} from '@/features/editor/utils/segment-constraints'
 import { pixelToTime } from '@/features/editor/utils/timeline-scale'
 import { useSegmentsStore } from '@/shared/store/useSegmentsStore'
 
@@ -30,14 +34,26 @@ export function useSegmentDrag({
   onDragEnd,
 }: UseSegmentDragOptions) {
   const updateSegmentPosition = useSegmentsStore((state) => state.updateSegmentPosition)
+  const segments = useSegmentsStore((state) => state.segments)
   const [isDragging, setIsDragging] = useState(false)
 
   const dragStateRef = useRef<{
-    // isDragging: boolean
     startX: number
     initialSegmentStart: number
     segmentDuration: number
   } | null>(null)
+
+  // 인접 세그먼트를 ref로 저장하여 불필요한 재계산 방지
+  const adjacentSegmentsRef = useRef<{
+    previous: Segment | null
+    next: Segment | null
+  }>({ previous: null, next: null })
+
+  // segments 배열이 변경되거나 segment.id가 변경될 때만 인접 세그먼트 재계산
+  // 순서가 변경되지 않는다고 가정하므로 findIndex만 사용
+  useMemo(() => {
+    adjacentSegmentsRef.current = findAdjacentSegments(segments, segment.id)
+  }, [segments, segment.id])
 
   const onPointerDown = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -51,7 +67,6 @@ export function useSegmentDrag({
 
       setIsDragging(true)
       dragStateRef.current = {
-        // isDragging: true,
         startX: event.clientX,
         initialSegmentStart: segment.start,
         segmentDuration,
@@ -66,20 +81,19 @@ export function useSegmentDrag({
         const deltaTime = pixelToTime(deltaX, duration, scale)
 
         // Calculate new position
-        let newStart = dragStateRef.current.initialSegmentStart + deltaTime
-        const newEnd = newStart + dragStateRef.current.segmentDuration
+        const newStart = dragStateRef.current.initialSegmentStart + deltaTime
 
-        // Clamp to timeline bounds
-        if (newStart < 0) {
-          newStart = 0
-        } else if (newEnd > duration) {
-          newStart = duration - dragStateRef.current.segmentDuration
-        }
-
-        const finalEnd = newStart + dragStateRef.current.segmentDuration
+        // Apply constraints using utility function
+        const { start: clampedStart, end: clampedEnd } = clampSegmentPosition(
+          newStart,
+          dragStateRef.current.segmentDuration,
+          duration,
+          adjacentSegmentsRef.current.previous,
+          adjacentSegmentsRef.current.next,
+        )
 
         // Update segment position
-        updateSegmentPosition(segment.id, newStart, finalEnd)
+        updateSegmentPosition(segment.id, clampedStart, clampedEnd)
       }
 
       const handlePointerUp = () => {
