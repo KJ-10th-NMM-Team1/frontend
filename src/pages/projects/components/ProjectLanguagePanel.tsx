@@ -93,9 +93,11 @@ function LanguagePreview({
     }
   })
 
-  const previewAsset = assets.find((asset) => asset.asset_type === 'preview_video')
+  const previewAsset = assets.find(
+    (asset) => asset.asset_type === 'preview_video', //|| asset.asset_type === 'dubbed_video',
+  )
   const translatedSource = previewAsset?.file_path
-  const previewSource = version === 'original' ? videoSource : translatedSource ?? videoSource
+  const previewSource = version === 'original' ? videoSource : (translatedSource ?? videoSource)
   const languageLabel = languageNameMap[activeLanguage] ?? activeLanguage
   const videoSrc = previewSource ? videoUrlMap[previewSource] : undefined
 

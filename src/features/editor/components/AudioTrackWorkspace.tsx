@@ -1,8 +1,9 @@
 import type { Segment } from '@/entities/segment/types'
 
+import { useEditorHotkeys } from '../hooks/useEditorHotkeys'
+
 import { AudioTimeline } from './audio-track/AudioTimeline'
 import { AudioTimelineControls } from './audio-track/AudioTimelineControls'
-import { AudioTrackHeader } from './audio-track/AudioTrackHeader'
 import { AudioTrackSidebar } from './audio-track/AudioTrackSidebar'
 import { useAudioTimeline } from './audio-track/useAudioTimeline'
 
@@ -13,49 +14,64 @@ type AudioTrackWorkspaceProps = {
 
 export function AudioTrackWorkspace({ segments, duration }: AudioTrackWorkspaceProps) {
   const {
-    playbackRate,
-    setPlaybackRate,
+    // playbackRate,
+    // setPlaybackRate,
     trackRows,
     timelineTicks,
     waveformData,
     timelineRef,
     playheadPercent,
     onTimelinePointerDown,
-    rowHeight,
+    getTrackRowHeight,
     playhead,
     setPlayhead,
     isPlaying,
     togglePlayback,
     formatTime,
   } = useAudioTimeline(segments, duration)
+
+  // Register editor hotkeys
+  useEditorHotkeys({
+    playhead,
+    setPlayhead,
+    duration,
+    togglePlayback,
+  })
   return (
-    <section className="border-surface-3 bg-surface-1 flex flex-col gap-4 rounded-3xl border p-5 shadow-soft">
-      <AudioTrackHeader
-        playbackRate={playbackRate}
-        onDecreaseRate={() => setPlaybackRate(Math.max(playbackRate - 0.1, 0.5))}
-        onIncreaseRate={() => setPlaybackRate(Math.min(playbackRate + 0.1, 2))}
-      />
-      <div className="border-surface-3 grid rounded-2xl border lg:grid-cols-[220px,1fr]">
-        <AudioTrackSidebar trackRows={trackRows} />
-        <div className="bg-surface-1 flex flex-col">
-          <AudioTimelineControls
-            playhead={playhead}
-            duration={duration}
-            setPlayhead={setPlayhead}
-            togglePlayback={togglePlayback}
-            isPlaying={isPlaying}
-            formatTime={formatTime}
-          />
-          <AudioTimeline
-            trackRows={trackRows}
-            timelineTicks={timelineTicks}
-            waveformData={waveformData}
-            timelineRef={timelineRef}
-            playheadPercent={playheadPercent}
-            onTimelinePointerDown={onTimelinePointerDown}
-            rowHeight={rowHeight}
-            duration={duration}
-          />
+    <section className="border-surface-3 bg-surface-1 flex h-full flex-col border-t shadow-soft">
+      <div className="border-surface-3 flex h-full flex-col rounded-2xl border">
+        {/* Controls - 항상 상단에 고정 */}
+        <AudioTimelineControls
+          playhead={playhead}
+          duration={duration}
+          setPlayhead={setPlayhead}
+          togglePlayback={togglePlayback}
+          isPlaying={isPlaying}
+          formatTime={formatTime}
+        />
+
+        {/* Timeline 영역 - 스크롤 가능 */}
+        <div className="timeline-scroll-container grid flex-1 overflow-auto lg:grid-cols-[220px,1fr]">
+          {/* Sidebar - sticky로 좌측 고정 */}
+          <div className="border-surface-3 bg-surface-1 sticky left-0 z-40 hidden border-r lg:block">
+            {/* Sidebar 콘텐츠 */}
+            <AudioTrackSidebar trackRows={trackRows} getTrackRowHeight={getTrackRowHeight} />
+          </div>
+
+          {/* Timeline 콘텐츠 */}
+          <div className="bg-surface-1">
+            <AudioTimeline
+              trackRows={trackRows}
+              timelineTicks={timelineTicks}
+              waveformData={waveformData}
+              timelineRef={timelineRef}
+              playheadPercent={playheadPercent}
+              onTimelinePointerDown={onTimelinePointerDown}
+              getTrackRowHeight={getTrackRowHeight}
+              duration={duration}
+              playhead={playhead}
+            />
+          </div>
         </div>
       </div>
     </section>

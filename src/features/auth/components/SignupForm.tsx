@@ -123,9 +123,6 @@ export function SignupForm() {
             </>
           )}
         </Button>
-        <Button asChild variant="secondary" className="w-full">
-          <a href="#google-signup">Google로 계속</a>
-        </Button>
       </div>
       <p className="text-muted text-sm">
         이미 계정이 있나요?{' '}

@@ -13,7 +13,7 @@ export interface LoginPayload {
 }
 
 export interface UserOut {
-  id: string
+  _id?: string
   username: string
   role: string
   email: string

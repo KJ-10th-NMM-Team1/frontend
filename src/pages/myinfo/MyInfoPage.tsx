@@ -5,14 +5,14 @@ import { Bell, CalendarDays, KeyRound, Mail, PenSquare, Shield, UserRound } from
 import { useNavigate } from 'react-router-dom'
 
 import { getCurrentUser, type UserOut } from '@/features/auth/api/authApi'
-import { useAuthStore } from '@/shared/store/useAuthStore'
+import { routes } from '@/shared/config/routes'
 import { Badge } from '@/shared/ui/Badge'
+import { useAuthStore } from '@/shared/store/useAuthStore'
 import { Button } from '@/shared/ui/Button'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/shared/ui/Card'
 import { Spinner } from '@/shared/ui/Spinner'
 
 const fallbackUser: UserOut = {
-  id: '',
   username: '게스트',
   email: 'unknown@example.com',
   role: 'guest',
@@ -98,7 +98,7 @@ export default function MyInfoPage() {
             <PenSquare className="h-4 w-4" />
             프로필 편집
           </Button>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => navigate(routes.changePassword)}>
             <KeyRound className="h-4 w-4" />
             비밀번호 변경
           </Button>

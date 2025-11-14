@@ -3,7 +3,7 @@ export type ProjectStatus =
   | 'processing'
   | 'uploaded'
   | 'editing'
-  | 'completed'
+  | 'done'
   | 'failed'
 
 interface ProjectThumbnail {

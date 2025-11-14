@@ -21,7 +21,7 @@ const createInitialDraft = (): ProjectCreationDraft => ({
   sourceType: 'file',
   title: '',
   detectAutomatically: true,
-  sourceLanguage: 'ko',
+  sourceLanguage: '',
   targetLanguages: [],
   speakerCount: 2,
 })

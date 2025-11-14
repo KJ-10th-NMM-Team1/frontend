@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 
-import { Play } from 'lucide-react'
+import { Play, Pause } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { routes } from '../../shared/config/routes'
@@ -8,40 +8,37 @@ import { trackEvent } from '../../shared/lib/analytics'
 import { useAuthStore } from '../../shared/store/useAuthStore'
 import { Button } from '../../shared/ui/Button'
 import { Card, CardDescription, CardHeader, CardTitle } from '../../shared/ui/Card'
-import { ToggleGroup, ToggleGroupItem } from '../../shared/ui/ToggleGroup'
 import WorkspacePage from '../workspace/WorkspacePage'
 
-type SampleLanguage = 'ko' | 'ja'
+type SampleLanguage = 'ko' | 'en'
 
-const samples: Record<
-  SampleLanguage,
-  { label: string; caption: string; gradient: string; transcript: string }
-> = {
-  ko: {
-    label: '한국어',
-    caption: '자연스러운 한국어 더빙 음성으로 글로벌 온보딩을 돕습니다.',
-    gradient: 'from-purple-500 via-blue-500 to-emerald-500',
-    transcript: 'AI 파이프라인을 통해 30분 만에 한국어 음성을 합성한 결과입니다.',
-  },
-  ja: {
-    label: '日本語',
-    caption: '원문 뉘앙스를 살린 일본어 음성으로 현지화를 빠르게 진행하세요.',
-    gradient: 'from-rose-500 via-amber-500 to-violet-500',
-    transcript: '현지화 팀이 선호하는 일본어 발음 규칙을 반영해 합성했습니다.',
-  },
-  // es: {
-  //   label: 'Español',
-  //   caption: '중남미 시장에서 바로 사용할 수 있는 라틴 스페인어 억양입니다.',
-  //   gradient: 'from-cyan-500 via-sky-500 to-green-500',
-  //   transcript: '라틴 스페인어 억양을 적용해 글로벌 진출을 돕습니다.',
-  // },
+const previewVideo = '/media/welcom/preview.mp4'
+const previewPoster = ''
+const samples = {
+  ko: { label: '한국어', audioSrc: '/media/welcom/korean_audio.mp3' },
+  en: { label: 'English', audioSrc: '/media/welcom/english_audio.mp3' },
 }
 
-export default function HomePage() {
-  const [language, setLanguage] = useState<SampleLanguage>('ko')
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
-  const navigate = useNavigate()
 
+export default function HomePage() {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)  
+  const [language, setLanguage] = useState<SampleLanguage>('en')
+  const navigate = useNavigate()
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const audioRefs = useRef<Record<SampleLanguage, HTMLAudioElement> | null>(null)
+  if (!audioRefs.current) {
+    audioRefs.current = {
+      ko: Object.assign(new Audio(samples.ko.audioSrc), { loop: true, preload: 'auto' }),
+      en: Object.assign(new Audio(samples.en.audioSrc), { loop: true, preload: 'auto' }),
+    }
+  }
+  const currentAudioLangRef = useRef<SampleLanguage>('en')
+  const [currentAudioLang, setCurrentAudioLang] = useState<SampleLanguage>('en')
+
+  const getActiveAudio = () => audioRefs.current?.[currentAudioLangRef.current]
+  const [isPlaying, setIsPlaying] = useState(false)  
+
+  // 인증 시
   useEffect(() => {
     if (isAuthenticated) {
       navigate(routes.workspace, { replace: true })
@@ -52,8 +49,53 @@ export default function HomePage() {
     return <WorkspacePage />
   }
 
-  const activeSample = samples[language]
+  // 재생/일시정지 버튼에서 비디오/오디오 함께 제어
+  const playBoth = async (audioOverride?: HTMLAudioElement) => {
+    const video = videoRef.current
+    const audio = audioOverride ?? getActiveAudio()
+    if (!video || !audio) return
+    audio.currentTime = video.currentTime
+    await Promise.all([video.play(), audio.play()])
+    setIsPlaying(true)
+  }
 
+  const pauseBoth = () => {
+    videoRef.current?.pause()
+    getActiveAudio()?.pause()
+    setIsPlaying(false)
+  }
+  const togglePlay = () => {
+    if (isPlaying) {
+      pauseBoth()
+      return
+    }
+    void playBoth()
+  }
+
+  const updateAudioLanguage = (lang: SampleLanguage) => {
+    currentAudioLangRef.current = lang
+    setCurrentAudioLang(lang)
+  }
+
+  // 언어 전환 버튼
+  const switchLanguage = (lang: SampleLanguage) => {
+    if (!audioRefs.current || !videoRef.current || lang === currentAudioLang) return
+
+    const video = videoRef.current
+    const nextAudio = audioRefs.current[lang]
+    const prevAudio = getActiveAudio()   
+
+    prevAudio?.pause()
+    video.currentTime = 0
+    nextAudio.currentTime = 0
+
+    updateAudioLanguage(lang)
+    setLanguage(lang)
+
+    if (isPlaying) {
+    void playBoth(nextAudio)
+    }
+  }
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-16 px-6 py-16">
       <section className="space-y-10 lg:space-y-14">
@@ -73,10 +115,7 @@ export default function HomePage() {
               className="group px-6"
             >
               <Play className="h-4 w-4 transition-transform group-hover:scale-110" />
-              Get started
-            </Button>
-            <Button asChild variant="outline" size="lg" className="px-6">
-              <Link to={routes.login}>Learn more</Link>
+              <Link to={routes.login}>Get started</Link>
             </Button>
           </div>
         </div>
@@ -84,58 +123,53 @@ export default function HomePage() {
         <div className="relative mx-auto w-full max-w-4xl">
           <div className="border-surface-3 bg-surface-1 relative w-full overflow-hidden rounded-3xl border shadow-soft">
             <div
-              className={`absolute inset-0 bg-gradient-to-br ${activeSample.gradient} opacity-80`}
+              className={`absolute inset-0 bg-gradient-to-br opacity-80`}
             />
             <div className="relative">
               <div className="pb-[56.25%]" />
               <div className="absolute inset-0 flex flex-col justify-between p-6 text-white">
                 <div className="flex flex-wrap items-start justify-between gap-4">
+                </div>
+                <div className="relative mt-6 w-full overflow-hidden rounded-2xl bg-black/40">
+                <video
+                  ref={videoRef}
+                  muted
+                  playsInline
+                  className="h-full w-full object-cover"
+                  src={previewVideo}
+                  poster={previewPoster}
+                />
+                  <div className="absolute inset-x-0 bottom-6 z-20 flex justify-center gap-4">
+                  {(['ko', 'en'] as SampleLanguage[]).map((code) => (
+                    <button
+                      key={code}
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        void switchLanguage(code)
+                      }}
+                      className={`pointer-events-auto flex h-8 w-20 items-center justify-center rounded-full text-sm font-semibold transition
+                        ${code === language ? 'bg-white text-black shadow-lg' : 'bg-black/60 text-white/80'}`}
+                      aria-label={`${samples[code].label} 선택`}
+                    >
+                      {samples[code].label}
+                    </button>
+                  ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={togglePlay}
+                    className="absolute inset-0 z-10 flex items-center justify-center">
+                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-black/60 text-white shadow-lg transition hover:scale-105">
+                      {isPlaying ? <Pause size={36} /> : <Play size={36} />}
+                    </div>
+                  </button>    
+                </div>
                   <div>
                     <p className="text-xs uppercase tracking-[0.35em] text-white/70">
                       Preview Language
                     </p>
-                    <h2 className="mt-2 text-2xl font-semibold">
-                      {activeSample.label} 음성 트랙 프리뷰
-                    </h2>
-                    <p className="mt-1 text-sm text-white/80">{activeSample.caption}</p>
-                  </div>
-                  <ToggleGroup
-                    type="single"
-                    value={language}
-                    onValueChange={(value) => {
-                      if (!value) return
-                      setLanguage(value as SampleLanguage)
-                      trackEvent('sample_language_toggle', { lang: value })
-                    }}
-                    className="rounded-full bg-black/30 p-1 backdrop-blur"
-                  >
-                    {(Object.keys(samples) as SampleLanguage[]).map((code) => (
-                      <ToggleGroupItem
-                        key={code}
-                        value={code}
-                        className="rounded-full px-4 py-2 text-xs font-medium uppercase tracking-wide text-white data-[state=on]:bg-white data-[state=on]:text-black"
-                      >
-                        {samples[code].label}
-                      </ToggleGroupItem>
-                    ))}
-                  </ToggleGroup>
-                </div>
-                <div className="flex flex-1 flex-col items-center justify-center">
-                  <button
-                    type="button"
-                    className="flex h-20 w-20 items-center justify-center rounded-full bg-white/20 backdrop-blur transition hover:scale-105"
-                    onClick={() => trackEvent('sample_play', { lang: language })}
-                  >
-                    <Play className="h-10 w-10 text-white" />
-                  </button>
-                  <p className="mt-4 text-sm text-white/80">
-                    토글을 눌러 언어를 전환하고, 더빙 품질을 바로 확인해보세요.
-                  </p>
-                </div>
-                <div className="rounded-2xl bg-black/35 p-4 backdrop-blur">
-                  <p className="text-xs uppercase tracking-[0.3em] text-white/60">Transcript</p>
-                  <p className="mt-2 text-sm text-white/90">{activeSample.transcript}</p>
-                </div>
+                  </div>                
               </div>
             </div>
           </div>
@@ -145,19 +179,19 @@ export default function HomePage() {
       <section className="grid gap-6 md:grid-cols-3">
         {[
           {
-            title: '배급자 워크플로',
+            title: 'AI 자동 더빙 (Upload & Dub)',
             description:
-              '프로젝트 생성부터 배포까지 3단계 모달 플로우로 구성되어 있으며, 업로드/언어/일정 설정을 순차 진행합니다.',
+              '당신의 유튜브 링크를 붙여넣으세요. AI가 당신의 콘텐츠를 즉시 분석하여, 여러 타겟 언어(영어, 일본어 등)의 더빙 초안을 단 몇 분 만에 생성합니다.',
           },
           {
-            title: '번역가 에디터',
+            title: '간편한 더빙 에디터 (Edit & Apply)',
             description:
-              '세그먼트·파형·화자 레인을 동시에 편집하며, 속도 조절·분할·병합으로 싱크를 정밀하게 맞춥니다.',
+              '클릭 한 번으로 수정하세요. 웹 에디터에서 텍스트를 수정하고, 오디오트랙을 드래그하여 타이밍을 조절하세요.',
           },
           {
-            title: '완료 리포트',
+            title: '즉시 글로벌 배포 (Publish & Grow)',
             description:
-              '역할별 권한을 반영한 레포트 화면에서 진행률, 더빙 결과물, 언어별 자산을 확인하고 공유합니다.',
+              '새로운 1억 명의 시청자를 만나보세요. 완성된 다국어 더빙 오디오 트랙을 다운로드하여, 당신의 유튜브 채널 다국어 오디오 기능에 바로 업로드하세요.',
           },
         ].map((item) => (
           <Card key={item.title} className="border-surface-4 bg-surface-1/80 border p-6">

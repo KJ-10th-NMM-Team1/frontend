@@ -9,6 +9,7 @@ import {
 
 import { AppFallback } from './providers/AppFallback'
 import { RootLayout } from './routes/RootLayout'
+import { EditorLayout } from './routes/EditorLayout'
 import { RouteErrorBoundary } from './routes/RouteErrorBoundary'
 
 const HomePage = lazy(() => import('../pages/home/HomePage'))
@@ -27,16 +28,29 @@ const NotFoundPage = lazy(() => import('../pages/NotFoundPage'))
 
 const router = createBrowserRouter(
   createRoutesFromElements(
-    <Route path="/" element={<RootLayout />} errorElement={<RouteErrorBoundary />}>
-      <Route index element={<HomePage />} />
-      <Route path="auth">
-        <Route path="login" element={<LoginPage />} />
-        <Route path="signup" element={<SignupPage />} />
+    <>
+      <Route path="/" element={<RootLayout />} errorElement={<RouteErrorBoundary />}>
+        <Route index element={<HomePage />} />
+        <Route path="auth">
+          <Route path="login" element={<LoginPage />} />
+          <Route path="signup" element={<SignupPage />} />
+        </Route>
+        <Route path="workspace" element={<WorkspacePage />} />
+        <Route path="projects">
+          <Route index element={<ProjectsListPage />} />
+          <Route path=":id" element={<ProjectDetailPage />} />
+        </Route>
+        <Route path="voice-samples" element={<VoiceSamplesPage />} />
+        <Route path="example" element={<ExampleCrudPage />} />
+        <Route path="example/modal" element={<ModalExamplePage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
-      <Route path="workspace" element={<WorkspacePage />} />
-      <Route path="projects">
-        <Route index element={<ProjectsListPage />} />
-        <Route path=":id" element={<ProjectDetailPage />} />
+      <Route path="/editor" element={<EditorLayout />} errorElement={<RouteErrorBoundary />}>
+        <Route path=":projectId/:languageCode" element={<EditorPage />} />
+      </Route>
+      <Route path="myinfo">
+        <Route index element={<MyInfoPage />} />
+        <Route path="change-password" element={<ChangedPasswordPage />} />
       </Route>
       <Route path="myinfo">
         <Route index element={<MyInfoPage />} />
@@ -47,7 +61,7 @@ const router = createBrowserRouter(
       <Route path="example" element={<ExampleCrudPage />} />
       <Route path="example/modal" element={<ModalExamplePage />} />
       <Route path="*" element={<NotFoundPage />} />
-    </Route>,
+    </>,
   ),
 )
 

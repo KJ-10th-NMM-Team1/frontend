@@ -6,6 +6,7 @@ export type TrackRow =
       label: string
       color: string
       type: 'waveform' | 'muted'
+      size?: 'small' | 'medium' | 'large'
     }
   | {
       id: string
@@ -13,4 +14,5 @@ export type TrackRow =
       color: string
       type: 'speaker'
       segments: Segment[]
+      size?: 'medium'
     }

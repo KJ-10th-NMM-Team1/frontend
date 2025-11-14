@@ -1,13 +1,18 @@
-import { Play } from 'lucide-react'
+import { useEffect, useRef } from 'react'
 
-import { env } from '@/shared/config/env'
-import { Button } from '@/shared/ui/Button'
+import { useQuery } from '@tanstack/react-query'
+import { shallow } from 'zustand/shallow'
+
+import { apiGet } from '@/shared/api/client'
+import { queryKeys } from '@/shared/config/queryKeys'
+import { useEditorStore } from '@/shared/store/useEditorStore'
 
 type StudioVideoPreviewProps = {
   activeLanguage: string
   duration: number
   playbackRate: number
   videoSource?: string
+  videoOnlySource?: string
 }
 
 export function StudioVideoPreview({
@@ -15,8 +20,123 @@ export function StudioVideoPreview({
   duration,
   playbackRate,
   videoSource,
+  videoOnlySource,
 }: StudioVideoPreviewProps) {
-  const videoSrc = `${env.apiBaseUrl}/api/storage/media/${videoSource}`
+  // video_only_source가 있으면 우선 사용, 없으면 video_source 사용
+  const sourcePath = videoOnlySource || videoSource
+
+  // Presigned URL 가져오기
+  const { data: videoSrc } = useQuery({
+    queryKey: queryKeys.storage.presignedUrl(sourcePath || ''),
+    queryFn: () =>
+      sourcePath
+        ? apiGet<{ url: string }>(`api/storage/media/${sourcePath}`).then((data) => data.url)
+        : Promise.resolve(undefined),
+    enabled: !!sourcePath,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  })
+
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const { playhead, isPlaying, setPlayhead, setPlaying } = useEditorStore(
+    (state) => ({
+      playhead: state.playhead,
+      isPlaying: state.isPlaying,
+      setPlayhead: state.setPlayhead,
+      setPlaying: state.setPlaying,
+    }),
+    shallow,
+  )
+
+  // playhead와 비디오 currentTime 동기화 (playhead -> video)
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    // 비디오가 로드되지 않았으면 스킵
+    if (video.readyState < 2) return
+
+    // 차이가 0.1초 이상일 때만 동기화 (무한 루프 방지)
+    const timeDiff = Math.abs(video.currentTime - playhead)
+    if (timeDiff > 0.1) {
+      video.currentTime = playhead
+    }
+  }, [playhead])
+
+  // 비디오의 play/pause 이벤트로 isPlaying 상태 동기화
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    const handlePlay = () => {
+      setPlaying(true)
+    }
+    const handlePause = () => {
+      setPlaying(false)
+    }
+
+    video.addEventListener('play', handlePlay)
+    video.addEventListener('pause', handlePause)
+    return () => {
+      video.removeEventListener('play', handlePlay)
+      video.removeEventListener('pause', handlePause)
+    }
+  }, [setPlaying])
+
+  // isPlaying 상태와 비디오 재생 동기화 (store -> video)
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    // 비디오가 실제로 재생 중인지 확인
+    const isVideoPlaying = !video.paused && !video.ended && video.readyState > 2
+
+    if (isPlaying && !isVideoPlaying) {
+      void video.play().catch(console.error)
+    } else if (!isPlaying && isVideoPlaying) {
+      video.pause()
+    }
+  }, [isPlaying])
+
+  // 비디오의 timeupdate 이벤트로 playhead 업데이트 (video -> playhead)
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    const handleTimeUpdate = () => {
+      // 비디오가 실제로 재생 중일 때만 playhead 업데이트
+      const isVideoPlaying = !video.paused && !video.ended
+      if (isVideoPlaying) {
+        // 차이가 0.05초 이상일 때만 업데이트 (너무 자주 업데이트 방지)
+        const timeDiff = Math.abs(video.currentTime - playhead)
+        if (timeDiff > 0.05) {
+          setPlayhead(video.currentTime)
+        }
+      }
+    }
+
+    // 비디오의 재생바를 드래그했을 때 (seeked 이벤트)
+    const handleSeeked = () => {
+      // 재생바를 드래그했을 때는 즉시 playhead 업데이트
+      const timeDiff = Math.abs(video.currentTime - playhead)
+      if (timeDiff > 0.05) {
+        setPlayhead(video.currentTime)
+      }
+    }
+
+    video.addEventListener('timeupdate', handleTimeUpdate)
+    video.addEventListener('seeked', handleSeeked)
+    return () => {
+      video.removeEventListener('timeupdate', handleTimeUpdate)
+      video.removeEventListener('seeked', handleSeeked)
+    }
+  }, [playhead, setPlayhead])
+
+  // playbackRate 동기화
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+    video.playbackRate = playbackRate
+  }, [playbackRate])
 
   return (
     <section className="border-surface-3 bg-surface-1 flex flex-col gap-3 rounded-3xl border p-4 shadow-soft">
@@ -33,15 +153,22 @@ export function StudioVideoPreview({
             <Play className="h-5 w-5" />
             재생
           </Button> */}
-          <video
-            controls
-            autoPlay={false}
-            className="h-auto max-h-[32em] min-h-[20em] w-full bg-black"
-            src={videoSrc}
-            preload="metadata"
-          >
-            <track kind="captions" />
-          </video>
+          {videoSrc ? (
+            <video
+              ref={videoRef}
+              controls
+              autoPlay={false}
+              className="h-auto max-h-[32em] min-h-[20em] w-full bg-black"
+              src={videoSrc}
+              preload="metadata"
+            >
+              <track kind="captions" />
+            </video>
+          ) : (
+            <div className="text-muted flex h-full items-center justify-center text-sm">
+              비디오를 불러올 수 없습니다
+            </div>
+          )}
         </div>
       </div>
     </section>

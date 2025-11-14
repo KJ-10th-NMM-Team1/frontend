@@ -1,3 +1,5 @@
+import { useCallback } from 'react'
+
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 
@@ -30,9 +32,8 @@ import {
 // }
 
 export function useLoginMutation() {
-  const authenticate = useAuthStore((state) => state.authenticate)
   const showToast = useUiStore((state) => state.showToast)
-  const navigate = useNavigate()
+  const handleAuthSuccess = useAuthSuccessHandler()
 
   return useMutation({
     mutationKey: ['auth', 'login'],
@@ -62,42 +63,8 @@ export function useLoginMutation() {
     //     autoDismiss: 4000,
     //   })
     // },
-    onSuccess: async () => {
-      try {
-        // 로그인 성공 후 사용자 정보 가져오기
-        const user = await getCurrentUser()
-
-        const roles = user.role === 'editor' ? ['editor'] : ['distributor']
-
-        authenticate({
-          userName: user.username,
-          roles: roles as ('distributor' | 'editor')[],
-        })
-
-        trackEvent('login_success', { userId: user.id })
-        showToast({
-          id: 'login_success',
-          title: '로그인 성공',
-          description: `${user.username}님, 환영합니다!`,
-          autoDismiss: 4000,
-        })
-        navigate(routes.workspace)
-      } catch (error) {
-        // 사용자 정보 가져오기 실패 시에도 로그인은 성공한 상태
-        console.error('Failed to fetch user info:', error)
-        authenticate({
-          userName: 'User',
-          roles: ['distributor'],
-        })
-        trackEvent('login_success')
-        showToast({
-          id: 'login_success',
-          title: '로그인 성공',
-          description: '환영합니다!',
-          autoDismiss: 4000,
-        })
-        navigate(routes.workspace)
-      }
+    onSuccess: () => {
+      void handleAuthSuccess()
     },
     onError: (error: Error) => {
       // 에러 메시지 추출
@@ -135,7 +102,7 @@ export function useSignupMutation() {
       return signup(payload)
     },
     onSuccess: (data) => {
-      trackEvent('account_created', { userId: data.id })
+      trackEvent('account_created', { userId: data._id })
       showToast({
         id: 'signup-success',
         title: '회원가입 완료',
@@ -208,4 +175,37 @@ export function useLogoutMutation() {
       navigate(routes.home)
     },
   })
+}
+
+export const useAuthSuccessHandler = () => {
+  const authenticate = useAuthStore((state) => state.authenticate)
+  const showToast = useUiStore((state) => state.showToast)
+  const navigate = useNavigate()
+
+  return useCallback(async () => {
+    try {
+      const user = await getCurrentUser()
+      const roles = user.role === 'editor' ? ['editor'] : ['distributor']
+      authenticate({ userName: user.username, roles: roles as ('editor' | 'distributor')[] })
+      trackEvent('login_success', { userId: user._id })
+      showToast({
+        id: 'login_success',
+        title: '로그인 성공',
+        description: `${user.username}님 환영합니다.`,
+        autoDismiss: 4000,
+      })
+    } catch (error) {
+      console.error('Failed to fetch user info:', error)
+      authenticate({ userName: 'User', roles: ['distributor'] })
+      trackEvent('login_success')
+      showToast({
+        id: 'login_success',
+        title: '로그인 성공',
+        description: '환영합니다.',
+        autoDismiss: 4000,
+      })
+    }
+
+    navigate(routes.workspace)
+  }, [authenticate, showToast, navigate])
 }

@@ -1,7 +1,24 @@
+import { useEffect } from 'react'
+
+import { useNavigate } from 'react-router-dom'
+
 import { LoginForm } from '../../features/auth/components/LoginForm'
+import { routes } from '../../shared/config/routes'
+import { useAuthStore } from '../../shared/store/useAuthStore'
 import { Card, CardDescription, CardHeader, CardTitle } from '../../shared/ui/Card'
 
 export default function LoginPage() {
+   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+    const navigate = useNavigate()
+
+    useEffect(() => {
+      if (isAuthenticated) {
+        navigate(routes.workspace, { replace: true })
+      }
+    }, [isAuthenticated, navigate])
+
+    if (isAuthenticated) return null
+
   return (
     <div className="flex flex-col items-center gap-8 px-6 py-16">
       <div className="max-w-md text-center">

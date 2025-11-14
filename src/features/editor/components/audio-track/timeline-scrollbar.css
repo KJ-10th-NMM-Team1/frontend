@@ -1,0 +1,46 @@
+/* 커스텀 스크롤바 스타일 */
+.timeline-scroll-container {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: rgba(100, 116, 139, 0.5) rgba(15, 23, 42, 0.1); /* Firefox */
+}
+
+/* Webkit browsers (Chrome, Safari, Edge) */
+.timeline-scroll-container::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+  background: transparent;
+}
+
+.timeline-scroll-container::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.1);
+  border-radius: 5px;
+}
+
+.timeline-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.4);
+  border-radius: 5px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+}
+
+.timeline-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.6);
+}
+
+.timeline-scroll-container::-webkit-scrollbar-thumb:active {
+  background: rgba(100, 116, 139, 0.8);
+}
+
+/* 코너 (가로/세로 스크롤바가 만나는 부분) */
+.timeline-scroll-container::-webkit-scrollbar-corner {
+  background: rgba(15, 23, 42, 0.1);
+}
+
+/* 스크롤바 숨기기 클래스 - TimeRuler에서 사용 */
+.scrollbar-hide {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}

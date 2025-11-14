@@ -38,7 +38,7 @@ const projectStatusLabelMap: Record<string, '업로드' | '편집중' | '완료'
   processing: '업로드',
   uploaded: '업로드',
   editing: '편집중',
-  completed: '완료',
+  done: '완료',
   failed: '실패',
 }
 const projectStatusClassMap: Record<'업로드' | '편집중' | '완료' | '실패', string> = {
