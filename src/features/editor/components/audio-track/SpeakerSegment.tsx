@@ -1,3 +1,5 @@
+import { useRef } from 'react'
+
 import type { Segment } from '@/entities/segment/types'
 import { useAudioWaveform } from '@/features/editor/hooks/useAudioWaveform'
 import { useSegmentDrag } from '@/features/editor/hooks/useSegmentDrag'
@@ -40,14 +42,22 @@ export function SpeakerSegment({ segment, duration, scale, color }: SpeakerSegme
   })
 
   // Step 2: Generate waveform from audio URL (only when URL is available)
-  const BAR_UNIT = 4 // 바 하나당 차지하는 공간 (3px bar + 1px gap)
+  // 첫 로딩 시에만 optimalSamples를 계산하고 이후 크기 변경 시에는 고정
+  const BAR_UNIT = 2.5 // 바 하나당 차지하는 공간 (더 촘촘하게)
   const availableWidth = widthPx - 16 // 좌우 padding 8px씩 제외
-  const optimalSamples = Math.max(Math.floor(availableWidth / BAR_UNIT), 10) // 최소 10개
+  const currentOptimalSamples = Math.max(Math.floor(availableWidth / BAR_UNIT), 20) // 최소 20개
+
+  // 첫 로딩 시 샘플 수를 ref에 저장하여 고정
+  const fixedSamplesRef = useRef<number | null>(null)
+  if (fixedSamplesRef.current === null && audioSrc && isVisible) {
+    fixedSamplesRef.current = currentOptimalSamples
+  }
+  const samplesForQuery = fixedSamplesRef.current ?? currentOptimalSamples
 
   const { data: waveformData, isLoading: waveformLoading } = useAudioWaveform(
     audioSrc,
     !!audioSrc && isVisible, // URL 있고 visible일 때만 파형 생성
-    optimalSamples,
+    samplesForQuery,
   )
 
   const isLoading = isVisible && (urlLoading || waveformLoading)
@@ -85,7 +95,7 @@ export function SpeakerSegment({ segment, duration, scale, color }: SpeakerSegme
         <SegmentLoadingSpinner color={color} size="sm" />
       ) : waveformData ? (
         // 로드 완료: 파형 표시
-        <SegmentWaveform waveformData={waveformData} color={color} height={40} />
+        <SegmentWaveform waveformData={waveformData} color={color} widthPx={widthPx} height={60} />
       ) : null}
 
       {/* Right resize handle */}
