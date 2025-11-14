@@ -1,5 +1,5 @@
 import type { PointerEvent as ReactPointerEvent } from 'react'
-import { useCallback, useRef } from 'react'
+import { useCallback, useRef, useState } from 'react'
 
 import type { Segment } from '@/entities/segment/types'
 import { pixelToTime } from '@/features/editor/utils/timeline-scale'
@@ -30,9 +30,10 @@ export function useSegmentDrag({
   onDragEnd,
 }: UseSegmentDragOptions) {
   const updateSegmentPosition = useSegmentsStore((state) => state.updateSegmentPosition)
+  const [isDragging, setIsDragging] = useState(false)
 
   const dragStateRef = useRef<{
-    isDragging: boolean
+    // isDragging: boolean
     startX: number
     initialSegmentStart: number
     segmentDuration: number
@@ -48,8 +49,9 @@ export function useSegmentDrag({
 
       const segmentDuration = segment.end - segment.start
 
+      setIsDragging(true)
       dragStateRef.current = {
-        isDragging: true,
+        // isDragging: true,
         startX: event.clientX,
         initialSegmentStart: segment.start,
         segmentDuration,
@@ -83,6 +85,7 @@ export function useSegmentDrag({
       const handlePointerUp = () => {
         if (dragStateRef.current) {
           dragStateRef.current = null
+          setIsDragging(false)
           onDragEnd?.()
         }
 
@@ -98,6 +101,6 @@ export function useSegmentDrag({
 
   return {
     onPointerDown,
-    isDragging: dragStateRef.current?.isDragging ?? false,
+    isDragging,
   }
 }

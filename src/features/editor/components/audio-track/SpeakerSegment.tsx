@@ -34,6 +34,8 @@ export function SpeakerSegment({ segment, duration, scale, color }: SpeakerSegme
     scale,
   })
 
+  console.log(isDragging)
+
   // Lazy loading for waveform visualization (뷰포트에 진입했을 때만 파형 로드)
   const [ref, isVisible] = useIntersectionObserverOnce<HTMLDivElement>({
     rootMargin: '300px', // 뷰포트 진입 300px 전부터 로드 시작
@@ -66,7 +68,7 @@ export function SpeakerSegment({ segment, duration, scale, color }: SpeakerSegme
       className={cn(
         'absolute top-3 z-10 flex h-[60px] items-center justify-between rounded-2xl border px-3 text-xs font-semibold transition-opacity',
         isLoading && 'opacity-60',
-        isDragging && 'cursor-grabbing opacity-80',
+        isDragging && 'cursor-grabbing opacity-60',
         !isDragging && 'cursor-grab',
       )}
       style={{
