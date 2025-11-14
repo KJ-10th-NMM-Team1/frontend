@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 
+import type { Segment } from '@/entities/segment/types'
 import type { TrackRow } from '@/features/editor/components/audio-track/types'
 
 /**
@@ -9,6 +10,7 @@ import type { TrackRow } from '@/features/editor/components/audio-track/types'
  * 에디터의 트랙 데이터를 관리합니다.
  * - 트랙 생성, 수정, 삭제
  * - 스피커 번호 자동 증가
+ * - 세그먼트 업데이트 (단일 데이터 소스)
  * - 서버 저장을 위한 편집 데이터 포함
  */
 
@@ -18,13 +20,19 @@ type TracksState = {
   originalTracks: TrackRow[] // 서버에서 불러온 원본 데이터
   nextSpeakerNumber: number // 다음 스피커 번호
 
-  // Actions
+  // Track Actions
   setTracks: (tracks: TrackRow[]) => void
   addSpeakerTrack: () => void
   removeTrack: (id: string) => void
   updateTrack: (id: string, updates: Record<string, unknown>) => void
   resetTracks: () => void
   hasChanges: () => boolean
+
+  // Segment Actions (operate on segments within tracks)
+  updateSegment: (segmentId: string, updates: Partial<Segment>) => void
+  updateSegmentPosition: (segmentId: string, start: number, end: number) => void
+  updateSegmentSize: (segmentId: string, start: number, end: number, originalDuration: number) => void
+  getAllSegments: () => Segment[]
 }
 
 // 기본 트랙 색상 팔레트
@@ -129,6 +137,79 @@ export const useTracksStore = create<TracksState>()(
     hasChanges: () => {
       const state = get()
       return JSON.stringify(state.tracks) !== JSON.stringify(state.originalTracks)
+    },
+
+    // Segment Actions - operate on segments within tracks
+    updateSegment: (segmentId, updates) =>
+      set(
+        (state) => ({
+          tracks: state.tracks.map((track) => {
+            if (track.type !== 'speaker') return track
+            return {
+              ...track,
+              segments: track.segments.map((segment) =>
+                segment.id === segmentId ? { ...segment, ...updates } : segment,
+              ),
+            }
+          }),
+        }),
+        false,
+        { type: 'tracks/updateSegment', payload: { segmentId, updates } },
+      ),
+
+    updateSegmentPosition: (segmentId, start, end) =>
+      set(
+        (state) => ({
+          tracks: state.tracks.map((track) => {
+            if (track.type !== 'speaker') return track
+            return {
+              ...track,
+              segments: track.segments.map((segment) =>
+                segment.id === segmentId ? { ...segment, start, end } : segment,
+              ),
+            }
+          }),
+        }),
+        false,
+        { type: 'tracks/updateSegmentPosition', payload: { segmentId, start, end } },
+      ),
+
+    updateSegmentSize: (segmentId, start, end, originalDuration) => {
+      const newDuration = end - start
+      const playbackRate = originalDuration / newDuration
+
+      return set(
+        (state) => ({
+          tracks: state.tracks.map((track) => {
+            if (track.type !== 'speaker') return track
+            return {
+              ...track,
+              segments: track.segments.map((segment) =>
+                segment.id === segmentId
+                  ? {
+                      ...segment,
+                      start,
+                      end,
+                      playbackRate,
+                    }
+                  : segment,
+              ),
+            }
+          }),
+        }),
+        false,
+        {
+          type: 'tracks/updateSegmentSize',
+          payload: { segmentId, start, end, originalDuration },
+        },
+      )
+    },
+
+    getAllSegments: () => {
+      const state = get()
+      return state.tracks
+        .filter((track): track is Extract<TrackRow, { type: 'speaker' }> => track.type === 'speaker')
+        .flatMap((track) => track.segments)
     },
   })),
 )

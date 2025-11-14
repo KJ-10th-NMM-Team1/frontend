@@ -8,7 +8,7 @@ import {
   findAdjacentSegments,
 } from '@/features/editor/utils/segment-constraints'
 import { pixelToTime } from '@/features/editor/utils/timeline-scale'
-import { useSegmentsStore } from '@/shared/store/useSegmentsStore'
+import { useTracksStore } from '@/shared/store/useTracksStore'
 
 type ResizeEdge = 'start' | 'end'
 
@@ -38,8 +38,8 @@ export function useSegmentResize({
   onResizeStart,
   onResizeEnd,
 }: UseSegmentResizeOptions) {
-  const updateSegmentSize = useSegmentsStore((state) => state.updateSegmentSize)
-  const segments = useSegmentsStore((state) => state.segments)
+  const updateSegmentSize = useTracksStore((state) => state.updateSegmentSize)
+  const segments = useTracksStore((state) => state.getAllSegments())
   const [isResizing, setIsResizing] = useState(false)
 
   const resizeStateRef = useRef<{

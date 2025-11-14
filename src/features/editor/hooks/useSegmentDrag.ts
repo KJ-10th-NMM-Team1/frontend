@@ -7,7 +7,7 @@ import {
   findAdjacentSegments,
 } from '@/features/editor/utils/segment-constraints'
 import { pixelToTime } from '@/features/editor/utils/timeline-scale'
-import { useSegmentsStore } from '@/shared/store/useSegmentsStore'
+import { useTracksStore } from '@/shared/store/useTracksStore'
 
 type UseSegmentDragOptions = {
   segment: Segment
@@ -33,8 +33,8 @@ export function useSegmentDrag({
   onDragStart,
   onDragEnd,
 }: UseSegmentDragOptions) {
-  const updateSegmentPosition = useSegmentsStore((state) => state.updateSegmentPosition)
-  const segments = useSegmentsStore((state) => state.segments)
+  const updateSegmentPosition = useTracksStore((state) => state.updateSegmentPosition)
+  const segments = useTracksStore((state) => state.getAllSegments())
   const [isDragging, setIsDragging] = useState(false)
 
   const dragStateRef = useRef<{

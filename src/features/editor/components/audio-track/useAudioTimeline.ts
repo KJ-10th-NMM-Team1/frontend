@@ -63,23 +63,30 @@ export function useAudioTimeline(segments: Segment[], duration: number) {
   // Get speaker tracks from store (user-created tracks)
   const storedSpeakerTracks = useTracksStore((state) => state.tracks)
   const setTracks = useTracksStore((state) => state.setTracks)
+  const getAllSegments = useTracksStore((state) => state.getAllSegments)
 
-  // Initialize tracks from segments (only once when segments are loaded)
+  // Initialize tracks from segments only once on first load
+  const isInitializedRef = useRef(false)
+
   useEffect(() => {
-    if (segments.length === 0) return
+    if (segments.length === 0 || isInitializedRef.current) return
 
     const initialTracks = convertSegmentsToTracks(segments)
     setTracks(initialTracks)
+    isInitializedRef.current = true
   }, [segments, setTracks])
 
+  // Get all segments from tracks store for audio preloading and playback
+  const allSegments = getAllSegments()
+
   // Preload all segment audio URLs for seamless playback
-  const { audioUrls } = usePreloadSegmentAudios(segments)
+  const { audioUrls } = usePreloadSegmentAudios(allSegments)
 
   const [isScrubbing, setIsScrubbing] = useState(false)
 
   // Audio playback synchronized with playhead
   useSegmentAudioPlayer({
-    segments,
+    segments: allSegments,
     playhead,
     isPlaying,
     isScrubbing,
@@ -168,7 +175,7 @@ export function useAudioTimeline(segments: Segment[], duration: number) {
   }
 
   useEffect(() => {
-    if (!segments.length) {
+    if (!allSegments.length) {
       if (lastSegmentRef.current !== null) {
         lastSegmentRef.current = null
         setActiveSegment(null)
@@ -176,14 +183,16 @@ export function useAudioTimeline(segments: Segment[], duration: number) {
       return
     }
     const current =
-      segments.find((segment) => playhead >= segment.start && playhead < segment.end) ??
-      (playhead >= segments[segments.length - 1].end ? segments[segments.length - 1] : null)
+      allSegments.find((segment) => playhead >= segment.start && playhead < segment.end) ??
+      (playhead >= allSegments[allSegments.length - 1].end
+        ? allSegments[allSegments.length - 1]
+        : null)
     const nextId = current?.id ?? null
     if (nextId !== lastSegmentRef.current) {
       lastSegmentRef.current = nextId
       setActiveSegment(nextId)
     }
-  }, [playhead, segments, setActiveSegment])
+  }, [playhead, allSegments, setActiveSegment])
 
   const trackRows = useMemo<TrackRow[]>(
     () => [...STATIC_TRACKS, ...storedSpeakerTracks],
