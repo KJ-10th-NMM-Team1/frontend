@@ -5,8 +5,10 @@ import { ArrowRight } from 'lucide-react'
 import type { Segment } from '@/entities/segment/types'
 import { useLanguage } from '@/features/languages/hooks/useLanguage'
 import { useEditorStore } from '@/shared/store/useEditorStore'
+import { useSegmentsStore } from '@/shared/store/useSegmentsStore'
 import { Button } from '@/shared/ui/Button'
 import { apiPost } from '@/shared/api/client'
+
 import { TranslationSegmentCard } from './TranslationSegmentCard'
 
 type TranslationWorkspaceProps = {
@@ -23,24 +25,22 @@ export function TranslationWorkspace({
   targetLanguage,
 }: TranslationWorkspaceProps) {
   const { data: languageData } = useLanguage()
+  const { setPlayhead, setActiveSegment, setPlaying, activeSegmentId } = useEditorStore(
+    (state) => ({
+      setPlayhead: state.setPlayhead,
+      setActiveSegment: state.setActiveSegment,
+      setPlaying: state.setPlaying,
+      activeSegmentId: state.activeSegmentId,
+    }),
+  )
   const {
-    setPlayhead,
-    setActiveSegment,
-    setPlaying,
-    activeSegmentId,
     segments: storeSegments,
     setSegments,
-    updateSegmentSourceText,
-    updateSegmentTargetText,
-  } = useEditorStore((state) => ({
-    setPlayhead: state.setPlayhead,
-    setActiveSegment: state.setActiveSegment,
-    setPlaying: state.setPlaying,
-    activeSegmentId: state.activeSegmentId,
+    updateSegment,
+  } = useSegmentsStore((state) => ({
     segments: state.segments,
     setSegments: state.setSegments,
-    updateSegmentSourceText: state.updateSegmentSourceText,
-    updateSegmentTargetText: state.updateSegmentTargetText,
+    updateSegment: state.updateSegment,
   }))
 
   const languageNameMap = useMemo(() => {
@@ -57,11 +57,11 @@ export function TranslationWorkspace({
   }, [segments, setSegments])
 
   const handleChange = (segmentId: string, value: string) => {
-    updateSegmentTargetText(segmentId, value)
+    updateSegment(segmentId, { target_text: value })
   }
 
   const handleSourceChange = (segmentId: string, value: string) => {
-    updateSegmentSourceText(segmentId, value)
+    updateSegment(segmentId, { source_text: value })
   }
 
   const segmentRefs = useRef<Record<string, HTMLElement | null>>({})
@@ -81,7 +81,7 @@ export function TranslationWorkspace({
     }
 
     // store의 최신 source_text 사용 (사용자가 수정한 내용 반영)
-    const currentSegment = storeSegments[segment.id] ?? segment
+    const currentSegment = storeSegments.find((s) => s.id === segment.id) ?? segment
     const sourceText = currentSegment.source_text ?? segment.source_text ?? ''
     if (!sourceText.trim()) {
       console.warn('Source text is empty, cannot translate')
@@ -112,7 +112,7 @@ export function TranslationWorkspace({
       )
 
       // 번역 결과를 store에 반영
-      updateSegmentTargetText(segment.id, response.target_text)
+      updateSegment(segment.id, { target_text: response.target_text })
 
       console.log('Translation completed:', response)
     } catch (error) {
@@ -129,7 +129,7 @@ export function TranslationWorkspace({
     }
   }
 
-  const handleGenerateAudio = async (segment: Segment) => {
+  const handleGenerateAudio = (segment: Segment) => {
     // TODO: Generate Audio API 호출 구현
     console.log('Generate Audio for segment:', segment.id)
     // 예: await apiPost(`/api/segments/${segment.id}/generate-audio`, { ... })
@@ -143,7 +143,10 @@ export function TranslationWorkspace({
   }, [activeSegmentId])
 
   // store에서 segments 가져오기 (없으면 props의 segments 사용)
-  const displaySegments = segments.map((seg) => storeSegments[seg.id] ?? seg)
+  const displaySegments = segments.map((seg) => {
+    const storeSegment = storeSegments.find((s) => s.id === seg.id)
+    return storeSegment ?? seg
+  })
 
   return (
     <section className="border-surface-3 bg-surface-1 flex h-full flex-col rounded-3xl border p-3 shadow-soft">
@@ -177,7 +180,9 @@ export function TranslationWorkspace({
               isTranslating={isTranslating}
               onSourceChange={(value) => handleSourceChange(segment.id, value)}
               onTargetChange={(value) => handleChange(segment.id, value)}
-              onTranscribeAudio={() => handleTranslate(segment)}
+              onTranscribeAudio={() => {
+                void handleTranslate(segment)
+              }}
               onGenerateAudio={() => handleGenerateAudio(segment)}
               onSegmentClick={() => handleSegmentAreaClick(segment)}
               cardRef={(node) => {
