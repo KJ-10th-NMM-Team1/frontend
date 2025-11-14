@@ -23,7 +23,7 @@ export type EditorState = {
 export function useEditorState(projectId: string, languageCode: string) {
   const editorStateKey = (projectId: string, languageCode: string) =>
     ['editor', 'state', projectId, languageCode] as const
-  return useQuery({
+  return useQuery<EditorState>({
     queryKey: editorStateKey(projectId, languageCode),
     queryFn: () => apiGet<EditorState>(`api/projects/${projectId}/languages/${languageCode}`),
     enabled: Boolean(projectId && languageCode),
