@@ -14,6 +14,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 
 import { getCurrentUser, type UserOut } from '@/features/auth/api/authApi'
+import { YoutubeIntegrationCard } from '@/features/youtube/components/YoutubeIntegrationCard'
 import { routes } from '@/shared/config/routes'
 import { Badge } from '@/shared/ui/Badge'
 import { useAuthStore } from '@/shared/store/useAuthStore'
@@ -233,6 +234,7 @@ export default function MyInfoPage() {
               </div>
             </div>
           </Card>
+          <YoutubeIntegrationCard />
         </div>
       )}
     </div>

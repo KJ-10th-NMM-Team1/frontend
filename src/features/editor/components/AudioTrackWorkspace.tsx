@@ -1,7 +1,4 @@
-import { useEffect } from 'react'
-
 import type { Segment } from '@/entities/segment/types'
-import { useSegmentsStore } from '@/shared/store/useSegmentsStore'
 
 import { useEditorHotkeys } from '../hooks/useEditorHotkeys'
 
@@ -13,16 +10,15 @@ import { useAudioTimeline } from './audio-track/useAudioTimeline'
 type AudioTrackWorkspaceProps = {
   segments: Segment[]
   duration: number
+  originalAudioSrc?: string
 }
 
-export function AudioTrackWorkspace({ segments, duration }: AudioTrackWorkspaceProps) {
-  const setSegments = useSegmentsStore((state) => state.setSegments)
-  const storeSegments = useSegmentsStore((state) => state.segments)
-
-  // Initialize segments store when segments prop changes
-  useEffect(() => {
-    setSegments(segments)
-  }, [segments, setSegments])
+export function AudioTrackWorkspace({
+  segments,
+  duration,
+  originalAudioSrc,
+}: AudioTrackWorkspaceProps) {
+  // Segments are now managed directly in tracks store via useAudioTimeline
 
   const {
     // playbackRate,
@@ -30,6 +26,7 @@ export function AudioTrackWorkspace({ segments, duration }: AudioTrackWorkspaceP
     trackRows,
     timelineTicks,
     waveformData,
+    waveformLoading,
     timelineRef,
     playheadPercent,
     onTimelinePointerDown,
@@ -40,7 +37,7 @@ export function AudioTrackWorkspace({ segments, duration }: AudioTrackWorkspaceP
     setPlaying,
     togglePlayback,
     formatTime,
-  } = useAudioTimeline(storeSegments, duration)
+  } = useAudioTimeline(segments, duration, originalAudioSrc)
 
   // Register editor hotkeys
   useEditorHotkeys({
@@ -77,6 +74,7 @@ export function AudioTrackWorkspace({ segments, duration }: AudioTrackWorkspaceP
               trackRows={trackRows}
               timelineTicks={timelineTicks}
               waveformData={waveformData}
+              waveformLoading={waveformLoading}
               timelineRef={timelineRef}
               playheadPercent={playheadPercent}
               onTimelinePointerDown={onTimelinePointerDown}

@@ -6,7 +6,6 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 import type { Language } from '@/entities/language/types'
-import { sampleLanguages } from '@/entities/language/types'
 import { useLanguage } from '@/features/languages/hooks/useLanguage'
 import { trackEvent } from '@/shared/lib/analytics'
 import { Button } from '@/shared/ui/Button'
@@ -20,8 +19,6 @@ import { SourceLanguageField } from './components/auto-dubbing/SourceLanguageFie
 import { AudioSpeakerCountField } from './components/auto-dubbing/SpeakerCountField'
 import { TargetLanguagesField } from './components/auto-dubbing/TargetLanguagesField'
 import { TitleField } from './components/auto-dubbing/TitleField'
-
-const FALLBACK_LANGUAGES: Language[] = sampleLanguages
 
 export const autoDubbingSettingsSchema = z
   .object({
@@ -79,10 +76,7 @@ export function AutoDubbingSettingsStep({
 
   const { data: languageResponse } = useLanguage()
 
-  const languageItems = useMemo<Language[]>(
-    () => languageResponse ?? FALLBACK_LANGUAGES,
-    [languageResponse],
-  )
+  const languageItems = useMemo(() => languageResponse ?? [], [languageResponse])
   const languageLabelMap = useMemo<Record<string, string>>(
     () =>
       Object.fromEntries(

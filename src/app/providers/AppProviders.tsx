@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 import { useAuthRestore } from '@/features/auth/hooks/useAuthRestore'
-import { useLanguage } from '@/features/languages/hooks/useLanguage'
 
 import { env } from '../../shared/config/env'
 import { Spinner } from '../../shared/ui/Spinner'
@@ -24,11 +23,6 @@ function createQueryClient() {
       },
     },
   })
-}
-
-function LanguagePreloader() {
-  useLanguage()
-  return null
 }
 
 function AuthRestorer({ children }: PropsWithChildren) {
@@ -51,7 +45,6 @@ export function AppProviders({ children }: PropsWithChildren) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthRestorer>
-        <LanguagePreloader />
         {children}
       </AuthRestorer>
       <ReactQueryDevtools initialIsOpen={false} position="left" />

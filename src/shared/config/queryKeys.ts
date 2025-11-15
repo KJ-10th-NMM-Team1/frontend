@@ -25,4 +25,7 @@ export const queryKeys = {
   storage: {
     presignedUrl: (filePath: string) => ['storage', 'presigned-url', filePath] as const,
   },
+  youtube: {
+    status: () => ['youtube', 'status'] as const,
+  },
 }

@@ -1,6 +1,7 @@
 import { Pause, Play, Plus } from 'lucide-react'
 
 import { Button } from '@/shared/ui/Button'
+import { useTracksStore } from '@/shared/store/useTracksStore'
 
 import { ZoomControl } from './ZoomControl'
 
@@ -21,14 +22,22 @@ export function AudioTimelineControls({
   togglePlayback,
   isPlaying,
 }: AudioTimelineControlsProps) {
+  const addSpeakerTrack = useTracksStore((state) => state.addSpeakerTrack)
+
   return (
     <div className="border-surface-3 flex items-center justify-between border-b px-2 py-1.5">
-      <div className="border-surface-3 bg-surface-2 sticky top-0 z-20 border-b px-2 py-1.5">
-        <Button type="button" variant="ghost" size="sm" className="w-full justify-start gap-2">
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className="bg-surface-50 cursor-pointer rounded-none py-3 text-gray-700"
+        onClick={addSpeakerTrack}
+      >
+        <div className="flex items-center gap-1">
           <Plus className="h-4 w-4" />
-          트랙 추가
-        </Button>
-      </div>
+          Add Speaker
+        </div>
+      </Button>
 
       <div className="flex flex-wrap items-center gap-2">
         <Button

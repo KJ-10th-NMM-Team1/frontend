@@ -30,8 +30,8 @@ export default function EditorPage() {
       {/* <EditorToolbar /> */}
 
       <div className="flex min-h-0 flex-1 flex-col gap-2">
-        <div className="grid min-h-0 flex-1 gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-          <div className="overflow-y-auto">
+        <div className="flex min-h-0 flex-1 gap-2">
+          <div className="w-1/2 overflow-y-auto">
             <TranslationWorkspace
               projectId={projectId}
               segments={data.segments}
@@ -39,15 +39,22 @@ export default function EditorPage() {
               targetLanguage={targetLanguage}
             />
           </div>
-          <StudioVideoPreview
-            activeLanguage={targetLanguage}
-            duration={data.playback.duration}
-            playbackRate={data.playback.playback_rate}
-            videoSource={data.playback.video_source}
-          />
+          <div className="flex-1 items-stretch">
+            <StudioVideoPreview
+              activeLanguage={targetLanguage}
+              duration={data.playback.duration}
+              playbackRate={data.playback.playback_rate}
+              videoSource={data.playback.video_source}
+            />
+          </div>
         </div>
-        <div className="h-[400px] min-h-0">
-          <AudioTrackWorkspace segments={data.segments} duration={data.playback.duration} />
+
+        <div className="z-10 h-[400px] min-h-0">
+          <AudioTrackWorkspace
+            segments={data.segments}
+            duration={data.playback.duration}
+            originalAudioSrc={data.playback.audio_source}
+          />
         </div>
       </div>
     </div>

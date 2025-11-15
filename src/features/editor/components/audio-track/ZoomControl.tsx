@@ -7,7 +7,7 @@ interface ZoomControlProps {
   className?: string
 }
 
-const MIN_SCALE = 0.1
+const MIN_SCALE = 0.35
 const MAX_SCALE = 2
 
 export function ZoomControl({ className }: ZoomControlProps) {

@@ -1,5 +1,5 @@
 import type { PointerEvent as ReactPointerEvent, RefObject } from 'react'
-import { useEffect } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 
 import { getTimelineWidth } from '@/features/editor/utils/timeline-scale'
 import { useEditorStore } from '@/shared/store/useEditorStore'
@@ -19,6 +19,7 @@ type AudioTimelineProps = {
   trackRows: TrackRow[]
   timelineTicks: number[]
   waveformData: WaveformBar[]
+  waveformLoading?: boolean
   timelineRef: RefObject<HTMLDivElement>
   playheadPercent: number
   onTimelinePointerDown: (event: ReactPointerEvent<HTMLDivElement>) => void
@@ -45,6 +46,7 @@ export function AudioTimeline({
   trackRows,
   timelineTicks,
   waveformData,
+  waveformLoading,
   timelineRef,
   // playheadPercent,
   onTimelinePointerDown,
@@ -67,6 +69,46 @@ export function AudioTimeline({
   const timelineWidth = getTimelineWidth(duration, scale)
   // Calculate total height by summing all track heights
   const contentHeight = trackRows.reduce((total, track) => total + getTrackRowHeight(track), 0) + 40
+
+  // Track layout state for drag-and-drop between tracks
+  const trackRefs = useRef<Map<string, HTMLDivElement>>(new Map())
+  const [trackLayouts, setTrackLayouts] = useState<
+    Array<{ trackId: string; yStart: number; yEnd: number }>
+  >([])
+
+  // Update track layouts when trackRows change or on scroll
+  const updateTrackLayouts = useCallback(() => {
+    const layouts = trackRows
+      .filter((track) => track.type === 'speaker')
+      .map((track) => {
+        const element = trackRefs.current.get(track.id)
+        if (!element) return null
+
+        const rect = element.getBoundingClientRect()
+        return {
+          trackId: track.id,
+          yStart: rect.top,
+          yEnd: rect.bottom,
+        }
+      })
+      .filter((layout): layout is NonNullable<typeof layout> => layout !== null)
+
+    setTrackLayouts(layouts)
+  }, [trackRows])
+
+  // Update layouts on mount and when tracks change
+  useEffect(() => {
+    updateTrackLayouts()
+  }, [updateTrackLayouts])
+
+  // Update layouts on scroll (for sticky positioning)
+  useEffect(() => {
+    const container = timelineRef.current?.parentElement
+    if (!container) return
+
+    container.addEventListener('scroll', updateTrackLayouts)
+    return () => container.removeEventListener('scroll', updateTrackLayouts)
+  }, [updateTrackLayouts, timelineRef])
 
   return (
     <div className="relative" style={{ width: `${timelineWidth}px` }}>
@@ -98,12 +140,21 @@ export function AudioTimeline({
         {trackRows.map((track, index) => (
           <TrackRowComponent
             key={track.id}
+            ref={(el) => {
+              if (el && track.type === 'speaker') {
+                trackRefs.current.set(track.id, el)
+              } else {
+                trackRefs.current.delete(track.id)
+              }
+            }}
             track={track}
             index={index}
             duration={duration}
             scale={scale}
             height={getTrackRowHeight(track)}
             waveformData={track.type === 'waveform' ? waveformData : undefined}
+            waveformLoading={track.type === 'waveform' ? waveformLoading : undefined}
+            trackLayouts={trackLayouts}
           />
         ))}
       </div>

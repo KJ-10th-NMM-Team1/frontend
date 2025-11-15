@@ -136,10 +136,84 @@ export function TranslationWorkspace({
     }
   }
 
-  const handleGenerateAudio = (segment: Segment) => {
-    // TODO: Generate Audio API 호출 구현
-    console.log('Generate Audio for segment:', segment.id)
-    // 예: await apiPost(`/api/segments/${segment.id}/generate-audio`, { ... })
+  const [generatingAudioSegments, setGeneratingAudioSegments] = useState<Set<string>>(new Set())
+
+  const handleGenerateAudio = async (segment: Segment) => {
+    // 이미 생성 중이면 무시
+    if (generatingAudioSegments.has(segment.id)) {
+      return
+    }
+
+    // store의 최신 target_text 사용 (사용자가 수정한 내용 반영)
+    const currentSegment = storeSegments.find((s) => s.id === segment.id) ?? segment
+
+    const translatedText = currentSegment.target_text ?? segment.target_text ?? ''
+
+    // 디버깅: translated_text 전송 값 확인
+    console.log('🔍 [Generate Audio] Debug Info:', {
+      segmentId: segment.id,
+      originalSegmentTargetText: segment.target_text,
+      storeSegmentTargetText: currentSegment.target_text,
+      finalTranslatedText: translatedText,
+      translatedTextLength: translatedText.length,
+      translatedTextTrimmed: translatedText.trim(),
+      isEmpty: !translatedText.trim(),
+    })
+
+    if (!translatedText.trim()) {
+      console.warn('Target text is empty, cannot generate audio')
+      // TODO: 사용자에게 알림 표시
+      return
+    }
+
+    // segment_id 사용 (더 간단하고 정확함)
+    const segmentId = segment.id
+
+    // 생성 중 상태 추가
+    setGeneratingAudioSegments((prev) => new Set(prev).add(segment.id))
+
+    try {
+      // API 호출 전 최종 payload 확인
+      const payload = {
+        segment_id: segmentId,
+        translated_text: translatedText,
+        start: segment.start,
+        end: segment.end,
+        target_lang: targetLanguage,
+        mod: 'fixed' as const,
+        voice_sample_id: null,
+      }
+
+      console.log('📤 [Generate Audio] API Payload:', {
+        ...payload,
+        translated_text_preview:
+          translatedText.substring(0, 50) + (translatedText.length > 50 ? '...' : ''),
+        translated_text_full: translatedText,
+      })
+
+      const response = await apiPost<{
+        job_id: string
+        project_id: string
+        segment_idx: number
+        target_lang: string
+        mod: string
+      }>(`api/projects/${projectId}/segments/regenerate-tts`, payload, {
+        timeout: 60_000, // TTS 생성은 시간이 걸릴 수 있으므로 60초로 설정
+      })
+
+      console.log('✅ [Generate Audio] Job started successfully:', response)
+      // TODO: job_id를 사용하여 작업 상태를 폴링하거나 SSE로 업데이트 받기
+    } catch (error) {
+      console.error('Audio generation failed:', error)
+      // TODO: 에러 발생 시 사용자에게 알림 표시
+    } finally {
+      // 생성 중 상태 제거
+      setGeneratingAudioSegments((prev) => {
+        const next = new Set(prev)
+        next.delete(segment.id)
+        return next
+      })
+    }
   }
 
   useEffect(() => {
@@ -161,7 +235,7 @@ export function TranslationWorkspace({
 
   const { items: suggestionsBySegment, addSuggestion, clearAll } = useSuggestionStore()
   const segmentSuggestions = useMemo(
-    () => (activeSegmentId ? suggestionsBySegment[activeSegmentId] ?? [] : []),
+    () => (activeSegmentId ? (suggestionsBySegment[activeSegmentId] ?? []) : []),
     [activeSegmentId, suggestionsBySegment],
   )
   const [suggestionPage, setSuggestionPage] = useState(1)
@@ -172,7 +246,7 @@ export function TranslationWorkspace({
     setSuggestionResult(
       segmentSuggestions.length > 0
         ? segmentSuggestions[segmentSuggestions.length - 1].text
-        : currentActiveSegment?.target_text ?? '',
+        : (currentActiveSegment?.target_text ?? ''),
     )
   }, [activeSegmentId, segmentSuggestions, currentActiveSegment])
 
@@ -276,7 +350,9 @@ export function TranslationWorkspace({
                 onTranscribeAudio={() => {
                   void handleTranslate(segment)
                 }}
-                onGenerateAudio={() => handleGenerateAudio(segment)}
+                onGenerateAudio={() => {
+                  void handleGenerateAudio(segment)
+                }}
                 onSegmentClick={() => handleSegmentAreaClick(segment)}
                 cardRef={(node) => {
                   segmentRefs.current[segment.id] = node

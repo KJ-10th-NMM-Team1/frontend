@@ -4,15 +4,19 @@ import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { shallow } from 'zustand/shallow'
 
 import type { Segment } from '@/entities/segment/types'
+import { useAudioWaveform } from '@/features/editor/hooks/useAudioWaveform'
 import { usePreloadSegmentAudios } from '@/features/editor/hooks/usePreloadSegmentAudios'
 import { useSegmentAudioPlayer } from '@/features/editor/hooks/useSegmentAudioPlayer'
+import { convertSegmentsToTracks } from '@/features/editor/utils/trackInitializer'
 import { pixelToTime } from '@/features/editor/utils/timeline-scale'
 import { useEditorStore } from '@/shared/store/useEditorStore'
+import { useTracksStore } from '@/shared/store/useTracksStore'
+import { usePresignedUrl } from '@/shared/api/hooks'
 
 import type { TrackRow } from './types'
 
 const STATIC_TRACKS: TrackRow[] = [
-  { id: 'track-original', label: 'Original', color: '#ec4899', type: 'waveform', size: 'small' },
+  { id: 'track-original', label: 'Original', color: '#888', type: 'waveform', size: 'small' },
   { id: 'track-fx', label: 'Music & FX', color: '#38bdf8', type: 'muted', size: 'small' },
 ]
 
@@ -26,7 +30,7 @@ function getTrackRowHeight(track: TrackRow): number {
   return track.type === 'speaker' ? SPEAKER_ROW_HEIGHT : STATIC_ROW_HEIGHT
 }
 
-export function useAudioTimeline(segments: Segment[], duration: number) {
+export function useAudioTimeline(segments: Segment[], duration: number, originalAudioSrc?: string) {
   const timelineRef = useRef<HTMLDivElement>(null)
   const rafRef = useRef<number>()
   const playheadRef = useRef(0)
@@ -58,14 +62,33 @@ export function useAudioTimeline(segments: Segment[], duration: number) {
     shallow,
   )
 
+  // Get speaker tracks from store (user-created tracks)
+  const storedSpeakerTracks = useTracksStore((state) => state.tracks)
+  const setTracks = useTracksStore((state) => state.setTracks)
+  const getAllSegments = useTracksStore((state) => state.getAllSegments)
+
+  // Initialize tracks from segments only once on first load
+  const isInitializedRef = useRef(false)
+
+  useEffect(() => {
+    if (segments.length === 0 || isInitializedRef.current) return
+
+    const initialTracks = convertSegmentsToTracks(segments)
+    setTracks(initialTracks)
+    isInitializedRef.current = true
+  }, [segments, setTracks])
+
+  // Get all segments from tracks store for audio preloading and playback
+  const allSegments = getAllSegments()
+
   // Preload all segment audio URLs for seamless playback
-  const { audioUrls } = usePreloadSegmentAudios(segments)
+  const { audioUrls } = usePreloadSegmentAudios(allSegments)
 
   const [isScrubbing, setIsScrubbing] = useState(false)
 
   // Audio playback synchronized with playhead
   useSegmentAudioPlayer({
-    segments,
+    segments: allSegments,
     playhead,
     isPlaying,
     isScrubbing,
@@ -154,7 +177,7 @@ export function useAudioTimeline(segments: Segment[], duration: number) {
   }
 
   useEffect(() => {
-    if (!segments.length) {
+    if (!allSegments.length) {
       if (lastSegmentRef.current !== null) {
         lastSegmentRef.current = null
         setActiveSegment(null)
@@ -162,48 +185,55 @@ export function useAudioTimeline(segments: Segment[], duration: number) {
       return
     }
     const current =
-      segments.find((segment) => playhead >= segment.start && playhead < segment.end) ??
-      (playhead >= segments[segments.length - 1].end ? segments[segments.length - 1] : null)
+      allSegments.find((segment) => playhead >= segment.start && playhead < segment.end) ??
+      (playhead >= allSegments[allSegments.length - 1].end
+        ? allSegments[allSegments.length - 1]
+        : null)
     const nextId = current?.id ?? null
     if (nextId !== lastSegmentRef.current) {
       lastSegmentRef.current = nextId
       setActiveSegment(nextId)
     }
-  }, [playhead, segments, setActiveSegment])
-
-  const speakerTracks = useMemo(() => {
-    const palette = ['#f97316', '#0ea5e9', '#8b5cf6', '#22c55e']
-    const map = new Map<string, { id: string; label: string; color: string; segments: Segment[] }>()
-    segments.forEach((segment, index) => {
-      const speakerId = segment.speaker_tag ?? `speaker-${index + 1}`
-      if (!map.has(speakerId)) {
-        map.set(speakerId, {
-          id: segment.speaker_tag ?? '',
-          label: segment.speaker_tag ?? '',
-          color: palette[index % palette.length],
-          segments: [],
-        })
-      }
-      map.get(speakerId)?.segments.push(segment)
-    })
-    return Array.from(map.values())
-  }, [segments])
+  }, [playhead, allSegments, setActiveSegment])
 
   const trackRows = useMemo<TrackRow[]>(
-    () => [
-      ...STATIC_TRACKS,
-      ...speakerTracks.map((track) => ({ ...track, type: 'speaker' as const })),
-    ],
-    [speakerTracks],
+    () => [...STATIC_TRACKS, ...storedSpeakerTracks],
+    [storedSpeakerTracks],
   )
 
+  // Resolve S3 key to presigned URL for original audio
+  const { data: originalAudioUrl, isLoading: urlLoading } = usePresignedUrl(originalAudioSrc, {
+    staleTime: 5 * 60 * 1000,
+    enabled: true,
+  })
+
+  // Generate waveform from original audio
+  // Use 20 samples per second for dense visual quality with acceptable performance
+  const targetSamples = useMemo(() => Math.max(Math.floor(duration) * 35, 48), [duration])
+  const {
+    data: realWaveformData,
+    isLoading: waveformGenerating,
+    error: waveformError,
+  } = useAudioWaveform(originalAudioUrl, !!originalAudioUrl, targetSamples)
+
+  // Combined loading state: URL resolution + waveform generation
+  const waveformLoading = urlLoading || waveformGenerating
+
   const waveformData = useMemo(() => {
-    const bars = Math.max(Math.floor(duration) * 6, 48)
+    if (realWaveformData) {
+      // Convert amplitude data (0-1) to height percentage (0-100)
+      return realWaveformData.map((amplitude, index) => ({
+        id: index,
+        height: amplitude * 350,
+      }))
+    }
+    // Fallback: random data while loading or on error
+    const bars = targetSamples
     return Array.from({ length: bars }, (_, index) => ({
       id: index,
       height: 30 + Math.random() * 60,
     }))
-  }, [duration])
+  }, [realWaveformData, targetSamples])
 
   const timelineTicks = useMemo(() => {
     if (duration === 0) return [0]
@@ -246,6 +276,8 @@ export function useAudioTimeline(segments: Segment[], duration: number) {
     trackRows,
     timelineTicks,
     waveformData,
+    waveformLoading,
+    waveformError,
     playheadPercent,
     onTimelinePointerDown,
     formatTime,

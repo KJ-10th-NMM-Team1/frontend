@@ -15,4 +15,5 @@ export type TrackRow =
       type: 'speaker'
       segments: Segment[]
       size?: 'medium'
+      voiceSampleId?: string // 보이스 샘플 매핑을 위한 ID
     }

@@ -22,6 +22,7 @@ const EditorPage = lazy(() => import('../pages/editor/EditorPage'))
 const VoiceSamplesPage = lazy(() => import('../pages/voice-samples/VoiceSamplesPage'))
 const MyInfoPage = lazy(() => import('../pages/myinfo/MyInfoPage'))
 const ChangedPasswordPage = lazy(() => import('../pages/myinfo/ChangedPasswordPage'))
+const YoutubeCallbackPage = lazy(() => import('../pages/oauth/YoutubeCallbackPage'))
 const ExampleCrudPage = lazy(() => import('../pages/example/ExampleCrudPage'))
 const ModalExamplePage = lazy(() => import('../pages/example/ModalExamplePage'))
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'))
@@ -41,20 +42,17 @@ const router = createBrowserRouter(
           <Route path=":id" element={<ProjectDetailPage />} />
         </Route>
         <Route path="voice-samples" element={<VoiceSamplesPage />} />
+        <Route path="myinfo">
+          <Route index element={<MyInfoPage />} />
+          <Route path="change-password" element={<ChangedPasswordPage />} />
+        </Route>
+        <Route path="oauth2/callback/youtube" element={<YoutubeCallbackPage />} />
         <Route path="example" element={<ExampleCrudPage />} />
         <Route path="example/modal" element={<ModalExamplePage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
       <Route path="/editor" element={<EditorLayout />} errorElement={<RouteErrorBoundary />}>
         <Route path=":projectId/:languageCode" element={<EditorPage />} />
-      </Route>
-      <Route path="myinfo">
-        <Route index element={<MyInfoPage />} />
-        <Route path="change-password" element={<ChangedPasswordPage />} />
-      </Route>
-      <Route path="myinfo">
-        <Route index element={<MyInfoPage />} />
-        <Route path="change-password" element={<ChangedPasswordPage />} />
       </Route>
       <Route path="voice-samples" element={<VoiceSamplesPage />} />
       <Route path="editor/:projectId/:languageCode" element={<EditorPage />} />
