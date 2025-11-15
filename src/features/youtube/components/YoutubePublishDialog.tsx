@@ -1,10 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import type { AssetEntry } from '@/entities/asset/types'
-import {
-  useYoutubePublishMutation,
-  type YoutubePublishResponse,
-} from '@/features/youtube/hooks/useYoutubeIntegration'
+import type { YoutubePublishResponse } from '@/features/youtube/api/youtubeApi'
+import { useYoutubePublishMutation } from '@/features/youtube/hooks/useYoutubeIntegration'
 import { useUiStore } from '@/shared/store/useUiStore'
 import { Button } from '@/shared/ui/Button'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/shared/ui/Dialog'
@@ -57,7 +55,7 @@ export function YoutubePublishDialog({
     setPrivacyStatus('unlisted')
   }, [asset, open, projectTitle, languageCode, languageLabel])
 
-  const isSubmitting = publishMutation.isPending
+  const isSubmitting = Boolean(publishMutation.isPending)
   const isFormValid = title.trim().length > 3
 
   const defaultChannelLabel = useMemo(() => languageLabel ?? languageCode.toUpperCase(), [
@@ -69,10 +67,10 @@ export function YoutubePublishDialog({
     return null
   }
 
-  const handleSuccess = (response: YoutubePublishResponse) => {
+  const handleSuccess = ({ videoId }: YoutubePublishResponse) => {
     showToast({
       title: '유튜브 업로드 완료',
-      description: `영상 ID: ${response.videoId}`,
+      description: `영상 ID: ${videoId}`,
     })
     onOpenChange(false)
   }
@@ -84,7 +82,7 @@ export function YoutubePublishDialog({
     })
   }
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!asset || !isFormValid || isSubmitting) return
     const tagList =

@@ -1,5 +1,6 @@
-import { Youtube } from 'lucide-react'
 import { useMemo } from 'react'
+
+import { Youtube } from 'lucide-react'
 
 import {
   useDisconnectYoutubeMutation,
