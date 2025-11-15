@@ -60,19 +60,13 @@ export function useSegmentContextMenu({ segment, voiceSampleId }: UseSegmentCont
   }, [])
 
   const handleGenerateFixed = useCallback(() => {
-    if (!voiceSampleId) {
-      console.warn('[SegmentContextMenu] No voice sample assigned to track')
-      // TODO: Show toast notification
-      return
-    }
-
     // Set loading state
     setSegmentLoading(segment.id, true)
 
     // Calculate segment duration
     const duration = segment.end - segment.start
 
-    // Call API
+    // Call API (voiceSampleId는 optional - 없으면 백엔드에서 처리)
     generateFixed(
       {
         segmentId: segment.id,
@@ -93,16 +87,10 @@ export function useSegmentContextMenu({ segment, voiceSampleId }: UseSegmentCont
   }, [segment, voiceSampleId, setSegmentLoading, generateFixed, handleClose])
 
   const handleGenerateDynamic = useCallback(() => {
-    if (!voiceSampleId) {
-      console.warn('[SegmentContextMenu] No voice sample assigned to track')
-      // TODO: Show toast notification
-      return
-    }
-
     // Set loading state
     setSegmentLoading(segment.id, true)
 
-    // Call API
+    // Call API (voiceSampleId는 optional - 없으면 백엔드에서 처리)
     generateDynamic(
       {
         segmentId: segment.id,

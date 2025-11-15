@@ -3,11 +3,11 @@ import { apiClient } from '@/shared/api/client'
 /**
  * Fixed 오디오 생성 요청 페이로드
  * - 세그먼트의 시작/끝/길이 정보 필요
- * - 트랙에 적용된 샘플 ID 필요
+ * - 트랙에 적용된 샘플 ID (선택사항 - 없으면 백엔드에서 처리)
  */
 export type GenerateFixedAudioPayload = {
   segmentId: string
-  voiceSampleId: string
+  voiceSampleId?: string
   start: number // 세그먼트 시작 시간 (초)
   end: number // 세그먼트 종료 시간 (초)
   duration: number // 세그먼트 길이 (초)
@@ -15,11 +15,11 @@ export type GenerateFixedAudioPayload = {
 
 /**
  * Dynamic 오디오 생성 요청 페이로드
- * - 트랙에 적용된 샘플 ID만 필요
+ * - 트랙에 적용된 샘플 ID (선택사항 - 없으면 백엔드에서 처리)
  */
 export type GenerateDynamicAudioPayload = {
   segmentId: string
-  voiceSampleId: string
+  voiceSampleId?: string
 }
 
 /**
@@ -43,15 +43,21 @@ export type AudioGenerationResponse = {
 export async function generateFixedAudio(
   payload: GenerateFixedAudioPayload,
 ): Promise<AudioGenerationResponse> {
+  const requestBody: Record<string, unknown> = {
+    segment_id: payload.segmentId,
+    start: payload.start,
+    end: payload.end,
+    duration: payload.duration,
+  }
+
+  // voiceSampleId가 있을 때만 포함
+  if (payload.voiceSampleId) {
+    requestBody.voice_sample_id = payload.voiceSampleId
+  }
+
   return apiClient
     .post('api/audio/generate/fixed', {
-      json: {
-        segment_id: payload.segmentId,
-        voice_sample_id: payload.voiceSampleId,
-        start: payload.start,
-        end: payload.end,
-        duration: payload.duration,
-      },
+      json: requestBody,
     })
     .json<AudioGenerationResponse>()
 }
@@ -66,12 +72,18 @@ export async function generateFixedAudio(
 export async function generateDynamicAudio(
   payload: GenerateDynamicAudioPayload,
 ): Promise<AudioGenerationResponse> {
+  const requestBody: Record<string, unknown> = {
+    segment_id: payload.segmentId,
+  }
+
+  // voiceSampleId가 있을 때만 포함
+  if (payload.voiceSampleId) {
+    requestBody.voice_sample_id = payload.voiceSampleId
+  }
+
   return apiClient
     .post('api/audio/generate/dynamic', {
-      json: {
-        segment_id: payload.segmentId,
-        voice_sample_id: payload.voiceSampleId,
-      },
+      json: requestBody,
     })
     .json<AudioGenerationResponse>()
 }
