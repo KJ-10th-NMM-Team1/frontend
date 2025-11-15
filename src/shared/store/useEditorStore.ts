@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 
-type AudioGenerationMode = 'fixed' | 'dynamic'
+export type AudioGenerationMode = 'fixed' | 'dynamic'
 
 type EditorUiState = {
   // Timeline state
@@ -20,6 +20,9 @@ type EditorUiState = {
   // UI modes
   splitMode: boolean
 
+  // Loading states
+  loadingSegments: Set<string> // Segments currently generating audio
+
   // Actions
   setActiveSegment: (id: string | null) => void
   setPlaybackRate: (rate: number) => void
@@ -30,14 +33,15 @@ type EditorUiState = {
   setSegmentEnd: (time: number | null) => void
   setScale: (scale: number) => void
   setDuration: (duration: number) => void
-  generateSegmentAudio: (segmentId: string, mode: AudioGenerationMode) => void
+  setSegmentLoading: (segmentId: string, isLoading: boolean) => void
+  isSegmentLoading: (segmentId: string) => boolean
 }
 
 const MIN_SCALE = 0.35
 const MAX_SCALE = 2
 
 export const useEditorStore = create<EditorUiState>()(
-  devtools((set) => ({
+  devtools((set, get) => ({
     // Initial state
     playhead: 0,
     duration: 0,
@@ -47,6 +51,7 @@ export const useEditorStore = create<EditorUiState>()(
     segmentEnd: null,
     activeSegmentId: null,
     splitMode: false,
+    loadingSegments: new Set(),
 
     // Actions
     setActiveSegment: (id) =>
@@ -79,11 +84,21 @@ export const useEditorStore = create<EditorUiState>()(
     setDuration: (duration) =>
       set({ duration }, false, { type: 'editor/setDuration', payload: duration }),
 
-    generateSegmentAudio: (segmentId, mode) => {
-      console.log(`[EditorStore] Generate ${mode} audio for segment:`, segmentId)
-      // TODO: Implement API call for voice generation
-      // - Fixed mode: Use assigned voice sample
-      // - Dynamic mode: Use AI-generated voice cloning
-    },
+    setSegmentLoading: (segmentId, isLoading) =>
+      set(
+        (state) => {
+          const loadingSegments = new Set(state.loadingSegments)
+          if (isLoading) {
+            loadingSegments.add(segmentId)
+          } else {
+            loadingSegments.delete(segmentId)
+          }
+          return { loadingSegments }
+        },
+        false,
+        { type: 'editor/setSegmentLoading', payload: { segmentId, isLoading } },
+      ),
+
+    isSegmentLoading: (segmentId) => get().loadingSegments.has(segmentId),
   })),
 )

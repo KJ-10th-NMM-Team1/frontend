@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import type { Segment } from '@/entities/segment/types'
 import { queryKeys } from '@/shared/config/queryKeys'
 import { env } from '@/shared/config/env'
+import { useEditorStore } from '@/shared/store/useEditorStore'
 
 type AudioGenerationEvent = {
   segmentId: string
@@ -33,6 +34,7 @@ export function useAudioGenerationEvents(
   enabled = true,
 ) {
   const queryClient = useQueryClient()
+  const setSegmentLoading = useEditorStore((state) => state.setSegmentLoading)
 
   useEffect(() => {
     if (!enabled || !projectId || !languageCode) return
@@ -71,6 +73,9 @@ export function useAudioGenerationEvents(
           },
         )
 
+        // 로딩 상태 해제
+        setSegmentLoading(segmentId, false)
+
         // TODO: 토스트 알림 추가
         // toast.success(`세그먼트 ${segmentId} 오디오 생성 완료!`)
       } catch (error) {
@@ -85,6 +90,9 @@ export function useAudioGenerationEvents(
         const { segmentId, error } = data
 
         console.error('[SSE] Audio generation failed:', { segmentId, error })
+
+        // 로딩 상태 해제
+        setSegmentLoading(segmentId, false)
 
         // TODO: 토스트 알림 추가
         // toast.error(`세그먼트 ${segmentId} 오디오 생성 실패: ${error}`)
@@ -109,5 +117,5 @@ export function useAudioGenerationEvents(
       console.log('[SSE] Closing audio generation events connection')
       eventSource.close()
     }
-  }, [projectId, languageCode, enabled, queryClient])
+  }, [projectId, languageCode, enabled, queryClient, setSegmentLoading])
 }

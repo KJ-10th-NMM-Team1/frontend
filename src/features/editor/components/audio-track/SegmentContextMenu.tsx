@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom'
-import { Music, Wand2 } from 'lucide-react'
+import { Box, Wand2 } from 'lucide-react'
 
 import { cn } from '@/shared/lib/utils'
 
@@ -59,10 +59,10 @@ export function SegmentContextMenu({
             'text-foreground hover:bg-surface-2 flex w-full cursor-pointer select-none items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium outline-none transition-colors',
           )}
         >
-          <Music className="h-4 w-4" />
+          <Box className="h-4 w-4" />
           <div className="flex flex-col gap-0.5">
-            <span>Fixed Voice</span>
-            <span className="text-muted text-xs font-normal">Use assigned voice sample</span>
+            <span>Fixed Duration</span>
+            <span className="text-muted text-xs font-normal">지정 구간 발화 길이 유지</span>
           </div>
         </button>
 
@@ -74,8 +74,8 @@ export function SegmentContextMenu({
         >
           <Wand2 className="h-4 w-4" />
           <div className="flex flex-col gap-0.5">
-            <span>Dynamic Voice</span>
-            <span className="text-muted text-xs font-normal">AI-generated voice cloning</span>
+            <span>Dynamic Duration</span>
+            <span className="text-muted text-xs font-normal">텍스트에 맞게 길이를 자동 조절</span>
           </div>
         </button>
       </div>

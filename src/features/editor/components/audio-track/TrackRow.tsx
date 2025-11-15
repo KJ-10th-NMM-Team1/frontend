@@ -71,6 +71,7 @@ export const TrackRow = memo(
                 color={track.color}
                 currentTrackId={track.id}
                 trackLayouts={trackLayouts}
+                voiceSampleId={track.voiceSampleId}
               />
             ))}
           </>
