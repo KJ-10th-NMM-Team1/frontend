@@ -1,3 +1,5 @@
+import { memo } from 'react'
+
 type WaveformBar = {
   id: number
   height: number
@@ -12,8 +14,10 @@ type WaveformTrackProps = {
 /**
  * 오디오 파형을 표시하는 트랙 컴포넌트
  * z-index: 없음 (기본 레이어)
+ *
+ * Memoized to prevent re-renders when playhead changes
  */
-export function WaveformTrack({ waveformData, isLoading, color = '#ec4899' }: WaveformTrackProps) {
+export const WaveformTrack = memo(function WaveformTrack({ waveformData, isLoading, color = '#ec4899' }: WaveformTrackProps) {
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -29,7 +33,7 @@ export function WaveformTrack({ waveformData, isLoading, color = '#ec4899' }: Wa
   }
 
   return (
-    <div className="flex h-full items-center gap-px">
+    <div className="flex h-full items-center">
       {waveformData.map((bar) => (
         <span
           key={bar.id}
@@ -39,4 +43,4 @@ export function WaveformTrack({ waveformData, isLoading, color = '#ec4899' }: Wa
       ))}
     </div>
   )
-}
+})

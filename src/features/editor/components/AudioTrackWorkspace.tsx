@@ -10,7 +10,7 @@ import { useAudioTimeline } from './audio-track/useAudioTimeline'
 type AudioTrackWorkspaceProps = {
   segments: Segment[]
   duration: number
-  originalAudioSrc: string
+  originalAudioSrc?: string
 }
 
 export function AudioTrackWorkspace({

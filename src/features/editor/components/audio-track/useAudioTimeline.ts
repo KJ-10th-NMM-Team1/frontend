@@ -1,7 +1,6 @@
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 
-import { useQuery } from '@tanstack/react-query'
 import { shallow } from 'zustand/shallow'
 
 import type { Segment } from '@/entities/segment/types'
@@ -10,15 +9,14 @@ import { usePreloadSegmentAudios } from '@/features/editor/hooks/usePreloadSegme
 import { useSegmentAudioPlayer } from '@/features/editor/hooks/useSegmentAudioPlayer'
 import { convertSegmentsToTracks } from '@/features/editor/utils/trackInitializer'
 import { pixelToTime } from '@/features/editor/utils/timeline-scale'
-import { queryKeys } from '@/shared/config/queryKeys'
-import { resolvePresignedUrl } from '@/shared/lib/utils'
 import { useEditorStore } from '@/shared/store/useEditorStore'
 import { useTracksStore } from '@/shared/store/useTracksStore'
+import { usePresignedUrl } from '@/shared/api/hooks'
 
 import type { TrackRow } from './types'
 
 const STATIC_TRACKS: TrackRow[] = [
-  { id: 'track-original', label: 'Original', color: '#1f2937', type: 'waveform', size: 'small' },
+  { id: 'track-original', label: 'Original', color: '#888', type: 'waveform', size: 'small' },
   { id: 'track-fx', label: 'Music & FX', color: '#38bdf8', type: 'muted', size: 'small' },
 ]
 
@@ -32,7 +30,7 @@ function getTrackRowHeight(track: TrackRow): number {
   return track.type === 'speaker' ? SPEAKER_ROW_HEIGHT : STATIC_ROW_HEIGHT
 }
 
-export function useAudioTimeline(segments: Segment[], duration: number, originalAudioSrc: string) {
+export function useAudioTimeline(segments: Segment[], duration: number, originalAudioSrc?: string) {
   const timelineRef = useRef<HTMLDivElement>(null)
   const rafRef = useRef<number>()
   const playheadRef = useRef(0)
@@ -204,16 +202,14 @@ export function useAudioTimeline(segments: Segment[], duration: number, original
   )
 
   // Resolve S3 key to presigned URL for original audio
-  const { data: originalAudioUrl, isLoading: urlLoading } = useQuery({
-    queryKey: queryKeys.storage.presignedUrl(originalAudioSrc),
-    queryFn: () => resolvePresignedUrl(originalAudioSrc),
-    enabled: !!originalAudioSrc,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+  const { data: originalAudioUrl, isLoading: urlLoading } = usePresignedUrl(originalAudioSrc, {
+    staleTime: 5 * 60 * 1000,
+    enabled: true,
   })
 
   // Generate waveform from original audio
-  const targetSamples = useMemo(() => Math.max(Math.floor(duration) * 100, 48), [duration])
+  // Use 20 samples per second for dense visual quality with acceptable performance
+  const targetSamples = useMemo(() => Math.max(Math.floor(duration) * 35, 48), [duration])
   const {
     data: realWaveformData,
     isLoading: waveformGenerating,
