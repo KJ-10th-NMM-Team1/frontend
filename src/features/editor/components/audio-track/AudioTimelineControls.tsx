@@ -2,6 +2,8 @@ import { Pause, Play, Plus } from 'lucide-react'
 
 import { Button } from '@/shared/ui/Button'
 import { useTracksStore } from '@/shared/store/useTracksStore'
+import { useEditorStore } from '@/shared/store/useEditorStore'
+import { cn } from '@/shared/lib/utils'
 
 import { ZoomControl } from './ZoomControl'
 
@@ -23,6 +25,10 @@ export function AudioTimelineControls({
   isPlaying,
 }: AudioTimelineControlsProps) {
   const addSpeakerTrack = useTracksStore((state) => state.addSpeakerTrack)
+  const { audioPlaybackMode, toggleAudioPlaybackMode } = useEditorStore((state) => ({
+    audioPlaybackMode: state.audioPlaybackMode,
+    toggleAudioPlaybackMode: state.toggleAudioPlaybackMode,
+  }))
 
   return (
     <div className="border-surface-3 flex items-center justify-between border-b px-2 py-1.5">
@@ -49,6 +55,21 @@ export function AudioTimelineControls({
         >
           {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
         </Button>
+
+        {/* Audio Playback Mode Toggle */}
+        <div className="border-surface-3 flex items-center rounded-lg border bg-white">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className={cn(
+              'w-20 rounded-r-none border-none py-1.5 text-xs font-medium transition-colors',
+            )}
+            onClick={() => toggleAudioPlaybackMode()}
+          >
+            {audioPlaybackMode === 'original' ? 'Traget' : 'Original'}
+          </Button>
+        </div>
       </div>
       <div className="flex items-center gap-4">
         <div className="text-foreground font-mono text-sm">{formatTime(playhead)}</div>

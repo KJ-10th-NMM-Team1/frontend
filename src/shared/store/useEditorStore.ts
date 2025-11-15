@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 
 export type AudioGenerationMode = 'fixed' | 'dynamic'
+export type AudioPlaybackMode = 'original' | 'target'
 
 type EditorUiState = {
   // Timeline state
@@ -13,6 +14,7 @@ type EditorUiState = {
   isPlaying: boolean
   playbackRate: number
   segmentEnd: number | null // Stop playback at this point (for segment preview)
+  audioPlaybackMode: AudioPlaybackMode // Switch between original and target audio
 
   // Selection state
   activeSegmentId: string | null
@@ -35,6 +37,8 @@ type EditorUiState = {
   setDuration: (duration: number) => void
   setSegmentLoading: (segmentId: string, isLoading: boolean) => void
   isSegmentLoading: (segmentId: string) => boolean
+  setAudioPlaybackMode: (mode: AudioPlaybackMode) => void
+  toggleAudioPlaybackMode: () => void
 }
 
 const MIN_SCALE = 0.35
@@ -52,6 +56,7 @@ export const useEditorStore = create<EditorUiState>()(
     activeSegmentId: null,
     splitMode: false,
     loadingSegments: new Set(),
+    audioPlaybackMode: 'target',
 
     // Actions
     setActiveSegment: (id) =>
@@ -100,5 +105,20 @@ export const useEditorStore = create<EditorUiState>()(
       ),
 
     isSegmentLoading: (segmentId) => get().loadingSegments.has(segmentId),
+
+    setAudioPlaybackMode: (mode) =>
+      set({ audioPlaybackMode: mode }, false, {
+        type: 'editor/setAudioPlaybackMode',
+        payload: mode,
+      }),
+
+    toggleAudioPlaybackMode: () =>
+      set(
+        (state) => ({
+          audioPlaybackMode: state.audioPlaybackMode === 'original' ? 'target' : 'original',
+        }),
+        false,
+        { type: 'editor/toggleAudioPlaybackMode' },
+      ),
   })),
 )

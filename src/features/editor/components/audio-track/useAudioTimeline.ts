@@ -7,6 +7,7 @@ import type { Segment } from '@/entities/segment/types'
 import { useAudioWaveform } from '@/features/editor/hooks/useAudioWaveform'
 import { usePreloadSegmentAudios } from '@/features/editor/hooks/usePreloadSegmentAudios'
 import { useSegmentAudioPlayer } from '@/features/editor/hooks/useSegmentAudioPlayer'
+import { useOriginalAudioPlayer } from '@/features/editor/hooks/useOriginalAudioPlayer'
 import { convertSegmentsToTracks } from '@/features/editor/utils/trackInitializer'
 import { pixelToTime } from '@/features/editor/utils/timeline-scale'
 import { useEditorStore } from '@/shared/store/useEditorStore'
@@ -46,6 +47,7 @@ export function useAudioTimeline(segments: Segment[], duration: number, original
     setActiveSegment,
     segmentEnd,
     scale,
+    audioPlaybackMode,
   } = useEditorStore(
     (state) => ({
       playbackRate: state.playbackRate,
@@ -58,6 +60,7 @@ export function useAudioTimeline(segments: Segment[], duration: number, original
       setActiveSegment: state.setActiveSegment,
       segmentEnd: state.segmentEnd,
       scale: state.scale,
+      audioPlaybackMode: state.audioPlaybackMode,
     }),
     shallow,
   )
@@ -85,15 +88,6 @@ export function useAudioTimeline(segments: Segment[], duration: number, original
   const { audioUrls } = usePreloadSegmentAudios(allSegments)
 
   const [isScrubbing, setIsScrubbing] = useState(false)
-
-  // Audio playback synchronized with playhead
-  useSegmentAudioPlayer({
-    segments: allSegments,
-    playhead,
-    isPlaying,
-    isScrubbing,
-    audioUrls,
-  })
 
   useEffect(() => {
     playheadRef.current = playhead
@@ -205,6 +199,27 @@ export function useAudioTimeline(segments: Segment[], duration: number, original
   const { data: originalAudioUrl, isLoading: urlLoading } = usePresignedUrl(originalAudioSrc, {
     staleTime: 5 * 60 * 1000,
     enabled: true,
+  })
+
+  // Audio playback synchronized with playhead
+  // Only play segment audio when in 'target' mode
+  useSegmentAudioPlayer({
+    segments: allSegments,
+    playhead,
+    isPlaying: isPlaying && audioPlaybackMode === 'target',
+    isScrubbing,
+    audioUrls,
+  })
+
+  // Original audio playback synchronized with playhead
+  // Only play original audio when in 'original' mode
+  useOriginalAudioPlayer({
+    audioUrl: originalAudioUrl,
+    playhead,
+    isPlaying,
+    isScrubbing,
+    isEnabled: audioPlaybackMode === 'original',
+    playbackRate,
   })
 
   // Generate waveform from original audio
