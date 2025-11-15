@@ -10,9 +10,14 @@ import { useAudioTimeline } from './audio-track/useAudioTimeline'
 type AudioTrackWorkspaceProps = {
   segments: Segment[]
   duration: number
+  originalAudioSrc: string
 }
 
-export function AudioTrackWorkspace({ segments, duration }: AudioTrackWorkspaceProps) {
+export function AudioTrackWorkspace({
+  segments,
+  duration,
+  originalAudioSrc,
+}: AudioTrackWorkspaceProps) {
   // Segments are now managed directly in tracks store via useAudioTimeline
 
   const {
@@ -21,6 +26,7 @@ export function AudioTrackWorkspace({ segments, duration }: AudioTrackWorkspaceP
     trackRows,
     timelineTicks,
     waveformData,
+    waveformLoading,
     timelineRef,
     playheadPercent,
     onTimelinePointerDown,
@@ -31,7 +37,7 @@ export function AudioTrackWorkspace({ segments, duration }: AudioTrackWorkspaceP
     setPlaying,
     togglePlayback,
     formatTime,
-  } = useAudioTimeline(segments, duration)
+  } = useAudioTimeline(segments, duration, originalAudioSrc)
 
   // Register editor hotkeys
   useEditorHotkeys({
@@ -68,6 +74,7 @@ export function AudioTrackWorkspace({ segments, duration }: AudioTrackWorkspaceP
               trackRows={trackRows}
               timelineTicks={timelineTicks}
               waveformData={waveformData}
+              waveformLoading={waveformLoading}
               timelineRef={timelineRef}
               playheadPercent={playheadPercent}
               onTimelinePointerDown={onTimelinePointerDown}

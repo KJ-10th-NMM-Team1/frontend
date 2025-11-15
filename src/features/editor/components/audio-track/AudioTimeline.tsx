@@ -19,6 +19,7 @@ type AudioTimelineProps = {
   trackRows: TrackRow[]
   timelineTicks: number[]
   waveformData: WaveformBar[]
+  waveformLoading?: boolean
   timelineRef: RefObject<HTMLDivElement>
   playheadPercent: number
   onTimelinePointerDown: (event: ReactPointerEvent<HTMLDivElement>) => void
@@ -45,6 +46,7 @@ export function AudioTimeline({
   trackRows,
   timelineTicks,
   waveformData,
+  waveformLoading,
   timelineRef,
   // playheadPercent,
   onTimelinePointerDown,
@@ -151,6 +153,7 @@ export function AudioTimeline({
             scale={scale}
             height={getTrackRowHeight(track)}
             waveformData={track.type === 'waveform' ? waveformData : undefined}
+            waveformLoading={track.type === 'waveform' ? waveformLoading : undefined}
             trackLayouts={trackLayouts}
           />
         ))}

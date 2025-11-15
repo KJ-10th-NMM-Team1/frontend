@@ -1,20 +1,24 @@
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 
+import { useQuery } from '@tanstack/react-query'
 import { shallow } from 'zustand/shallow'
 
 import type { Segment } from '@/entities/segment/types'
+import { useAudioWaveform } from '@/features/editor/hooks/useAudioWaveform'
 import { usePreloadSegmentAudios } from '@/features/editor/hooks/usePreloadSegmentAudios'
 import { useSegmentAudioPlayer } from '@/features/editor/hooks/useSegmentAudioPlayer'
 import { convertSegmentsToTracks } from '@/features/editor/utils/trackInitializer'
 import { pixelToTime } from '@/features/editor/utils/timeline-scale'
+import { queryKeys } from '@/shared/config/queryKeys'
+import { resolvePresignedUrl } from '@/shared/lib/utils'
 import { useEditorStore } from '@/shared/store/useEditorStore'
 import { useTracksStore } from '@/shared/store/useTracksStore'
 
 import type { TrackRow } from './types'
 
 const STATIC_TRACKS: TrackRow[] = [
-  { id: 'track-original', label: 'Original', color: '#ec4899', type: 'waveform', size: 'small' },
+  { id: 'track-original', label: 'Original', color: '#1f2937', type: 'waveform', size: 'small' },
   { id: 'track-fx', label: 'Music & FX', color: '#38bdf8', type: 'muted', size: 'small' },
 ]
 
@@ -28,7 +32,7 @@ function getTrackRowHeight(track: TrackRow): number {
   return track.type === 'speaker' ? SPEAKER_ROW_HEIGHT : STATIC_ROW_HEIGHT
 }
 
-export function useAudioTimeline(segments: Segment[], duration: number) {
+export function useAudioTimeline(segments: Segment[], duration: number, originalAudioSrc: string) {
   const timelineRef = useRef<HTMLDivElement>(null)
   const rafRef = useRef<number>()
   const playheadRef = useRef(0)
@@ -199,13 +203,41 @@ export function useAudioTimeline(segments: Segment[], duration: number) {
     [storedSpeakerTracks],
   )
 
+  // Resolve S3 key to presigned URL for original audio
+  const { data: originalAudioUrl, isLoading: urlLoading } = useQuery({
+    queryKey: queryKeys.storage.presignedUrl(originalAudioSrc),
+    queryFn: () => resolvePresignedUrl(originalAudioSrc),
+    enabled: !!originalAudioSrc,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  })
+
+  // Generate waveform from original audio
+  const targetSamples = useMemo(() => Math.max(Math.floor(duration) * 100, 48), [duration])
+  const {
+    data: realWaveformData,
+    isLoading: waveformGenerating,
+    error: waveformError,
+  } = useAudioWaveform(originalAudioUrl, !!originalAudioUrl, targetSamples)
+
+  // Combined loading state: URL resolution + waveform generation
+  const waveformLoading = urlLoading || waveformGenerating
+
   const waveformData = useMemo(() => {
-    const bars = Math.max(Math.floor(duration) * 6, 48)
+    if (realWaveformData) {
+      // Convert amplitude data (0-1) to height percentage (0-100)
+      return realWaveformData.map((amplitude, index) => ({
+        id: index,
+        height: amplitude * 350,
+      }))
+    }
+    // Fallback: random data while loading or on error
+    const bars = targetSamples
     return Array.from({ length: bars }, (_, index) => ({
       id: index,
       height: 30 + Math.random() * 60,
     }))
-  }, [duration])
+  }, [realWaveformData, targetSamples])
 
   const timelineTicks = useMemo(() => {
     if (duration === 0) return [0]
@@ -248,6 +280,8 @@ export function useAudioTimeline(segments: Segment[], duration: number) {
     trackRows,
     timelineTicks,
     waveformData,
+    waveformLoading,
+    waveformError,
     playheadPercent,
     onTimelinePointerDown,
     formatTime,

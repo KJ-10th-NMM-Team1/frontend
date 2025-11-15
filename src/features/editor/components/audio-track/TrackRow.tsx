@@ -17,6 +17,7 @@ type TrackRowProps = {
   scale: number
   height: number
   waveformData?: Array<{ id: number; height: number }>
+  waveformLoading?: boolean
   trackLayouts?: TrackLayout[]
 }
 
@@ -30,19 +31,31 @@ type TrackRowProps = {
  * - muted/fx: FX 플레이스홀더 (높이: 28px)
  */
 export const TrackRow = forwardRef<HTMLDivElement, TrackRowProps>(function TrackRow(
-  { track, index, duration, scale, height, waveformData, trackLayouts },
+  { track, duration, scale, height, waveformData, waveformLoading, trackLayouts },
   ref,
 ) {
-  const backgroundColor = index % 2 === 0 ? 'rgba(15,23,42,0.02)' : 'transparent'
+  // Darker background for waveform tracks
+  // const backgroundColor =
+  //   track.type === 'waveform'
+  //     ? '#4b5563'
+  //     : index % 2 === 0
+  //       ? 'rgba(15,23,42,0.02)'
+  //       : 'transparent'
 
   return (
     <div
       ref={ref}
       className="border-surface-3 relative overflow-visible border-b px-4 py-3"
-      style={{ backgroundColor, height: `${height}px` }}
+      style={{
+        height: `${height}px`,
+      }}
     >
       {track.type === 'waveform' && waveformData ? (
-        <WaveformTrack waveformData={waveformData} />
+        <WaveformTrack
+          waveformData={waveformData}
+          isLoading={waveformLoading}
+          color={track.color}
+        />
       ) : track.type === 'speaker' ? (
         <>
           {track.segments.map((segment) => (

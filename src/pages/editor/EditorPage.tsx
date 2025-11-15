@@ -50,7 +50,11 @@ export default function EditorPage() {
         </div>
 
         <div className="z-10 h-[400px] min-h-0">
-          <AudioTrackWorkspace segments={data.segments} duration={data.playback.duration} />
+          <AudioTrackWorkspace
+            segments={data.segments}
+            duration={data.playback.duration}
+            originalAudioSrc={data.playback.audio_source}
+          />
         </div>
       </div>
     </div>
