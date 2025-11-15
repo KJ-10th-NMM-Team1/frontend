@@ -10,6 +10,7 @@ import { useEditorStore } from '@/shared/store/useEditorStore'
 type AudioGenerationEvent = {
   segmentId: string
   audioS3Key: string
+  audioDuration?: number // Dynamic duration인 경우 새로 생성된 오디오의 실제 길이 (초)
   status: 'completed' | 'failed'
   error?: string
 }
@@ -54,9 +55,9 @@ export function useAudioGenerationEvents(
     eventSource.addEventListener('audio-completed', (event: MessageEvent) => {
       try {
         const data = JSON.parse(event.data as string) as AudioGenerationEvent
-        const { segmentId, audioS3Key } = data
+        const { segmentId, audioS3Key, audioDuration } = data
 
-        console.log('[SSE] Audio generation completed:', { segmentId, audioS3Key })
+        console.log('[SSE] Audio generation completed:', { segmentId, audioS3Key, audioDuration })
 
         // 세그먼트 리스트에서 해당 세그먼트만 업데이트 (네트워크 요청 없음!)
         // S3 키가 변경되면 usePreloadSegmentAudios가 새 키를 감지하고 자동으로 presigned URL을 fetch함
@@ -65,11 +66,19 @@ export function useAudioGenerationEvents(
           (oldSegments) => {
             if (!oldSegments) return oldSegments
 
-            return oldSegments.map((seg) =>
-              seg.id === segmentId
-                ? { ...seg, segment_audio_url: audioS3Key } // 새 S3 키로 교체
-                : seg,
-            )
+            return oldSegments.map((seg) => {
+              if (seg.id === segmentId) {
+                // Dynamic duration인 경우 오디오 길이에 맞게 세그먼트 end 시간 업데이트
+                const newEnd = audioDuration !== undefined ? seg.start + audioDuration : seg.end
+
+                return {
+                  ...seg,
+                  segment_audio_url: audioS3Key, // 새 S3 키로 교체
+                  end: newEnd, // Dynamic인 경우 새로운 길이로 업데이트
+                }
+              }
+              return seg
+            })
           },
         )
 
