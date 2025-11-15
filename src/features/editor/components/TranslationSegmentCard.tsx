@@ -10,6 +10,7 @@ type TranslationSegmentCardProps = {
   sourceText: string
   targetText: string
   isTranslating?: boolean
+  isGeneratingAudio?: boolean
   onSourceChange: (value: string) => void
   onTargetChange: (value: string) => void
   onTranscribeAudio: () => void
@@ -25,6 +26,7 @@ export function TranslationSegmentCard({
   sourceText,
   targetText,
   isTranslating = false,
+  isGeneratingAudio = false,
   onSourceChange,
   onTargetChange,
   onTranscribeAudio,
@@ -95,9 +97,10 @@ export function TranslationSegmentCard({
             variant="secondary"
             size="sm"
             onClick={onGenerateAudio}
+            disabled={isGeneratingAudio || !targetText.trim()}
             className="w-full"
           >
-            Generate Audio
+            {isGeneratingAudio ? '생성 중...' : 'Generate Audio'}
           </Button>
         </div>
       </div>
