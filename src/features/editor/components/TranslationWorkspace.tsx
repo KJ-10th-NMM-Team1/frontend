@@ -73,9 +73,9 @@ export function TranslationWorkspace({
   const segmentRefs = useRef<Record<string, HTMLElement | null>>({})
 
   const handleSegmentAreaClick = (segment: Segment) => {
-    setPlaying(false)
-    setActiveSegment(segment.id)
-    setPlayhead(segment.start)
+    // setPlaying(false)
+    // setActiveSegment(segment.id)
+    // setPlayhead(segment.start)
   }
 
   const [translatingSegments, setTranslatingSegments] = useState<Set<string>>(new Set())
