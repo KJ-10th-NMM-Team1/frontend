@@ -98,6 +98,7 @@ export function useUploadProgressController({
     source.addEventListener('progress', (event) => {
       try {
         const parsed = JSON.parse(event.data as string) as unknown
+
         if (!isUploadProgressEvent(parsed)) return
 
         setUploadProgress((prev) => {
@@ -114,16 +115,6 @@ export function useUploadProgressController({
             message: localizedStatus ?? prev.message ?? stageMessageMap[nextStage],
           }
         })
-
-        if (parsed.stage === 'done') {
-          showToast({
-            title: '영상 업로드 완료',
-            description: '파일 전송과 처리가 모두 끝났습니다.',
-            autoDismiss: 3000,
-          })
-          source.close()
-          onComplete()
-        }
       } catch (error) {
         console.error('Failed to parse SSE payload', error)
       }

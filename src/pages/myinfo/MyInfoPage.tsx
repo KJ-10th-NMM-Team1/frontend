@@ -1,7 +1,16 @@
 import { useEffect, useMemo } from 'react'
 
 import { useQuery } from '@tanstack/react-query'
-import { Bell, CalendarDays, KeyRound, Mail, PenSquare, Shield, UserRound } from 'lucide-react'
+import {
+  ArrowLeft,
+  Bell,
+  CalendarDays,
+  KeyRound,
+  Mail,
+  PenSquare,
+  Shield,
+  UserRound,
+} from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 import { getCurrentUser, type UserOut } from '@/features/auth/api/authApi'
@@ -16,18 +25,8 @@ const fallbackUser: UserOut = {
   username: '게스트',
   email: 'unknown@example.com',
   role: 'guest',
-  createAt: new Date().toISOString(),
-}
-
-function formatDate(value?: string) {
-  if (!value) return '-'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return date.toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
+  createdAt: new Date(),
+  google_sub: '',
 }
 
 export default function MyInfoPage() {
@@ -47,6 +46,18 @@ export default function MyInfoPage() {
   }, [isAuthenticated, navigate])
 
   const profile = data ?? fallbackUser
+  const isGoogleAccount = Boolean(profile.google_sub)
+  console.log(isGoogleAccount)
+
+  const formattedJoinDate = useMemo(() => {
+    if (!profile.createdAt) return '-'
+    const date = new Date(profile.createdAt)
+    if (Number.isNaN(date.getTime())) return '-'
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }, [profile.createdAt])
 
   const initials = useMemo(() => {
     return (
@@ -73,11 +84,11 @@ export default function MyInfoPage() {
       },
       {
         label: '가입일',
-        value: formatDate(profile.createAt),
+        value: formattedJoinDate,
         icon: CalendarDays,
       },
     ],
-    [profile.email, profile.role, profile.createAt],
+    [profile.email, profile.role, formattedJoinDate],
   )
 
   if (!isAuthenticated) {
@@ -86,22 +97,45 @@ export default function MyInfoPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-12">
-      <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-foreground text-3xl font-semibold">내 정보</h1>
-          <p className="text-muted mt-1 text-sm">
-            계정 정보를 확인하고 알림, 보안 설정을 관리할 수 있습니다.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <Button variant="outline" className="gap-2">
-            <PenSquare className="h-4 w-4" />
-            프로필 편집
-          </Button>
-          <Button className="gap-2" onClick={() => navigate(routes.changePassword)}>
-            <KeyRound className="h-4 w-4" />
-            비밀번호 변경
-          </Button>
+      <header className="bg-surface-1 border-surface-3 flex flex-col gap-4 rounded-3xl border px-5 py-5 shadow-soft">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-start gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="border-surface-3 text-muted hover:text-foreground border"
+              aria-label="뒤로 가기"
+              onClick={() => navigate(-1)}
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <p className="text-primary text-xs font-semibold uppercase tracking-[0.35em]">
+                Account
+              </p>
+              <h1 className="text-foreground text-3xl font-semibold">내 정보</h1>
+              <p className="text-muted mt-1 text-sm">
+                계정 정보를 확인하고 알림, 보안 설정을 관리할 수 있습니다.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Button variant="outline" className="gap-2">
+              <PenSquare className="h-4 w-4" />
+              프로필 편집
+            </Button>
+            <Button
+              className="gap-2"
+              onClick={() => navigate(routes.changePassword)}
+              disabled={isGoogleAccount}
+              title={
+                isGoogleAccount ? '구글 로그인 계정은 비밀번호를 변경할 수 없습니다.' : undefined
+              }
+            >
+              <KeyRound className="h-4 w-4" />
+              비밀번호 변경
+            </Button>
+          </div>
         </div>
       </header>
 

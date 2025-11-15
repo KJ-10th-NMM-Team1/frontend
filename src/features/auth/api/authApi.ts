@@ -17,7 +17,8 @@ export interface UserOut {
   username: string
   role: string
   email: string
-  createAt: string
+  createdAt: Date
+  google_sub: string
 }
 
 export interface LoginResponse {
