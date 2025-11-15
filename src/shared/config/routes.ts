@@ -8,6 +8,7 @@ export const routes = {
   voiceSamples: '/voice-samples',
   myinfo: '/myinfo',
   changePassword: '/myinfo/change-password',
+  youtubeCallback: '/oauth2/callback/youtube',
   editor: (projectId: string, languageCode: string) => `/editor/${projectId}/${languageCode}`,
 }
 

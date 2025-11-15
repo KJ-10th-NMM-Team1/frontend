@@ -18,6 +18,10 @@ export function CardHeader({ className, ...props }: HTMLAttributes<HTMLDivElemen
   return <div className={cn('mb-4 flex flex-col gap-2', className)} {...props} />
 }
 
+export function CardContent({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn('space-y-3', className)} {...props} />
+}
+
 export function CardTitle({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) {
   return <h3 className={cn('text-foreground text-lg font-semibold', className)} {...props} />
 }
