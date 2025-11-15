@@ -350,7 +350,9 @@ export function TranslationWorkspace({
                 onTranscribeAudio={() => {
                   void handleTranslate(segment)
                 }}
-                onGenerateAudio={() => handleGenerateAudio(segment)}
+                onGenerateAudio={() => {
+                  void handleGenerateAudio(segment)
+                }}
                 onSegmentClick={() => handleSegmentAreaClick(segment)}
                 cardRef={(node) => {
                   segmentRefs.current[segment.id] = node
