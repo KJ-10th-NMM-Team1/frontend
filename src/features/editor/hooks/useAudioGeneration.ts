@@ -1,50 +1,34 @@
 import { useMutation } from '@tanstack/react-query'
 
-import {
-  generateDynamicAudio,
-  generateFixedAudio,
-  type GenerateDynamicAudioPayload,
-  type GenerateFixedAudioPayload,
-} from '../api/audioGenerationApi'
+import { regenerateSegmentTTS, type RegenerateTTSPayload } from '../api/audioGenerationApi'
 
 /**
- * Fixed duration 오디오 생성 mutation 훅
+ * 세그먼트 TTS 재생성 mutation 훅
+ * - Fixed/Dynamic 모드를 payload의 mod로 구분
  *
  * Usage:
  * ```ts
- * const { mutate: generateFixed } = useGenerateFixedAudio()
- * generateFixed({ segmentId, voiceSampleId, start, end, duration })
+ * const { mutate: regenerateTTS } = useRegenerateSegmentTTS()
+ * regenerateTTS({
+ *   projectId,
+ *   segmentId,
+ *   translatedText,
+ *   start,
+ *   end,
+ *   targetLang,
+ *   mod: 'fixed', // or 'dynamic'
+ *   voiceSampleId
+ * })
  * ```
  */
-export function useGenerateFixedAudio() {
+export function useRegenerateSegmentTTS() {
   return useMutation({
-    mutationFn: (payload: GenerateFixedAudioPayload) => generateFixedAudio(payload),
+    mutationFn: (payload: RegenerateTTSPayload) => regenerateSegmentTTS(payload),
     onSuccess: (data) => {
-      console.log('[AudioGeneration] Fixed audio generation queued:', data)
+      console.log('[AudioGeneration] TTS regeneration queued:', data)
     },
     onError: (error) => {
-      console.error('[AudioGeneration] Fixed audio generation failed:', error)
-    },
-  })
-}
-
-/**
- * Dynamic duration 오디오 생성 mutation 훅
- *
- * Usage:
- * ```ts
- * const { mutate: generateDynamic } = useGenerateDynamicAudio()
- * generateDynamic({ segmentId, voiceSampleId })
- * ```
- */
-export function useGenerateDynamicAudio() {
-  return useMutation({
-    mutationFn: (payload: GenerateDynamicAudioPayload) => generateDynamicAudio(payload),
-    onSuccess: (data) => {
-      console.log('[AudioGeneration] Dynamic audio generation queued:', data)
-    },
-    onError: (error) => {
-      console.error('[AudioGeneration] Dynamic audio generation failed:', error)
+      console.error('[AudioGeneration] TTS regeneration failed:', error)
     },
   })
 }

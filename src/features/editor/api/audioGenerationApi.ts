@@ -1,25 +1,19 @@
 import { apiClient } from '@/shared/api/client'
 
 /**
- * Fixed 오디오 생성 요청 페이로드
- * - 세그먼트의 시작/끝/길이 정보 필요
- * - 트랙에 적용된 샘플 ID (선택사항 - 없으면 백엔드에서 처리)
+ * TTS 재생성 요청 페이로드
+ * - Fixed/Dynamic 모두 동일한 엔드포인트 사용
+ * - mod 필드로 고정/동적 길이 구분
  */
-export type GenerateFixedAudioPayload = {
+export type RegenerateTTSPayload = {
+  projectId: string // URL 경로에 사용
   segmentId: string
-  voiceSampleId?: string
+  translatedText: string // TTS 생성에 사용할 번역된 텍스트
   start: number // 세그먼트 시작 시간 (초)
   end: number // 세그먼트 종료 시간 (초)
-  duration: number // 세그먼트 길이 (초)
-}
-
-/**
- * Dynamic 오디오 생성 요청 페이로드
- * - 트랙에 적용된 샘플 ID (선택사항 - 없으면 백엔드에서 처리)
- */
-export type GenerateDynamicAudioPayload = {
-  segmentId: string
-  voiceSampleId?: string
+  targetLang: string // 타겟 언어 코드 (예: 'ko', 'en')
+  mod: 'fixed' | 'dynamic' // fixed: 고정 길이, dynamic: 동적 길이
+  voiceSampleId?: string // 음성 샘플 ID (선택사항)
 }
 
 /**
@@ -34,20 +28,23 @@ export type AudioGenerationResponse = {
 }
 
 /**
- * Fixed duration 오디오 생성 API 호출
- * - 지정된 구간의 발화 길이를 유지하며 오디오 생성
+ * 세그먼트 TTS 재생성 API 호출
+ * - Fixed/Dynamic 모드를 mod 파라미터로 구분
+ * - 백엔드 워커 큐에 작업 추가 후 SSE로 완료 알림
  *
- * @param payload - 세그먼트 정보 및 음성 샘플 ID
+ * @param payload - TTS 재생성 요청 정보
  * @returns API 응답 (워커 큐잉 확인)
  */
-export async function generateFixedAudio(
-  payload: GenerateFixedAudioPayload,
+export async function regenerateSegmentTTS(
+  payload: RegenerateTTSPayload,
 ): Promise<AudioGenerationResponse> {
   const requestBody: Record<string, unknown> = {
     segment_id: payload.segmentId,
+    translated_text: payload.translatedText,
     start: payload.start,
     end: payload.end,
-    duration: payload.duration,
+    target_lang: payload.targetLang,
+    mod: payload.mod,
   }
 
   // voiceSampleId가 있을 때만 포함
@@ -56,33 +53,7 @@ export async function generateFixedAudio(
   }
 
   return apiClient
-    .post('api/audio/generate/fixed', {
-      json: requestBody,
-    })
-    .json<AudioGenerationResponse>()
-}
-
-/**
- * Dynamic duration 오디오 생성 API 호출
- * - 텍스트에 맞게 길이를 자동 조절하여 오디오 생성
- *
- * @param payload - 세그먼트 ID 및 음성 샘플 ID
- * @returns API 응답 (워커 큐잉 확인)
- */
-export async function generateDynamicAudio(
-  payload: GenerateDynamicAudioPayload,
-): Promise<AudioGenerationResponse> {
-  const requestBody: Record<string, unknown> = {
-    segment_id: payload.segmentId,
-  }
-
-  // voiceSampleId가 있을 때만 포함
-  if (payload.voiceSampleId) {
-    requestBody.voice_sample_id = payload.voiceSampleId
-  }
-
-  return apiClient
-    .post('api/audio/generate/dynamic', {
+    .post(`api/projects/${payload.projectId}/segments/regenerate-tts`, {
       json: requestBody,
     })
     .json<AudioGenerationResponse>()

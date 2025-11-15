@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { Segment } from '@/entities/segment/types'
 import { useEditorStore } from '@/shared/store/useEditorStore'
 
-import { useGenerateDynamicAudio, useGenerateFixedAudio } from './useAudioGeneration'
+import { useRegenerateSegmentTTS } from './useAudioGeneration'
 
 type Position = {
   x: number
@@ -33,8 +33,7 @@ export function useSegmentContextMenu({ segment, voiceSampleId }: UseSegmentCont
 
   const setSegmentLoading = useEditorStore((state) => state.setSegmentLoading)
 
-  const { mutate: generateFixed } = useGenerateFixedAudio()
-  const { mutate: generateDynamic } = useGenerateDynamicAudio()
+  const { mutate: regenerateTTS } = useRegenerateSegmentTTS()
 
   // Close menu when segment changes
   useEffect(() => {
@@ -63,17 +62,17 @@ export function useSegmentContextMenu({ segment, voiceSampleId }: UseSegmentCont
     // Set loading state
     setSegmentLoading(segment.id, true)
 
-    // Calculate segment duration
-    const duration = segment.end - segment.start
-
-    // Call API (voiceSampleId는 optional - 없으면 백엔드에서 처리)
-    generateFixed(
+    // Call API - Fixed mode
+    regenerateTTS(
       {
+        projectId: segment.project_id,
         segmentId: segment.id,
-        voiceSampleId,
+        translatedText: segment.target_text || segment.source_text, // target_text 없으면 source_text 사용
         start: segment.start,
         end: segment.end,
-        duration,
+        targetLang: segment.language_code,
+        mod: 'fixed',
+        voiceSampleId,
       },
       {
         onError: () => {
@@ -84,16 +83,22 @@ export function useSegmentContextMenu({ segment, voiceSampleId }: UseSegmentCont
     )
 
     handleClose()
-  }, [segment, voiceSampleId, setSegmentLoading, generateFixed, handleClose])
+  }, [segment, voiceSampleId, setSegmentLoading, regenerateTTS, handleClose])
 
   const handleGenerateDynamic = useCallback(() => {
     // Set loading state
     setSegmentLoading(segment.id, true)
 
-    // Call API (voiceSampleId는 optional - 없으면 백엔드에서 처리)
-    generateDynamic(
+    // Call API - Dynamic mode
+    regenerateTTS(
       {
+        projectId: segment.project_id,
         segmentId: segment.id,
+        translatedText: segment.target_text || segment.source_text, // target_text 없으면 source_text 사용
+        start: segment.start,
+        end: segment.end,
+        targetLang: segment.language_code,
+        mod: 'dynamic',
         voiceSampleId,
       },
       {
@@ -105,7 +110,7 @@ export function useSegmentContextMenu({ segment, voiceSampleId }: UseSegmentCont
     )
 
     handleClose()
-  }, [segment, voiceSampleId, setSegmentLoading, generateDynamic, handleClose])
+  }, [segment, voiceSampleId, setSegmentLoading, regenerateTTS, handleClose])
 
   // Close on escape key
   useEffect(() => {
