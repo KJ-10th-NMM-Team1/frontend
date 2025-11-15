@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { AudioTrackWorkspace } from '@/features/editor/components/AudioTrackWorkspace'
 import { StudioVideoPreview } from '@/features/editor/components/StudioVideoPreview'
 import { TranslationWorkspace } from '@/features/editor/components/TranslationWorkspace'
+import { useAudioGenerationEvents } from '@/features/editor/hooks/useAudioGenerationEvents'
 import { useEditorState } from '@/features/editor/hooks/useEditorState'
 import { Spinner } from '@/shared/ui/Spinner'
 
@@ -13,6 +14,10 @@ export default function EditorPage() {
   }>()
   const { data, isLoading } = useEditorState(projectId, languageCode)
 
+  // Subscribe to audio generation events via SSE
+  // When worker completes audio generation, this will update the segment data automatically
+  useAudioGenerationEvents(projectId, languageCode, !isLoading && !!data)
+
   if (isLoading || !data) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3">
@@ -22,7 +27,7 @@ export default function EditorPage() {
     )
   }
 
-  const sourceLanguage = '원문'
+  const sourceLanguage = '원본'
   const targetLanguage = data.playback.active_language || '번역본'
 
   return (

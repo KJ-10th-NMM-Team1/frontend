@@ -6,6 +6,11 @@ export const queryKeys = {
   editor: {
     state: (id: string) => ['editor', id] as const,
   },
+  segments: {
+    list: (projectId: string, languageCode: string) =>
+      ['segments', projectId, languageCode] as const,
+    detail: (segmentId: string) => ['segments', 'detail', segmentId] as const,
+  },
   example: {
     all: ['example', 'items'] as const,
     detail: (id: string) => ['example', 'items', id] as const,
