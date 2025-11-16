@@ -128,35 +128,37 @@ export default function VoiceLibraryPage() {
   }, [])
 
   const handlePlaySample = useCallback(
-    async (sample: VoiceSample) => {
-      const sampleId = sample.id
-      if (!sampleId) return
+    (sample: VoiceSample) => {
+      void (async () => {
+        const sampleId = sample.id
+        if (!sampleId) return
 
-      if (playingSampleId === sampleId) {
+        if (playingSampleId === sampleId) {
+          stopPlayback()
+          return
+        }
+
         stopPlayback()
-        return
-      }
 
-      stopPlayback()
+        const audioUrl = await resolveSampleAudioUrl(sample)
+        if (!audioUrl) {
+          console.warn('재생 가능한 오디오 URL을 찾지 못했습니다.', sample)
+          return
+        }
 
-      const audioUrl = await resolveSampleAudioUrl(sample)
-      if (!audioUrl) {
-        console.warn('재생 가능한 오디오 URL을 찾지 못했습니다.', sample)
-        return
-      }
+        const audio = new Audio(audioUrl)
+        audioRef.current = audio
+        setPlayingSampleId(sampleId)
 
-      const audio = new Audio(audioUrl)
-      audioRef.current = audio
-      setPlayingSampleId(sampleId)
+        audio.addEventListener('ended', () => {
+          stopPlayback()
+        })
 
-      audio.addEventListener('ended', () => {
-        stopPlayback()
-      })
-
-      audio.play().catch((error) => {
-        console.error('음성 재생 실패:', error)
-        stopPlayback()
-      })
+        audio.play().catch((error) => {
+          console.error('음성 재생 실패:', error)
+          stopPlayback()
+        })
+      })()
     },
     [playingSampleId, resolveSampleAudioUrl, stopPlayback],
   )
@@ -282,7 +284,7 @@ function VoiceLibraryRow({
   sample: VoiceSample
   onToggleFavorite: () => void
   toggling: boolean
-  onPlay: (sample: VoiceSample) => void | Promise<void>
+  onPlay: (sample: VoiceSample) => void
   isPlaying: boolean
 }) {
   const [resolvedAvatar, setResolvedAvatar] = useState<string>(
@@ -344,7 +346,9 @@ function VoiceLibraryRow({
           type="button"
           variant={isPlaying ? 'secondary' : 'outline'}
           className="flex h-9 w-9 items-center justify-center rounded-full p-0"
-          onClick={() => onPlay(sample)}
+          onClick={() => {
+            onPlay(sample)
+          }}
           disabled={!sample.audio_sample_url && !sample.file_path_wav && !sample.previewUrl}
         >
           {isPlaying ? (
