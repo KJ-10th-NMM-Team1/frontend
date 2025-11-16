@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 
 import { AudioTrackWorkspace } from '@/features/editor/components/AudioTrackWorkspace'
@@ -7,6 +8,7 @@ import { SummaryWorkspace } from '@/features/editor/components/SummaryWorkspace'
 import { TranslationSummarySection } from '@/features/editor/components/TranslationSummarySection'
 import { useAudioGenerationEvents } from '@/features/editor/hooks/useAudioGenerationEvents'
 import { useEditorState } from '@/features/editor/hooks/useEditorState'
+import { useEditorStore } from '@/shared/store/useEditorStore'
 import { Breadcrumbs } from '@/shared/ui/Breadcrumbs'
 import { Spinner } from '@/shared/ui/Spinner'
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from '@/shared/ui/Tabs'
@@ -17,6 +19,14 @@ export default function EditorPage() {
     languageCode: string
   }>()
   const { data, isLoading } = useEditorState(projectId, languageCode)
+  const setAudioPlaybackMode = useEditorStore((state) => state.setAudioPlaybackMode)
+
+  // Set initial audio playback mode to current language code (first target language)
+  useEffect(() => {
+    if (languageCode) {
+      setAudioPlaybackMode(languageCode)
+    }
+  }, [languageCode, setAudioPlaybackMode])
 
   // Subscribe to audio generation events via SSE
   // When worker completes audio generation, this will update the segment data automatically

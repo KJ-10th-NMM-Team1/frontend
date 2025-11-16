@@ -1,14 +1,8 @@
-import { Check, ChevronDown } from 'lucide-react'
+import { Globe, Languages } from 'lucide-react'
 
 import { useProject } from '@/features/projects/hooks/useProjects'
 import { Button } from '@/shared/ui/Button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/shared/ui/Dropdown'
+import { cn } from '@/shared/lib/utils'
 import { useEditorStore } from '@/shared/store/useEditorStore'
 
 type LanguageSelectorProps = {
@@ -37,7 +31,7 @@ export function LanguageSelector({ projectId, currentLanguageCode }: LanguageSel
   const languageOptions: LanguageOption[] = [
     {
       code: 'original',
-      label: `원어 (${project.source_language?.toUpperCase() || 'Original'})`,
+      label: `원어`,
       isOriginal: true,
     },
     ...(project.targets?.map((target) => ({
@@ -47,35 +41,33 @@ export function LanguageSelector({ projectId, currentLanguageCode }: LanguageSel
     })) || []),
   ]
 
-  const selectedOption =
-    languageOptions.find((opt) => opt.code === audioPlaybackMode) || languageOptions[0]
-
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="gap-1 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium shadow-sm hover:bg-gray-50"
-        >
-          {selectedOption.label}
-          <ChevronDown className="h-3 w-3 opacity-50" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-[180px]">
-        {languageOptions.map((option, index) => (
-          <div key={option.code}>
-            {index === 1 && <DropdownMenuSeparator />}
-            <DropdownMenuItem
-              onClick={() => setAudioPlaybackMode(option.code)}
-              className="flex items-center justify-between"
-            >
-              <span>{option.label}</span>
-              {audioPlaybackMode === option.code && <Check className="h-4 w-4" />}
-            </DropdownMenuItem>
-          </div>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="flex items-center gap-2">
+      {languageOptions.map((option) => {
+        const isSelected = audioPlaybackMode === option.code
+
+        return (
+          <Button
+            key={option.code}
+            variant={isSelected ? 'primary' : 'ghost'}
+            size="sm"
+            onClick={() => setAudioPlaybackMode(option.code)}
+            className={cn(
+              'gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all',
+              isSelected
+                ? 'shadow-sm'
+                : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50',
+            )}
+          >
+            {option.isOriginal ? (
+              <Globe className="h-3.5 w-3.5" />
+            ) : (
+              <Languages className="h-3.5 w-3.5" />
+            )}
+            <span>{option.label}</span>
+          </Button>
+        )
+      })}
+    </div>
   )
 }
