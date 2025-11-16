@@ -53,13 +53,13 @@ export default function EditorPage() {
                 <TabsList className="h-auto gap-0 rounded-none border-0 bg-transparent p-0">
                   <TabsTrigger
                     value="summary"
-                    className="border-primary data-[state=active]:border-b-2 data-[state=active]:bg-transparent rounded-none px-4 py-2 text-xs font-semibold"
+                    className="border-primary rounded-none px-4 py-2 text-xs font-semibold data-[state=active]:border-b-2 data-[state=active]:bg-transparent"
                   >
                     요약
                   </TabsTrigger>
                   <TabsTrigger
                     value="translation"
-                    className="border-primary data-[state=active]:border-b-2 data-[state=active]:bg-transparent rounded-none px-4 py-2 text-xs font-semibold"
+                    className="border-primary rounded-none px-4 py-2 text-xs font-semibold data-[state=active]:border-b-2 data-[state=active]:bg-transparent"
                   >
                     번역
                   </TabsTrigger>
@@ -68,9 +68,9 @@ export default function EditorPage() {
 
               <TabsContent value="summary" className="mt-0 flex-1 overflow-y-auto">
                 <SummaryWorkspace
-                  segments={data.segments}
-                  sourceLanguage={sourceLanguage}
-                  targetLanguage={targetLanguage}
+                // segments={data.segments}
+                // sourceLanguage={sourceLanguage}
+                // targetLanguage={targetLanguage}
                 />
               </TabsContent>
 

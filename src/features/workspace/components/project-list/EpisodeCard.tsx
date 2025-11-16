@@ -137,7 +137,7 @@ export function EpisodeCard({ project, onEdit, onDelete }: EpisodeCardProps) {
   return (
     <Link
       to={routes.projectDetail(project.id)}
-      className="border-surface-3 bg-surface-1/95 focus-visible:outline-hidden hover:border-primary/60 block overflow-hidden rounded-3xl border shadow-soft transition hover:-translate-y-0.5 hover:shadow-xl"
+      className="focus-visible:outline-hidden block overflow-hidden rounded-3xl border shadow-soft transition hover:-translate-y-0.5 hover:shadow-xl"
     >
       <div className="relative aspect-video overflow-hidden">
         {showActions && (

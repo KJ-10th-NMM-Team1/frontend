@@ -1,4 +1,4 @@
-import { Pause, Play, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 
 import { Button } from '@/shared/ui/Button'
 import { useTracksStore } from '@/shared/store/useTracksStore'
@@ -54,7 +54,7 @@ export function AudioTimelineControls({
             size="sm"
             className={cn(
               'rounded-r-none border-none px-4 py-1.5 text-xs font-medium transition-colors',
-              audioPlaybackMode === 'original' && 'bg-blue-500 text-white hover:bg-blue-600',
+              audioPlaybackMode === 'original' && 'bg-primary text-white',
             )}
             onClick={() => toggleAudioPlaybackMode()}
           >
@@ -66,7 +66,7 @@ export function AudioTimelineControls({
             size="sm"
             className={cn(
               'rounded-l-none border-none px-4 py-1.5 text-xs font-medium transition-colors',
-              audioPlaybackMode === 'target' && 'bg-blue-500 text-white hover:bg-blue-600',
+              audioPlaybackMode === 'target' && 'bg-primary text-white',
             )}
             onClick={() => toggleAudioPlaybackMode()}
           >
