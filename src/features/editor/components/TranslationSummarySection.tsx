@@ -5,8 +5,10 @@
 
 import { useState, useEffect, useRef } from 'react'
 
-import { MoreVertical } from 'lucide-react'
+import { MoreVertical, Sparkles } from 'lucide-react'
 
+import { useAiSuggestion } from '@/features/editor/hooks/useAiSuggestion'
+import { useLanguage } from '@/features/languages/hooks/useLanguage'
 import { apiPost } from '@/shared/api/client'
 import { useEditorStore } from '@/shared/store/useEditorStore'
 import { useTracksStore } from '@/shared/store/useTracksStore'
@@ -16,7 +18,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/shared/ui/Dropdown'
+
+import { SuggestionDialog } from './suggestion/SuggestionDialog'
 
 type TranslationSummarySectionProps = {
   projectId: string
@@ -29,7 +34,10 @@ export function TranslationSummarySection({
   sourceLanguage,
   targetLanguage,
 }: TranslationSummarySectionProps) {
-  const activeSegmentId = useEditorStore((state) => state.activeSegmentId)
+  const { activeSegmentId, setActiveSegment } = useEditorStore((state) => ({
+    activeSegmentId: state.activeSegmentId,
+    setActiveSegment: state.setActiveSegment,
+  }))
   const { getAllSegments, updateSegment } = useTracksStore((state) => ({
     getAllSegments: state.getAllSegments,
     updateSegment: state.updateSegment,
@@ -40,6 +48,26 @@ export function TranslationSummarySection({
 
   const [translatingSegments, setTranslatingSegments] = useState<Set<string>>(new Set())
   const [generatingAudioSegments, setGeneratingAudioSegments] = useState<Set<string>>(new Set())
+
+  // AI 제안 기능
+  const { data: languageData } = useLanguage()
+  const languageNameMap =
+    languageData?.reduce<Record<string, string>>((acc, item) => {
+      acc[item.language_code] = item.name_ko
+      return acc
+    }, {}) ?? {}
+
+  const {
+    isAiDialogOpen,
+    suggestionResult,
+    suggestionPage,
+    suggestionTotalPages,
+    handleRequestSuggestion,
+    handleSuggestionPageChange,
+    handleDialogOpenChange,
+    handleApplySuggestion,
+    openAiDialog,
+  } = useAiSuggestion({ activeSegmentId, targetLanguage })
 
   // 활성 세그먼트로 자동 스크롤
   useEffect(() => {
@@ -150,78 +178,104 @@ export function TranslationSummarySection({
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex-1 space-y-1.5 overflow-y-auto p-3">
-        {allSegments.map((segment) => {
-          const isActive = activeSegmentId === segment.id
-          const isTranslating = translatingSegments.has(segment.id)
-          const isGeneratingAudio = generatingAudioSegments.has(segment.id)
+    <>
+      <div className="flex h-full flex-col">
+        <div className="flex-1 space-y-1.5 overflow-y-auto p-3">
+          {allSegments.map((segment) => {
+            const isActive = activeSegmentId === segment.id
+            const isTranslating = translatingSegments.has(segment.id)
+            const isGeneratingAudio = generatingAudioSegments.has(segment.id)
 
-          return (
-            <div
-              key={segment.id}
-              ref={(node) => {
-                segmentRefs.current[segment.id] = node
-              }}
-              className={`group flex items-start gap-2 rounded px-2 py-1.5 transition ${
-                isActive ? 'border-primary bg-primary/5' : 'hover:bg-surface-2'
-              }`}
-            >
-              <div className="flex-1">
-                {/* 원본 텍스트 */}
-                <input
-                  className="text-foreground mb-0.5 w-full border-0 bg-transparent px-0 py-0 text-xs focus:outline-none"
-                  value={segment.source_text || ''}
-                  onChange={(e) => handleSourceChange(segment.id, e.target.value)}
-                  placeholder="원문 없음"
-                />
-
-                {/* 번역 텍스트 */}
-                <div className="relative flex items-center gap-1">
-                  <span className="text-muted text-xs">→</span>
+            return (
+              <div
+                key={segment.id}
+                ref={(node) => {
+                  segmentRefs.current[segment.id] = node
+                }}
+                className={`group flex items-start gap-2 rounded px-2 py-1.5 transition ${
+                  isActive ? 'border-primary bg-primary/5' : 'hover:bg-surface-2'
+                }`}
+              >
+                <div className="flex-1">
+                  {/* 원본 텍스트 */}
                   <input
-                    className="text-primary flex-1 border-0 bg-transparent px-0 py-0 text-xs font-medium focus:outline-none disabled:opacity-50"
-                    value={segment.target_text || ''}
-                    onChange={(e) => handleTargetChange(segment.id, e.target.value)}
-                    placeholder={isTranslating ? '번역 중...' : '번역 없음'}
-                    disabled={isTranslating}
+                    className="text-foreground mb-0.5 w-full border-0 bg-transparent px-0 py-0 text-xs focus:outline-none"
+                    value={segment.source_text || ''}
+                    onChange={(e) => handleSourceChange(segment.id, e.target.value)}
+                    placeholder="원문 없음"
                   />
-                  {isTranslating && (
-                    <div className="border-primary h-3 w-3 animate-spin rounded-full border-2 border-t-transparent" />
-                  )}
-                </div>
-              </div>
 
-              {/* 드롭다운 버튼 */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-5 w-5 shrink-0 p-0 opacity-0 transition group-hover:opacity-100"
-                  >
-                    <MoreVertical className="h-3.5 w-3.5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onClick={() => void handleTranslate(segment.id)}
-                    disabled={isTranslating || !segment.source_text?.trim()}
-                  >
-                    {isTranslating ? '번역 중...' : '번역하기'}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => void handleGenerateAudio(segment.id)}
-                    disabled={isGeneratingAudio || !segment.target_text?.trim()}
-                  >
-                    {isGeneratingAudio ? '생성 중...' : '오디오 생성'}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          )
-        })}
+                  {/* 번역 텍스트 */}
+                  <div className="relative flex items-center gap-1">
+                    <span className="text-muted text-xs">→</span>
+                    <input
+                      className="text-primary flex-1 border-0 bg-transparent px-0 py-0 text-xs font-medium focus:outline-none disabled:opacity-50"
+                      value={segment.target_text || ''}
+                      onChange={(e) => handleTargetChange(segment.id, e.target.value)}
+                      placeholder={isTranslating ? '번역 중...' : '번역 없음'}
+                      disabled={isTranslating}
+                    />
+                    {isTranslating && (
+                      <div className="border-primary h-3 w-3 animate-spin rounded-full border-2 border-t-transparent" />
+                    )}
+                  </div>
+                </div>
+
+                {/* 드롭다운 버튼 */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-5 w-5 shrink-0 p-0 opacity-0 transition group-hover:opacity-100"
+                    >
+                      <MoreVertical className="h-3.5 w-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={() => void handleTranslate(segment.id)}
+                      disabled={isTranslating || !segment.source_text?.trim()}
+                    >
+                      {isTranslating ? '번역 중...' : '번역하기'}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => void handleGenerateAudio(segment.id)}
+                      disabled={isGeneratingAudio || !segment.target_text?.trim()}
+                    >
+                      {isGeneratingAudio ? '생성 중...' : '오디오 생성'}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setActiveSegment(segment.id)
+                        openAiDialog()
+                      }}
+                    >
+                      <Sparkles className="mr-2 h-3.5 w-3.5" />
+                      AI 제안 받기
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )
+          })}
+        </div>
       </div>
-    </div>
+
+      {/* AI 제안 다이얼로그 */}
+      <SuggestionDialog
+        isOpen={isAiDialogOpen}
+        onOpenChange={handleDialogOpenChange}
+        onRequestSuggestion={handleRequestSuggestion}
+        suggestionText={suggestionResult}
+        currentPage={suggestionPage}
+        totalPages={suggestionTotalPages}
+        onPageChange={handleSuggestionPageChange}
+        languageLabel={languageNameMap[targetLanguage] ?? targetLanguage}
+        onApply={handleApplySuggestion}
+      />
+    </>
   )
 }
