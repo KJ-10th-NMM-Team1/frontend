@@ -5,6 +5,7 @@ import { HTTPError } from 'ky'
 
 import { env } from '@/shared/config/env'
 import { queryKeys } from '@/shared/config/queryKeys'
+import { routes } from '@/shared/config/routes'
 import { useUiStore } from '@/shared/store/useUiStore'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
@@ -14,6 +15,13 @@ import {
   useFinishUploadMutation,
   usePrepareUploadMutation,
 } from '../hooks/useVoiceSampleStorage'
+import {
+  finalizeVoiceSampleAvatarUpload,
+  prepareVoiceSampleAvatarUpload,
+} from '../api/voiceSamplesApi'
+
+const DEFAULT_AVATAR =
+  'https://ui-avatars.com/api/?name=Voice&background=EEF2FF&color=1E1B4B&size=128'
 
 type VoiceSampleFormProps = {
   initialFile?: File | null
@@ -32,6 +40,8 @@ export function VoiceSampleForm({
   const [country, setCountry] = useState('ko')
   const [gender, setGender] = useState('any')
   const [audioFile, setAudioFile] = useState<File | null>(initialFile)
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [notes, setNotes] = useState('')
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadStage, setUploadStage] = useState<'idle' | 'preparing' | 'uploading' | 'finalizing'>(
@@ -48,18 +58,19 @@ export function VoiceSampleForm({
     setAudioFile(initialFile)
   }, [initialFile])
 
-  const selectedFileName = useMemo(() => audioFile?.name ?? '선택된 파일이 없습니다', [audioFile])
-
   useEffect(() => {
-    return () => {
-      setAudioFile((prev) => {
-        if (prev && prev !== initialFile) {
-          URL.revokeObjectURL(prev.name)
-        }
-        return prev
-      })
+    if (!avatarFile) {
+      setAvatarPreview(null)
+      return
     }
-  }, [initialFile])
+    const url = URL.createObjectURL(avatarFile)
+    setAvatarPreview(url)
+    return () => {
+      URL.revokeObjectURL(url)
+    }
+  }, [avatarFile])
+
+  const selectedFileName = useMemo(() => audioFile?.name ?? '선택된 파일이 없습니다', [audioFile])
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -92,20 +103,40 @@ export function VoiceSampleForm({
 
       setUploadStage('finalizing')
       setUploadProgress(85)
-      const descParts = [`국가: ${country.toUpperCase()}`]
-      if (gender !== 'any') {
-        descParts.push(`성별: ${gender}`)
-      }
-      if (notes.trim()) {
-        descParts.push(notes.trim())
-      }
-      const description = descParts.join(' | ')
       const createdSample = await finishUploadMutation.mutateAsync({
         name: name.trim(),
-        description: description || undefined,
+        description: notes.trim() || undefined,
         is_public: true,
         object_key,
+        country,
+        gender,
       })
+
+      if (avatarFile && createdSample.id) {
+        try {
+          const { upload_url, fields, object_key: avatarKey } =
+            await prepareVoiceSampleAvatarUpload(createdSample.id, {
+              filename: avatarFile.name,
+              content_type: avatarFile.type || 'image/png',
+            })
+
+          await uploadFileWithProgress({
+            uploadUrl: upload_url,
+            fields,
+            file: avatarFile,
+            onProgress: () => {},
+          })
+
+          await finalizeVoiceSampleAvatarUpload(createdSample.id, { object_key: avatarKey })
+        } catch (error) {
+          console.error('Failed to upload avatar image', error)
+          showToast({
+            id: 'voice-sample-avatar-error',
+            title: '아바타 업로드 실패',
+            description: '이미지를 업로드하는 중 문제가 발생했습니다.',
+          })
+        }
+      }
 
       setUploadProgress(100)
       showToast({
@@ -214,6 +245,8 @@ export function VoiceSampleForm({
     setName('')
     setCountry('ko')
     setGender('any')
+    setAvatarFile(null)
+    setAvatarPreview(null)
     setUploadStage('idle')
     setUploadProgress(0)
     setNotes('')
@@ -272,7 +305,12 @@ export function VoiceSampleForm({
           </div>
         </div>
       ) : (
-        null
+        <div className="space-y-2">
+          <Label>선택된 녹음 파일</Label>
+          <div className="rounded-xl border border-dashed border-surface-4 p-4 text-sm">
+            {selectedFileName}
+          </div>
+        </div>
       )}
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -303,6 +341,39 @@ export function VoiceSampleForm({
             <option value="female">여성</option>
             <option value="male">남성</option>
           </select>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>아바타 이미지 (선택)</Label>
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => document.getElementById('avatar-upload')?.click()}
+            disabled={isUploading}
+            className="rounded-full border border-dashed border-surface-4 p-1 transition hover:border-primary disabled:opacity-50"
+          >
+            <div className="h-16 w-16 overflow-hidden rounded-full">
+              <img
+                src={avatarPreview ?? DEFAULT_AVATAR}
+                alt="voice avatar"
+                className="h-full w-full object-cover"
+              />
+            </div>
+          </button>
+          <div className="space-y-1 text-xs text-muted">
+            <p>원하는 이미지를 등록해 보이스 썸네일을 꾸밀 수 있어요.</p>
+            <p>512x512 이하 PNG/JPG 권장, 미선택 시 기본 이미지가 사용됩니다.</p>
+            {avatarFile ? <p className="text-foreground text-sm">{avatarFile.name}</p> : null}
+          </div>
+          <input
+            id="avatar-upload"
+            type="file"
+            accept="image/png,image/jpeg"
+            className="hidden"
+            onChange={(event) => setAvatarFile(event.target.files?.[0] ?? null)}
+            disabled={isUploading}
+          />
         </div>
       </div>
 

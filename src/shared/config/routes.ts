@@ -7,6 +7,7 @@ export const routes = {
   projectDetail: (id: string) => `/projects/${id}`,
   voiceSamples: '/voice-samples',
   voiceCloning: '/voice-cloning',
+  voiceLibrary: '/voice-library',
   myinfo: '/myinfo',
   changePassword: '/myinfo/change-password',
   youtubeCallback: '/oauth2/callback/youtube',

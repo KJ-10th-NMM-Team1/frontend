@@ -26,6 +26,11 @@ function transformVoiceSample(apiSample: VoiceSampleApiResponse): VoiceSample {
     prompt_text: apiSample.prompt_text || undefined,
     createdAt: apiSample.created_at,
     owner_id: apiSample.owner_id ? String(apiSample.owner_id) : undefined,
+    favoriteCount: apiSample.favorite_count ?? 0,
+    country: apiSample.country ?? undefined,
+    gender: apiSample.gender ?? undefined,
+    avatarImageUrl: apiSample.avatar_image_url ?? undefined,
+    avatarImagePath: apiSample.avatar_image_path ?? apiSample.avatar_image_url ?? undefined,
   }
 }
 
@@ -81,10 +86,42 @@ export interface FinishUploadPayload {
   description?: string
   is_public: boolean
   object_key: string
+  country?: string
+  gender?: string
 }
 
 export async function finishVoiceSampleUpload(payload: FinishUploadPayload): Promise<VoiceSample> {
   const response = await apiPost<VoiceSampleApiResponse>('api/voice-samples/finish-upload', payload)
+  return transformVoiceSample(response)
+}
+
+export interface PrepareAvatarUploadPayload {
+  filename: string
+  content_type: string
+}
+
+export interface PrepareAvatarUploadResponse {
+  upload_url: string
+  fields: Record<string, string>
+  object_key: string
+}
+
+export async function prepareVoiceSampleAvatarUpload(
+  sampleId: string,
+  payload: PrepareAvatarUploadPayload,
+) {
+  return apiClient
+    .post(`api/voice-samples/${sampleId}/avatar/prepare-upload`, { json: payload })
+    .json<PrepareAvatarUploadResponse>()
+}
+
+export async function finalizeVoiceSampleAvatarUpload(
+  sampleId: string,
+  payload: { object_key: string },
+): Promise<VoiceSample> {
+  const response = await apiClient
+    .post(`api/voice-samples/${sampleId}/avatar`, { json: payload })
+    .json<VoiceSampleApiResponse>()
   return transformVoiceSample(response)
 }
 

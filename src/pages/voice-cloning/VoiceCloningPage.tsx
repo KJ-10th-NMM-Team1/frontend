@@ -128,9 +128,8 @@ export default function VoiceCloningPage() {
         const blob = new Blob(recordedChunksRef.current, { type: options?.mimeType ?? 'audio/webm' })
         const baseName = `voice-recording-${new Date().toISOString().replace(/[:.]/g, '-')}`
         setRecordingState('converting')
-        ;(async () => {
-          try {
-            const wavBlob = await convertBlobToWav(blob, 16_000)
+        void convertBlobToWav(blob, 16_000)
+          .then((wavBlob) => {
             const wavFile = new File([wavBlob], `${baseName}.wav`, { type: 'audio/wav' })
             if (previewUrl) {
               URL.revokeObjectURL(previewUrl)
@@ -140,14 +139,15 @@ export default function VoiceCloningPage() {
             setSelectedFile(wavFile)
             setRecordingState('ready')
             setStep('review')
-          } catch (error) {
+          })
+          .catch((error) => {
             console.error('Failed to convert recording', error)
             setMicError('녹음 파일을 변환하는 중 문제가 발생했습니다.')
             setStep('record-intro')
-          } finally {
+          })
+          .finally(() => {
             resetRecording({ preserveDuration: true })
-          }
-        })()
+          })
       }
       recorder.start()
       setRecordingSeconds(0)
@@ -336,7 +336,6 @@ export default function VoiceCloningPage() {
             {selectedFile ? (
               <VoiceSampleForm
                 initialFile={selectedFile}
-                initialPreviewUrl={previewUrl ?? undefined}
                 hideFileUpload={mode === 'record'}
                 onCancel={handleResetAll}
                 onSuccess={() => navigate(routes.voiceSamples)}

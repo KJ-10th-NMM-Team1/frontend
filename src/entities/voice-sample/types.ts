@@ -12,6 +12,11 @@ export interface VoiceSampleApiResponse {
   prompt_text?: string | null
   created_at: string
   is_favorite: boolean
+  favorite_count?: number
+  country?: string | null
+  gender?: string | null
+  avatar_image_url?: string | null
+  avatar_image_path?: string | null
 }
 
 // 프론트엔드에서 사용하는 타입 (camelCase)
@@ -29,11 +34,17 @@ export interface VoiceSample {
   prompt_text?: string
   isPublic: boolean
   isFavorite: boolean
+  favoriteCount?: number
+  country?: string
+  gender?: string
+  avatarImageUrl?: string
+  avatarImagePath?: string
   provider?: string
   tags?: string[]
   createdAt?: string
   updatedAt?: string
   owner_id?: string
+  favoriteCount?: number
 }
 
 export interface VoiceSamplePayload {
