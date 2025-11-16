@@ -9,7 +9,12 @@ type UploadCardProps = {
   className?: string
 }
 
-export function UploadCard({ className }: UploadCardProps) {
+type CreateEpisodeButtonProps = {
+  className?: string
+  label?: string
+}
+
+export function CreateEpisodeButton({ className, label = '더빙·자막 만들기' }: CreateEpisodeButtonProps) {
   const openProjectCreation = useUiStore((state) => state.openProjectCreation)
 
   return (
@@ -26,7 +31,11 @@ export function UploadCard({ className }: UploadCardProps) {
       }}
     >
       <AudioLines className="h-5 w-5" aria-hidden />
-      더빙·자막 만들기
+      {label}
     </Button>
   )
+}
+
+export function UploadCard({ className }: UploadCardProps) {
+  return <CreateEpisodeButton className={className} />
 }

@@ -11,6 +11,13 @@ import { fetchVoiceSamples, toggleFavorite } from '@/features/voice-samples/api/
 import { routes } from '@/shared/config/routes'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/Select'
 
 type LibraryTab = 'library' | 'mine' | 'favorites'
 
@@ -39,6 +46,7 @@ const getPresignedUrl = async (path: string): Promise<string | undefined> => {
 export default function VoiceLibraryPage() {
   const [tab, setTab] = useState<LibraryTab>('library')
   const [search, setSearch] = useState('')
+  const [sort, setSort] = useState<'default' | 'favorite'>('default')
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
@@ -63,9 +71,17 @@ export default function VoiceLibraryPage() {
   })
 
   const samples = voiceQuery.data?.samples ?? []
+  const sortedSamples = useMemo(() => {
+    if (sort === 'favorite') {
+      return [...samples].sort(
+        (a, b) => (b.favoriteCount ?? 0) - (a.favoriteCount ?? 0),
+      )
+    }
+    return samples
+  }, [samples, sort])
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-6 py-8">
+    <div className="mx-auto max-w-7xl space-y-6 px-6 py-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-primary text-xs font-semibold uppercase tracking-[0.3em]">
@@ -78,27 +94,38 @@ export default function VoiceLibraryPage() {
         </Button>
       </div>
 
-      <div className="flex flex-wrap items-center gap-4 rounded-3xl border border-surface-3 bg-surface-1/70 px-4 py-3 shadow-soft">
-        <div className="flex gap-2">
+      <div className="space-y-3">
+        <div>
           {tabButton('library', '라이브러리', tab, setTab)}
           {tabButton('mine', '내 보이스', tab, setTab)}
           {tabButton('favorites', '즐겨찾기', tab, setTab)}
         </div>
-        <div className="relative flex-1 min-w-[220px]">
-          <Search className="text-muted absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="보이스 검색"
-            className="pl-9"
-          />
+        <div className="flex flex-1 min-w-[240px] items-center gap-3 rounded-3xl border border-surface-3 bg-surface-1/70 px-4 py-3 shadow-soft">
+          <div className="relative flex-1">
+            <Search className="text-muted absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="보이스 검색"
+              className="pl-9"
+            />
+          </div>
+          <Select value={sort} onValueChange={(value) => setSort(value as 'default' | 'favorite')}>
+            <SelectTrigger className="w-36 rounded-full border-surface-3 bg-surface-1 text-sm shadow-soft">
+              <SelectValue placeholder="정렬" />
+            </SelectTrigger>
+            <SelectContent align="end">
+              <SelectItem value="default">기본</SelectItem>
+              <SelectItem value="favorite">좋아요순</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
       <div className="rounded-3xl border border-surface-2 bg-surface-1 p-4 shadow-soft">
         {voiceQuery.isLoading ? (
           <p className="text-center text-muted text-sm">목록을 불러오는 중...</p>
-        ) : samples.length === 0 ? (
+        ) : sortedSamples.length === 0 ? (
           <p className="text-center text-muted text-sm">조건에 맞는 보이스가 없습니다.</p>
         ) : (
           <>
@@ -110,7 +137,7 @@ export default function VoiceLibraryPage() {
               <span className="text-right">미리듣기</span>
             </div>
             <ul className="divide-y divide-surface-3">
-            {samples.map((sample) => (
+            {sortedSamples.map((sample) => (
               <VoiceLibraryRow
                 key={sample.id}
                 sample={sample}
@@ -142,8 +169,10 @@ function tabButton(
     <button
       type="button"
       onClick={() => setTab(value)}
-      className={`rounded-full px-4 py-2 text-sm font-medium ${
-        isActive ? 'bg-primary text-primary-foreground' : 'bg-surface-2 text-muted'
+      className={`rounded-2xl px-5 py-2 text-sm font-semibold transition ${
+        isActive
+          ? 'bg-primary text-primary-foreground shadow'
+          : 'bg-transparent text-muted hover:bg-surface-2 hover:text-foreground'
       }`}
     >
       {label}

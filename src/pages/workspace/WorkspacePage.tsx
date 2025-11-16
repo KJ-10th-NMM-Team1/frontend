@@ -4,7 +4,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import type { ProjectSummary } from '@/entities/project/types'
 import { useProjects, useDeleteProjectMutation } from '@/features/projects/hooks/useProjects'
-import { ProjectCreationModal } from '@/features/projects/modals/ProjectCreationModal'
 import { ProjectList } from '@/features/workspace/components/project-list/ProjectList'
 import { UploadCard } from '@/features/workspace/components/upload-card/UploadCard'
 import { routes } from '@/shared/config/routes'
@@ -113,7 +112,6 @@ export default function WorkspacePage() {
       <div className="mb-10 flex flex-wrap items-center justify-between gap-6">
         <div>
           <p className="text-primary text-xs font-semibold uppercase tracking-[0.3em]">Workspace</p>
-          <h1 className="text-foreground text-3xl font-bold">Workspace</h1>
           <p className="text-muted text-sm">AI 기반 자동 더빙으로 글로벌 콘텐츠를 만드세요.</p>
         </div>
         <div className="flex-shrink-0">
@@ -139,7 +137,6 @@ export default function WorkspacePage() {
           )}
         </div>
       </section>
-      <ProjectCreationModal />
     </div>
   )
 }

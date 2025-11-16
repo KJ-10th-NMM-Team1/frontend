@@ -98,46 +98,14 @@ export default function MyInfoPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-8">
-      <header className="bg-surface-1 border-surface-3 flex flex-col gap-4 rounded-3xl border px-5 py-5 shadow-soft">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-start gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="border-surface-3 text-muted hover:text-foreground border"
-              aria-label="뒤로 가기"
-              onClick={() => navigate(-1)}
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <p className="text-primary text-xs font-semibold uppercase tracking-[0.35em]">
-                Account
-              </p>
-              <p className="text-muted mt-1 text-sm">
-                계정 정보를 확인하고 알림, 보안 설정을 관리할 수 있습니다.
-              </p>
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Button variant="outline" className="gap-2">
-              <PenSquare className="h-4 w-4" />
-              프로필 편집
-            </Button>
-            <Button
-              className="gap-2"
-              onClick={() => navigate(routes.changePassword)}
-              disabled={isGoogleAccount}
-              title={
-                isGoogleAccount ? '구글 로그인 계정은 비밀번호를 변경할 수 없습니다.' : undefined
-              }
-            >
-              <KeyRound className="h-4 w-4" />
-              비밀번호 변경
-            </Button>
-          </div>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="text-primary text-xs font-semibold uppercase tracking-[0.35em]">Account</p>
+          <p className="text-muted mt-1 text-sm">
+            계정 정보를 확인하고 알림, 보안 설정을 관리할 수 있습니다.
+          </p>
         </div>
-      </header>
+      </div>
 
       {isLoading ? (
         <div className="border-surface-3 bg-surface-1 flex items-center justify-center rounded-3xl border py-20">
@@ -147,18 +115,37 @@ export default function MyInfoPage() {
       ) : (
         <div className="space-y-6">
           <Card className="flex flex-col gap-6">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center">
-              <div className="bg-primary/10 text-primary flex h-24 w-24 items-center justify-center rounded-3xl text-3xl font-bold">
-                {initials}
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center gap-4">
+                <div className="bg-primary/10 text-primary flex h-24 w-24 items-center justify-center rounded-3xl text-3xl font-bold">
+                  {initials}
+                </div>
+                <div className="space-y-2">
+                  <p className="text-muted text-xs font-semibold uppercase tracking-[0.35em]">
+                    Profile
+                  </p>
+                  <h2 className="text-foreground text-2xl font-semibold">{profile.username}</h2>
+                  <Badge tone="default" className="text-xs uppercase tracking-wide">
+                    {profile.role || 'unassigned'}
+                  </Badge>
+                </div>
               </div>
-              <div className="space-y-2">
-                <p className="text-muted text-xs font-semibold uppercase tracking-[0.35em]">
-                  Profile
-                </p>
-                <h2 className="text-foreground text-2xl font-semibold">{profile.username}</h2>
-                <Badge tone="default" className="text-xs uppercase tracking-wide">
-                  {profile.role || 'unassigned'}
-                </Badge>
+              <div className="flex flex-wrap gap-3">
+                <Button variant="outline" className="gap-2">
+                  <PenSquare className="h-4 w-4" />
+                  프로필 편집
+                </Button>
+                <Button
+                  className="gap-2"
+                  onClick={() => navigate(routes.changePassword)}
+                  disabled={isGoogleAccount}
+                  title={
+                    isGoogleAccount ? '구글 로그인 계정은 비밀번호를 변경할 수 없습니다.' : undefined
+                  }
+                >
+                  <KeyRound className="h-4 w-4" />
+                  비밀번호 변경
+                </Button>
               </div>
             </div>
             <div className="grid gap-4 md:grid-cols-3">
@@ -208,29 +195,6 @@ export default function MyInfoPage() {
                   </div>
                 </div>
               ))}
-            </div>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>계정 보안</CardTitle>
-              <CardDescription>계정을 안전하게 보호하기 위한 권장 설정입니다.</CardDescription>
-            </CardHeader>
-            <div className="space-y-4">
-              <div className="border-surface-3 rounded-2xl border px-4 py-3">
-                <p className="text-foreground font-medium">다중 인증</p>
-                <p className="text-muted text-sm">추가 인증 수단을 설정하면 보안이 강화됩니다.</p>
-                <Button variant="ghost" size="sm" className="text-primary mt-3 px-0">
-                  설정하기
-                </Button>
-              </div>
-              <div className="border-surface-3 rounded-2xl border px-4 py-3">
-                <p className="text-foreground font-medium">최근 로그인 기록</p>
-                <p className="text-muted text-sm">새로운 기기에서 접속 시 이메일로 알려드립니다.</p>
-                <Button variant="ghost" size="sm" className="text-primary mt-3 px-0">
-                  기록 확인
-                </Button>
-              </div>
             </div>
           </Card>
           <YoutubeIntegrationCard />

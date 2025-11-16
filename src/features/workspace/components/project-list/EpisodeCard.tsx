@@ -54,10 +54,10 @@ export const projectStatusLabelMap: Record<string, '업로드' | '편집중' | '
   failed: '실패',
 }
 const projectStatusClassMap: Record<'업로드' | '편집중' | '완료' | '실패', string> = {
-  업로드: 'bg-yellow-600/90 text-white',
-  편집중: 'bg-blue-600/90 text-white',
-  완료: 'bg-emerald-600/90 text-white',
-  실패: 'bg-rose-600/90 text-white',
+  업로드: 'bg-amber-200 text-amber-900',
+  편집중: 'bg-sky-200 text-sky-900',
+  완료: 'bg-emerald-200 text-emerald-900',
+  실패: 'bg-rose-200 text-rose-900',
 }
 export function getProjectStatusLabel(status?: string) {
   return projectStatusLabelMap[status ?? ''] ?? '업로드'
@@ -72,10 +72,10 @@ function getProjectTargetStatusLabel(status?: string) {
   return projectTargetStatusLabelMap[status ?? ''] ?? '업로드'
 }
 const projectTargetStatusClassMap: Record<'업로드' | '처리중' | '완료' | '실패', string> = {
-  업로드: 'bg-yellow-600/90 text-white',
-  처리중: 'bg-blue-600/90 text-white',
-  완료: 'bg-emerald-600/90 text-white',
-  실패: 'bg-rose-600/90 text-white',
+  업로드: 'bg-amber-200 text-amber-900',
+  처리중: 'bg-sky-200 text-sky-900',
+  완료: 'bg-emerald-200 text-emerald-900',
+  실패: 'bg-rose-200 text-rose-900',
 }
 
 // 등록일

@@ -3,6 +3,7 @@ import { Outlet, ScrollRestoration, useLocation } from 'react-router-dom'
 import { AppFooter } from '../../features/layout/components/footer/AppFooter'
 import { AppHeader } from '../../features/layout/components/header/AppHeader'
 import { AppSidebar } from '../../features/layout/components/sidebar/AppSidebar'
+import { ProjectCreationModal } from '../../features/projects/modals/ProjectCreationModal'
 import { useAuthStore } from '../../shared/store/useAuthStore'
 
 export function RootLayout() {
@@ -19,6 +20,7 @@ export function RootLayout() {
           <Outlet />
         </main>
       </div>
+      <ProjectCreationModal />
       <AppFooter />
       <ScrollRestoration />
     </div>

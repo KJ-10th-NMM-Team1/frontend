@@ -72,7 +72,7 @@ export function AppHeader() {
   //   : []
 
   return (
-    <header className="border-surface-3 bg-surface-1/90 sticky top-0 z-40 border-b backdrop-blur">
+    <header className="bg-[#F1F5F9]/95 sticky top-0 z-40 backdrop-blur">
       <div className={`mx-auto flex ${containerWidthClass} items-center justify-between gap-6 px-6 py-4`}>
         <Link
           to={routes.home}
@@ -96,12 +96,13 @@ export function AppHeader() {
 
         <div className="ml-auto flex items-center gap-3">
           {showWorkspaceSearch ? (
-            <div className="flex items-center gap-2">
-              <Search className="text-muted h-5 w-5" aria-hidden="true" />
+            <div className="relative flex items-center">
+              <Search className="text-muted absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" aria-hidden="true" />
               <Input
                 value={workspaceSearchTerm}
                 onChange={(event) => setWorkspaceSearchTerm(event.target.value)}
-                className="text-foreground h-10 w-72 rounded-full border border-surface-3 bg-surface-1 px-4 text-sm shadow-soft focus-visible:ring-primary focus-visible:ring-2"
+                placeholder="워크스페이스 검색"
+                className="pl-9"
               />
             </div>
           ) : null}
@@ -126,20 +127,6 @@ export function AppHeader() {
                   <User className="text-muted h-4 w-4" />
                   내 정보
                 </DropdownMenuItem>
-
-                <DropdownMenuItem onSelect={handleVoiceSamples}>
-                  <Waves className="text-muted h-4 w-4" />
-                  음성 샘플
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={handleVoiceLibrary}>
-                  <BookOpenCheck className="text-muted h-4 w-4" />
-                  보이스 라이브러리
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={handleVoiceCloning}>
-                  <Mic className="text-muted h-4 w-4" />
-                  보이스 클로닝
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem className="text-danger" onSelect={handleSignOut}>
                   <LogOut className="h-4 w-4" />
                   로그아웃

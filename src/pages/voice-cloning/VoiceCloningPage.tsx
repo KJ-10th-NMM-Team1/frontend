@@ -351,7 +351,7 @@ export default function VoiceCloningPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 px-6 py-8">
+    <div className="mx-auto max-w-7xl space-y-6 px-6 py-8">
       <div className="space-y-2 text-center">
         <p className="text-primary text-xs font-semibold tracking-[0.3em] uppercase">Voice cloning</p>
         <p className="text-muted text-sm">

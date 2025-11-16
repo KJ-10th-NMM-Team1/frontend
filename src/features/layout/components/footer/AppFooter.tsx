@@ -4,7 +4,7 @@ import { env } from '@/shared/config/env'
 
 export function AppFooter() {
   return (
-    <footer className="border-surface-3 bg-surface-2/80 border-t">
+    <footer className="bg-[#F1F5F9]/95">
       <div className="text-muted mx-auto flex w-full flex-col gap-4 px-6 py-8 text-sm sm:flex-row sm:items-center sm:justify-between">
         <p>
           © {new Date().getFullYear()} {env.appName}
