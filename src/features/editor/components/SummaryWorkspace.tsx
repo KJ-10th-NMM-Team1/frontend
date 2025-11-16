@@ -1,22 +1,15 @@
 import type { Segment } from '@/entities/segment/types'
 
-import { DubbingIssuesSection } from './DubbingIssuesSection'
-import { TranslationSummarySection } from './TranslationSummarySection'
+import { ProjectSummarySection } from './ProjectSummarySection'
 
 type SummaryWorkspaceProps = {
+  projectId: string
   segments: Segment[]
-  sourceLanguage: string
-  targetLanguage: string
+  duration: number
 }
 
-export function SummaryWorkspace() {
+export function SummaryWorkspace({ projectId, segments, duration }: SummaryWorkspaceProps) {
   return (
-    <div className="flex h-full flex-col gap-3 p-3">
-      {/* 상단: 이슈 표시 영역 */}
-      <DubbingIssuesSection />
-
-      {/* 하단: 번역 결과 요약 */}
-      <TranslationSummarySection />
-    </div>
+    <ProjectSummarySection projectId={projectId} segments={segments.length} duration={duration} />
   )
 }

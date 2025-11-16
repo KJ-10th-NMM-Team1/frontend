@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import { AudioTrackWorkspace } from '@/features/editor/components/AudioTrackWorkspace'
 import { StudioVideoPreview } from '@/features/editor/components/StudioVideoPreview'
 import { SummaryWorkspace } from '@/features/editor/components/SummaryWorkspace'
-import { TranslationWorkspace } from '@/features/editor/components/TranslationWorkspace'
+import { TranslationSummarySection } from '@/features/editor/components/TranslationSummarySection'
 import { useAudioGenerationEvents } from '@/features/editor/hooks/useAudioGenerationEvents'
 import { useEditorState } from '@/features/editor/hooks/useEditorState'
 import { Spinner } from '@/shared/ui/Spinner'
@@ -53,31 +53,30 @@ export default function EditorPage() {
                 <TabsList className="h-auto gap-0 rounded-none border-0 bg-transparent p-0">
                   <TabsTrigger
                     value="summary"
-                    className="border-primary rounded-none px-4 py-2 text-xs font-semibold data-[state=active]:border-b-2 data-[state=active]:bg-transparent"
+                    className="border-primary data-[state=active]:text-balck data-[state=active]:bg-tran rounded-none px-4 py-2 text-xs font-semibold data-[state=active]:border-b-2"
                   >
                     요약
                   </TabsTrigger>
                   <TabsTrigger
                     value="translation"
-                    className="border-primary rounded-none px-4 py-2 text-xs font-semibold data-[state=active]:border-b-2 data-[state=active]:bg-transparent"
+                    className="border-primary data-[state=active]:text-balck data-[state=active]:bg-tran rounded-none px-4 py-2 text-xs font-semibold data-[state=active]:border-b-2"
                   >
                     번역
                   </TabsTrigger>
                 </TabsList>
               </div>
 
-              <TabsContent value="summary" className="mt-0 flex-1 overflow-y-auto">
+              <TabsContent value="summary" className="mt-0 flex-1 overflow-hidden">
                 <SummaryWorkspace
-                // segments={data.segments}
-                // sourceLanguage={sourceLanguage}
-                // targetLanguage={targetLanguage}
+                  projectId={projectId}
+                  segments={data.segments}
+                  duration={data.playback.duration}
                 />
               </TabsContent>
 
-              <TabsContent value="translation" className="mt-0 flex-1 overflow-y-auto">
-                <TranslationWorkspace
+              <TabsContent value="translation" className="mt-0 flex-1 overflow-hidden">
+                <TranslationSummarySection
                   projectId={projectId}
-                  segments={data.segments}
                   sourceLanguage={sourceLanguage}
                   targetLanguage={targetLanguage}
                 />

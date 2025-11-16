@@ -1,129 +1,227 @@
 /**
  * 번역 요약 섹션
- * 현재/이전/다음 세그먼트의 번역 내용을 표시
+ * 모든 세그먼트의 번역 내용을 표시하고 편집 가능
  */
 
-import { useMemo, useRef, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
-import type { Segment } from '@/entities/segment/types'
+import { MoreVertical } from 'lucide-react'
+
+import { apiPost } from '@/shared/api/client'
 import { useEditorStore } from '@/shared/store/useEditorStore'
 import { useTracksStore } from '@/shared/store/useTracksStore'
+import { Button } from '@/shared/ui/Button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/shared/ui/Dropdown'
 
-export function TranslationSummarySection() {
-  // 성능 최적화: activeSegmentId만 구독 (playhead는 매 프레임 변경되므로 구독 X)
+type TranslationSummarySectionProps = {
+  projectId: string
+  sourceLanguage: string
+  targetLanguage: string
+}
+
+export function TranslationSummarySection({
+  projectId,
+  sourceLanguage,
+  targetLanguage,
+}: TranslationSummarySectionProps) {
   const activeSegmentId = useEditorStore((state) => state.activeSegmentId)
+  const { getAllSegments, updateSegment } = useTracksStore((state) => ({
+    getAllSegments: state.getAllSegments,
+    updateSegment: state.updateSegment,
+  }))
 
-  // Get all segments from tracks store (same data used by useAudioTimeline)
-  // tracks가 업데이트될 때마다 allSegments도 업데이트
-  const allSegments = useTracksStore((state) =>
-    state.tracks
-      .filter((track): track is Extract<typeof track, { type: 'speaker' }> => track.type === 'speaker')
-      .flatMap((track) => track.segments),
-  )
+  const allSegments = getAllSegments()
+  const segmentRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
-  // 성능 최적화: segment ID -> index Map 생성 (O(1) 조회)
-  const segmentIndexMap = useMemo(() => {
-    const map = new Map<string, number>()
-    allSegments.forEach((segment, index) => {
-      map.set(segment.id, index)
-    })
-    return map
-  }, [allSegments])
+  const [translatingSegments, setTranslatingSegments] = useState<Set<string>>(new Set())
+  const [generatingAudioSegments, setGeneratingAudioSegments] = useState<Set<string>>(new Set())
 
-  // gap에서 사용할 마지막 알려진 위치를 저장
-  const lastKnownPositionRef = useRef<{
-    previousSegment: (typeof allSegments)[0] | null
-    nextSegment: (typeof allSegments)[0] | null
-  }>({
-    previousSegment: null,
-    nextSegment: null,
-  })
-
-  // activeSegmentId가 변경될 때만 마지막 알려진 위치 업데이트
+  // 활성 세그먼트로 자동 스크롤
   useEffect(() => {
-    if (activeSegmentId) {
-      const currentIndex = segmentIndexMap.get(activeSegmentId)
-      if (currentIndex !== undefined) {
-        lastKnownPositionRef.current = {
-          previousSegment: currentIndex > 0 ? allSegments[currentIndex - 1] : null,
-          nextSegment: currentIndex < allSegments.length - 1 ? allSegments[currentIndex + 1] : null,
-        }
-      }
-    }
-  }, [activeSegmentId, allSegments, segmentIndexMap])
+    if (!activeSegmentId) return
+    const node = segmentRefs.current[activeSegmentId]
+    if (!node) return
+    node.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [activeSegmentId])
 
-  // 현재 activeSegmentId에 해당하는 segment와 이전/다음 segment 찾기
-  // 성능 최적화: Map을 사용한 O(1) 조회
-  const { currentSegment, previousSegment, nextSegment } = useMemo(() => {
-    // Case 1: activeSegmentId가 있는 경우 (segment 위에 있음)
-    if (activeSegmentId) {
-      const currentIndex = segmentIndexMap.get(activeSegmentId)
+  const handleSourceChange = (segmentId: string, value: string) => {
+    updateSegment(segmentId, { source_text: value })
+  }
 
-      if (currentIndex === undefined) {
-        return {
-          currentSegment: null,
-          previousSegment: null,
-          nextSegment: null,
-        }
-      }
+  const handleTargetChange = (segmentId: string, value: string) => {
+    updateSegment(segmentId, { target_text: value })
+  }
 
-      return {
-        currentSegment: allSegments[currentIndex],
-        previousSegment: currentIndex > 0 ? allSegments[currentIndex - 1] : null,
-        nextSegment: currentIndex < allSegments.length - 1 ? allSegments[currentIndex + 1] : null,
-      }
+  const handleTranslate = async (segmentId: string) => {
+    if (translatingSegments.has(segmentId)) return
+
+    const segment = allSegments.find((s) => s.id === segmentId)
+    if (!segment) return
+
+    const sourceText = segment.source_text ?? ''
+    if (!sourceText.trim()) {
+      console.warn('Source text is empty, cannot translate')
+      return
     }
 
-    // Case 2: activeSegmentId가 없는 경우 (segment 사이의 gap에 있음)
-    // 성능 최적화: 마지막 알려진 위치 사용 (실시간 playhead 추적 X)
-    return {
-      currentSegment: null,
-      previousSegment: lastKnownPositionRef.current.previousSegment,
-      nextSegment: lastKnownPositionRef.current.nextSegment,
+    setTranslatingSegments((prev) => new Set(prev).add(segmentId))
+
+    try {
+      const response = await apiPost<{
+        segment_id: string
+        translation_id: string
+        source_text: string
+        target_text: string
+        language_code: string
+        src_lang: string | null
+      }>(
+        `api/segments/${segmentId}/translate`,
+        {
+          target_lang: targetLanguage,
+          src_lang: sourceLanguage || undefined,
+          source_text: sourceText,
+        },
+        { timeout: 60_000 },
+      )
+
+      updateSegment(segmentId, { target_text: response.target_text })
+      console.log('Translation completed:', response)
+    } catch (error) {
+      console.error('Translation failed:', error)
+    } finally {
+      setTranslatingSegments((prev) => {
+        const next = new Set(prev)
+        next.delete(segmentId)
+        return next
+      })
     }
-  }, [activeSegmentId, allSegments, segmentIndexMap])
+  }
+
+  const handleGenerateAudio = async (segmentId: string) => {
+    if (generatingAudioSegments.has(segmentId)) return
+
+    const segment = allSegments.find((s) => s.id === segmentId)
+    if (!segment) return
+
+    const translatedText = segment.target_text ?? ''
+    if (!translatedText.trim()) {
+      console.warn('Target text is empty, cannot generate audio')
+      return
+    }
+
+    setGeneratingAudioSegments((prev) => new Set(prev).add(segmentId))
+
+    try {
+      const payload = {
+        segment_id: segmentId,
+        translated_text: translatedText,
+        start: segment.start,
+        end: segment.end,
+        target_lang: targetLanguage,
+        mod: 'fixed' as const,
+        voice_sample_id: null,
+      }
+
+      const response = await apiPost<{
+        job_id: string
+        project_id: string
+        segment_idx: number
+        target_lang: string
+        mod: string
+      }>(`api/projects/${projectId}/segments/regenerate-tts`, payload, {
+        timeout: 60_000,
+      })
+
+      console.log('Audio generation job started:', response)
+    } catch (error) {
+      console.error('Audio generation failed:', error)
+    } finally {
+      setGeneratingAudioSegments((prev) => {
+        const next = new Set(prev)
+        next.delete(segmentId)
+        return next
+      })
+    }
+  }
 
   return (
-    <section className="border-surface-3 flex-1 overflow-y-auto rounded border bg-white p-3">
-      <h3 className="text-foreground mb-2 text-xs font-semibold">번역 요약</h3>
+    <div className="flex h-full flex-col">
+      <div className="flex-1 space-y-1.5 overflow-y-auto p-3">
+        {allSegments.map((segment) => {
+          const isActive = activeSegmentId === segment.id
+          const isTranslating = translatingSegments.has(segment.id)
+          const isGeneratingAudio = generatingAudioSegments.has(segment.id)
 
-      <div className="flex flex-col gap-1.5">
-        {/* 이전 텍스트 */}
-        {previousSegment && (
-          <div className="text-muted rounded border border-transparent px-2 py-1.5 text-xs opacity-50">
-            <div className="mb-0.5 line-clamp-1 text-[11px]">
-              {previousSegment.source_text || '원문 없음'}
-            </div>
-            <div className="line-clamp-1 text-[11px]">
-              → {previousSegment.target_text || '번역 없음'}
-            </div>
-          </div>
-        )}
+          return (
+            <div
+              key={segment.id}
+              ref={(node) => {
+                segmentRefs.current[segment.id] = node
+              }}
+              className={`group flex items-start gap-2 rounded px-2 py-1.5 transition ${
+                isActive ? 'border-primary bg-primary/5' : 'hover:bg-surface-2'
+              }`}
+            >
+              <div className="flex-1">
+                {/* 원본 텍스트 */}
+                <input
+                  className="text-foreground mb-0.5 w-full border-0 bg-transparent px-0 py-0 text-xs focus:outline-none"
+                  value={segment.source_text || ''}
+                  onChange={(e) => handleSourceChange(segment.id, e.target.value)}
+                  placeholder="원문 없음"
+                />
 
-        {/* 현재 텍스트 */}
-        {currentSegment ? (
-          <div className="bg-primary/5 border-primary rounded border px-2.5 py-2">
-            <div className="text-foreground mb-1 line-clamp-2 text-xs font-medium">
-              {currentSegment.source_text || '원문 없음'}
-            </div>
-            <div className="text-primary line-clamp-2 text-xs font-medium">
-              → {currentSegment.target_text || '번역 없음'}
-            </div>
-          </div>
-        ) : null}
+                {/* 번역 텍스트 */}
+                <div className="relative flex items-center gap-1">
+                  <span className="text-muted text-xs">→</span>
+                  <input
+                    className="text-primary flex-1 border-0 bg-transparent px-0 py-0 text-xs font-medium focus:outline-none disabled:opacity-50"
+                    value={segment.target_text || ''}
+                    onChange={(e) => handleTargetChange(segment.id, e.target.value)}
+                    placeholder={isTranslating ? '번역 중...' : '번역 없음'}
+                    disabled={isTranslating}
+                  />
+                  {isTranslating && (
+                    <div className="border-primary h-3 w-3 animate-spin rounded-full border-2 border-t-transparent" />
+                  )}
+                </div>
+              </div>
 
-        {/* 다음 텍스트 */}
-        {nextSegment && (
-          <div className="text-muted rounded border border-transparent px-2 py-1.5 text-xs opacity-50">
-            <div className="mb-0.5 line-clamp-1 text-[11px]">
-              {nextSegment.source_text || '원문 없음'}
+              {/* 드롭다운 버튼 */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 w-5 shrink-0 p-0 opacity-0 transition group-hover:opacity-100"
+                  >
+                    <MoreVertical className="h-3.5 w-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => void handleTranslate(segment.id)}
+                    disabled={isTranslating || !segment.source_text?.trim()}
+                  >
+                    {isTranslating ? '번역 중...' : '번역하기'}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => void handleGenerateAudio(segment.id)}
+                    disabled={isGeneratingAudio || !segment.target_text?.trim()}
+                  >
+                    {isGeneratingAudio ? '생성 중...' : '오디오 생성'}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-            <div className="line-clamp-1 text-[11px]">
-              → {nextSegment.target_text || '번역 없음'}
-            </div>
-          </div>
-        )}
+          )
+        })}
       </div>
-    </section>
+    </div>
   )
 }
