@@ -114,7 +114,7 @@ export default function EditorPage() {
         </div>
 
         {/* Audio Track Workspace Card */}
-        <div className="border-surface-3 bg-surface-1 z-10 h-[460px] overflow-hidden rounded-lg border shadow-sm">
+        <div className="border-surface-3 bg-surface-1 z-10 h-[445px] overflow-hidden rounded-lg border shadow-sm">
           <AudioTrackWorkspace
             segments={data.segments}
             duration={data.playback.duration}

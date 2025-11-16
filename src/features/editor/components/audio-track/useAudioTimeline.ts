@@ -184,11 +184,35 @@ export function useAudioTimeline(
       }
       return
     }
-    const current =
-      allSegments.find((segment) => playhead >= segment.start && playhead < segment.end) ??
-      (playhead >= allSegments[allSegments.length - 1].end
-        ? allSegments[allSegments.length - 1]
-        : null)
+
+    // 이진 탐색으로 현재 세그먼트 찾기 (O(log n) - 성능 개선)
+    let current = null
+
+    // playhead가 마지막 세그먼트 이후인 경우
+    if (playhead >= allSegments[allSegments.length - 1].end) {
+      current = allSegments[allSegments.length - 1]
+    } else {
+      // 이진 탐색
+      let left = 0
+      let right = allSegments.length - 1
+
+      while (left <= right) {
+        const mid = Math.floor((left + right) / 2)
+        const segment = allSegments[mid]
+
+        if (playhead >= segment.start && playhead < segment.end) {
+          current = segment
+          break
+        }
+
+        if (playhead < segment.start) {
+          right = mid - 1
+        } else {
+          left = mid + 1
+        }
+      }
+    }
+
     const nextId = current?.id ?? null
     if (nextId !== lastSegmentRef.current) {
       lastSegmentRef.current = nextId
