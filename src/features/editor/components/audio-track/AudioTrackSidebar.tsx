@@ -1,3 +1,8 @@
+import { Plus } from 'lucide-react'
+
+import { Button } from '@/shared/ui/Button'
+import { useTracksStore } from '@/shared/store/useTracksStore'
+
 import { TrackActionsMenu } from './TrackActionsMenu'
 import { TrackNameEditor } from './TrackNameEditor'
 import type { TrackRow } from './types'
@@ -8,6 +13,8 @@ type AudioTrackSidebarProps = {
 }
 
 export function AudioTrackSidebar({ trackRows, getTrackRowHeight }: AudioTrackSidebarProps) {
+  const addSpeakerTrack = useTracksStore((state) => state.addSpeakerTrack)
+
   return (
     <div className="border-surface-3 bg-surface-2 border-r">
       {/* 티커라인 패딩 */}
@@ -48,6 +55,20 @@ export function AudioTrackSidebar({ trackRows, getTrackRowHeight }: AudioTrackSi
           </div>
         )
       })}
+
+      {/* 티커라인 패딩 with Add Speaker button */}
+      <div className="border-surface-3 flex h-10 items-center border-b px-3">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="w-full gap-1"
+          onClick={addSpeakerTrack}
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Add Speaker
+        </Button>
+      </div>
     </div>
   )
 }

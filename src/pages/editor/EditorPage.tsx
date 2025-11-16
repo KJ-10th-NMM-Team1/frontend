@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom'
 
 import { AudioTrackWorkspace } from '@/features/editor/components/AudioTrackWorkspace'
+import { LanguageSelector } from '@/features/editor/components/LanguageSelector'
 import { StudioVideoPreview } from '@/features/editor/components/StudioVideoPreview'
 import { SummaryWorkspace } from '@/features/editor/components/SummaryWorkspace'
 import { TranslationSummarySection } from '@/features/editor/components/TranslationSummarySection'
@@ -37,16 +38,19 @@ export default function EditorPage() {
     <div className="bg-background flex h-screen flex-col">
       {/* Main Content - 패딩과 카드 스타일 적용 */}
       <div className="flex min-h-0 flex-1 flex-col gap-2 p-2">
-        {/* Breadcrumbs - 작고 흐리게 */}
-        <div className="px-1 text-xs">
-          <Breadcrumbs
-            items={[
-              { label: '홈', href: '/' },
-              { label: `프로젝트`, href: `/projects/${projectId}` },
-              { label: '에디터' },
-            ]}
-            className="opacity-50"
-          />
+        {/* Breadcrumbs with Language Selector */}
+        <div className="flex items-center justify-between px-1">
+          <div className="text-xs">
+            <Breadcrumbs
+              items={[
+                { label: '홈', href: '/' },
+                { label: `프로젝트`, href: `/projects/${projectId}` },
+                { label: '에디터' },
+              ]}
+              className="opacity-50"
+            />
+          </div>
+          <LanguageSelector projectId={projectId} currentLanguageCode={languageCode} />
         </div>
         <div className="flex min-h-0 flex-1 gap-2">
           {/* Video Preview Card */}
@@ -99,7 +103,7 @@ export default function EditorPage() {
         </div>
 
         {/* Audio Track Workspace Card */}
-        <div className="border-surface-3 bg-surface-1 z-10 h-[460px] overflow-hidden rounded-lg border shadow-sm">
+        <div className="border-surface-3 bg-surface-1 z-10 h-[480px] overflow-hidden rounded-lg border shadow-sm">
           <AudioTrackWorkspace
             segments={data.segments}
             duration={data.playback.duration}

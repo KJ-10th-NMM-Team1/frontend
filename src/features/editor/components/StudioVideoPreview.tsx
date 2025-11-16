@@ -150,6 +150,12 @@ export function StudioVideoPreview({
     setPlayhead(newTime)
   }
 
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60)
+    const secs = Math.floor(seconds % 60)
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
   const progress = duration > 0 ? (playhead / duration) * 100 : 0
 
   return (
@@ -199,7 +205,7 @@ export function StudioVideoPreview({
       </div>
 
       {/* 재생 컨트롤 바 */}
-      <div className="border-surface-3 flex items-center justify-center border-t px-4 py-1">
+      <div className="border-surface-3 flex items-center justify-between border-t px-4 py-1">
         <Button
           variant="ghost"
           size="sm"
@@ -209,6 +215,7 @@ export function StudioVideoPreview({
         >
           {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
         </Button>
+        <div className="text-foreground font-mono text-xs">{formatTime(playhead)}</div>
       </div>
     </section>
   )

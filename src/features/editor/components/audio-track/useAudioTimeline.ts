@@ -224,7 +224,7 @@ export function useAudioTimeline(
   useSegmentAudioPlayer({
     segments: allSegments,
     playhead,
-    isPlaying: isPlaying && audioPlaybackMode === 'target',
+    isPlaying: isPlaying && audioPlaybackMode !== 'original',
     isScrubbing,
     audioUrls,
     audioObjects, // Pass preloaded Audio objects for instant playback

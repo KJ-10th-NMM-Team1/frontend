@@ -74,7 +74,8 @@ export function AudioTimeline({
 
   const timelineWidth = getTimelineWidth(duration, scale)
   // Calculate total height by summing all track heights
-  const contentHeight = trackRows.reduce((total, track) => total + getTrackRowHeight(track), 0) + 40
+  // +40 for TimeRuler, +40 for Add Speaker button section
+  const contentHeight = trackRows.reduce((total, track) => total + getTrackRowHeight(track), 0) + 80
 
   // Track layout state for drag-and-drop between tracks
   const trackRefs = useRef<Map<string, HTMLDivElement>>(new Map())

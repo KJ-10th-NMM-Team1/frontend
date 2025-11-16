@@ -70,14 +70,7 @@ export function AudioTrackWorkspace({
     <section className="border-surface-3 bg-surface-1 flex h-full flex-col border-t">
       <div className="border-surface-3 flex h-full flex-col rounded-lg border">
         {/* Controls - 항상 상단에 고정 */}
-        <AudioTimelineControls
-          playhead={playhead}
-          duration={duration}
-          setPlayhead={setPlayhead}
-          togglePlayback={togglePlayback}
-          isPlaying={isPlaying}
-          formatTime={formatTime}
-        />
+        <AudioTimelineControls />
 
         {/* Timeline 영역 - 스크롤 가능 */}
         <div className="timeline-scroll-container grid flex-1 overflow-auto lg:grid-cols-[220px,1fr]">
