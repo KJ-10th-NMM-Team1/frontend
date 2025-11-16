@@ -17,7 +17,6 @@ import { ValidationMessage } from '../../../shared/ui/ValidationMessage'
 import type { GoogleAPI, GoogleCredentialResponse } from '../../../types/google'
 import { useLoginMutation } from '../hooks/useAuthMutations'
 
-
 const loginSchema = z.object({
   email: z.string().email({ message: '올바른 이메일 형식을 입력해주세요.' }),
   password: z.string().min(8, { message: '비밀번호는 8자 이상이어야 합니다.' }),
@@ -50,27 +49,31 @@ export function LoginForm() {
     })
   })
 
-  const handleGoogleCredentialResponse = useCallback(({ credential }: GoogleCredentialResponse) => {
-    if (!credential) {
-      console.warn('Google credential missing')
-      return
-    }
+  const handleGoogleCredentialResponse = useCallback(
+    ({ credential }: GoogleCredentialResponse) => {
+      if (!credential) {
+        console.warn('Google credential missing')
+        return
+      }
 
-    trackEvent('login_google_credential_received')
+      trackEvent('login_google_credential_received')
 
-    const processLogin = async () => {
+      const processLogin = async () => {
         await apiClient.post('api/auth/google/login', {
           json: { id_token: credential },
         })
         await handleAuthSuccess()
-      await handleAuthSuccess()
-    }
+        await handleAuthSuccess()
+      }
 
-    void processLogin().catch((error) => console.error('Google login error', error))
-  }, [handleAuthSuccess])
+      void processLogin().catch((error) => console.error('Google login error', error))
+    },
+    [handleAuthSuccess],
+  )
 
   useEffect(() => {
     const googleClient: GoogleAPI | undefined = window.google
+    console.log(googleClient)
     if (!googleClient) {
       console.warn('Google Identity Services script not loaded')
       return

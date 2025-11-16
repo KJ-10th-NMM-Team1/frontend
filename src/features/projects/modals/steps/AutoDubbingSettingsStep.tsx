@@ -25,10 +25,7 @@ export const autoDubbingSettingsSchema = z
     title: z.string().min(2, '제목은 2자 이상이어야 합니다.'),
     detectAutomatically: z.boolean(),
     // 빈 문자열도 통과시킴
-    sourceLanguage: z
-      .string()
-      .min(1, '언어를 선택해주세요')
-      .or(z.literal('')),
+    sourceLanguage: z.string().min(1, '언어를 선택해주세요').or(z.literal('')),
     targetLanguages: z.array(z.string()).min(1, '타겟 언어를 최소 1개 선택하세요.'),
     speakerCount: z.coerce.number().min(1).max(10),
   })
