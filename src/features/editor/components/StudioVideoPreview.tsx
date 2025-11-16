@@ -148,6 +148,7 @@ export function StudioVideoPreview({
     const percentage = x / rect.width
     const newTime = percentage * duration
     setPlayhead(newTime)
+    setPlaying(false)
   }
 
   const formatTime = (seconds: number): string => {
