@@ -166,27 +166,24 @@ export function StudioVideoPreview({
           {duration}s · {playbackRate.toFixed(1)}x
         </span>
       </header> */}
-      <div className="border-surface-3 relative overflow-hidden border bg-black/5">
-        <div className="pb-[56.25%]" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          {videoSrc ? (
-            <video
-              ref={videoRef}
-              controls={false}
-              autoPlay={false}
-              className={'h-auto max-h-[32em] min-h-[20em] w-full bg-black'}
-              src={videoSrc}
-              preload="metadata"
-              muted
-            >
-              <track kind="captions" />
-            </video>
-          ) : (
-            <div className="text-muted flex h-full items-center justify-center text-sm">
-              비디오를 불러올 수 없습니다
-            </div>
-          )}
-        </div>
+      <div className="border-surface-3 relative flex h-full items-center justify-center border bg-black">
+        {videoSrc ? (
+          <video
+            ref={videoRef}
+            controls={false}
+            autoPlay={false}
+            className="h-full w-full object-contain"
+            src={videoSrc}
+            preload="metadata"
+            muted
+          >
+            <track kind="captions" />
+          </video>
+        ) : (
+          <div className="text-muted flex h-full items-center justify-center text-sm">
+            비디오를 불러올 수 없습니다
+          </div>
+        )}
       </div>
 
       {/* 재생 진행도 프로그레스 바 */}
