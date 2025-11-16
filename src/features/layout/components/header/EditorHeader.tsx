@@ -1,77 +1,93 @@
-import { ArrowLeft, ChevronDown } from 'lucide-react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { LogOut, User, Waves } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
 
-import { useLanguage } from '@/features/languages/hooks/useLanguage'
-import { useProject } from '@/features/projects/hooks/useProjects'
+import { useLogoutMutation } from '@/features/auth/hooks/useAuthMutations'
+import { routes } from '@/shared/config/routes'
 import { useAuthStore } from '@/shared/store/useAuthStore'
-import { Button } from '@/shared/ui/Button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/ui/Dropdown'
 
 export function EditorHeader() {
   const navigate = useNavigate()
-  const { projectId = '', languageCode = '' } = useParams<{
-    projectId: string
-    languageCode: string
-  }>()
+  const logoutMutation = useLogoutMutation()
 
-  const { data: project } = useProject(projectId)
-  const { data: languages } = useLanguage()
-  const { userName, signOut } = useAuthStore()
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const userName = useAuthStore((state) => state.userName)
 
-  const targetLanguage = languages?.find((lang) => lang.language_code === languageCode)
+  const initials =
+    userName
+      ?.split(' ')
+      .map((word) => word[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase() ?? 'DP'
 
-  const handleLogout = () => {
-    signOut()
-    navigate('/auth/login')
+  const handleVoiceSamples = () => {
+    navigate(routes.voiceSamples)
+  }
+
+  const handleMyInfo = () => {
+    navigate(routes.myinfo)
+  }
+
+  const handleSignOut = () => {
+    logoutMutation.mutate()
   }
 
   return (
-    <header className="border-surface-3 bg-surface-2 flex h-12 items-center justify-between border-b px-4">
-      {/* Left Section: Back Button and Logo */}
-      <div className="flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate(`/projects/${projectId}`)}
-          className="h-8 w-8 p-0"
+    <header className="border-surface-3 bg-surface-1 border-b">
+      <div className="mx-auto flex w-full max-w-[1920px] items-center justify-between gap-6 px-6 py-2">
+        {/* Logo - 얇은 버전 */}
+        <Link
+          to={routes.home}
+          className="focus-visible:outline-hidden focus-visible:ring-primary group flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-offset-2"
+          aria-label="Dupliot 홈으로 이동"
         >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div className="h-6" />
-      </div>
+          <span className="text-foreground text-xl font-semibold tracking-tight">
+            Dupliot
+            <span className="text-primary">.</span>
+          </span>
+        </Link>
 
-      {/* Center Section: Project Title and Target Language */}
-      <div className="flex items-center gap-2 text-sm">
-        <span className="text-foreground font-medium">{project?.title || 'Loading...'}</span>
-        {targetLanguage && (
-          <>
-            <span className="text-muted">/</span>
-            <span className="text-muted">{targetLanguage.name_ko}</span>
-          </>
-        )}
+        {/* User Menu */}
+        {isAuthenticated ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="bg-surface-2 text-foreground border-surface-4 inline-flex h-9 w-9 items-center justify-center rounded-full border text-xs font-semibold uppercase shadow-inner"
+              >
+                {initials}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-60">
+              <DropdownMenuLabel>
+                <p className="text-muted text-xs font-medium uppercase tracking-[0.3em]">Creator</p>
+                <p className="text-foreground mt-1 text-sm font-semibold">{userName ?? '미등록'}</p>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={handleMyInfo}>
+                <User className="text-muted h-4 w-4" />내 정보
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={handleVoiceSamples}>
+                <Waves className="text-muted h-4 w-4" />
+                음성 샘플
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-danger" onSelect={handleSignOut}>
+                <LogOut className="h-4 w-4" />
+                로그아웃
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : null}
       </div>
-
-      {/* Right Section: User Dropdown */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="gap-1.5">
-            <span className="text-sm">{userName || 'User'}</span>
-            <ChevronDown className="h-3.5 w-3.5" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem onClick={() => navigate('/workspace')}>워크스페이스</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigate('/projects')}>프로젝트 목록</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleLogout}>로그아웃</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
     </header>
   )
 }

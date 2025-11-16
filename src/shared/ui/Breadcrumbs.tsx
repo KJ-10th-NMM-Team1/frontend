@@ -47,7 +47,7 @@ export function Breadcrumbs({ items, className, separator = 'chevron' }: Breadcr
                   <Link
                     to={item.href}
                     className={cn(
-                      'text-muted hover:text-primary text-sm transition-colors',
+                      'text-muted hover:text-primary text-xs transition-colors',
                       isFirst && 'font-medium',
                     )}
                   >
@@ -56,7 +56,7 @@ export function Breadcrumbs({ items, className, separator = 'chevron' }: Breadcr
                 ) : (
                   <span
                     className={cn(
-                      'text-foreground text-sm',
+                      'text-foreground text-xs',
                       isLast ? 'font-semibold' : 'text-muted',
                     )}
                     aria-current={isLast ? 'page' : undefined}

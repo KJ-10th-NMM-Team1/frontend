@@ -23,7 +23,7 @@ export default function EditorPage() {
 
   if (isLoading || !data) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-2">
         <Spinner size="lg" />
         <p className="text-muted text-sm">에디터 상태를 불러오는 중…</p>
       </div>
@@ -34,21 +34,23 @@ export default function EditorPage() {
   const targetLanguage = data.playback.active_language || '번역본'
 
   return (
-    <div className="bg-surface-1 flex h-screen flex-col">
-      {/* Breadcrumbs */}
-      <div className="border-surface-3 bg-surface-1 border-b px-6 py-3">
-        <Breadcrumbs
-          items={[
-            { label: '홈', href: '/' },
-            { label: `프로젝트`, href: `/projects/${projectId}` },
-            { label: '에디터' },
-          ]}
-        />
-      </div>
-
-      <div className="flex min-h-0 flex-1 flex-col gap-1">
-        <div className="flex min-h-0 flex-1 gap-1">
-          <div className="flex-1 items-stretch">
+    <div className="bg-background flex h-screen flex-col">
+      {/* Main Content - 패딩과 카드 스타일 적용 */}
+      <div className="flex min-h-0 flex-1 flex-col gap-2 p-2">
+        {/* Breadcrumbs - 작고 흐리게 */}
+        <div className="px-1 text-xs">
+          <Breadcrumbs
+            items={[
+              { label: '홈', href: '/' },
+              { label: `프로젝트`, href: `/projects/${projectId}` },
+              { label: '에디터' },
+            ]}
+            className="opacity-50"
+          />
+        </div>
+        <div className="flex min-h-0 flex-1 gap-2">
+          {/* Video Preview Card */}
+          <div className="border-surface-3 bg-surface-1 flex-1 overflow-hidden rounded-lg border shadow-sm">
             <StudioVideoPreview
               activeLanguage={targetLanguage}
               duration={data.playback.duration}
@@ -57,7 +59,8 @@ export default function EditorPage() {
             />
           </div>
 
-          <div className="w-1/3">
+          {/* Summary/Translation Tabs Card */}
+          <div className="border-surface-3 bg-surface-1 w-1/3 overflow-hidden rounded-lg border shadow-sm">
             <TabsRoot defaultValue="summary" className="flex h-full flex-col">
               <div className="border-surface-3 border-b px-3">
                 <TabsList className="h-auto gap-0 rounded-none border-0 bg-transparent p-0">
@@ -95,7 +98,8 @@ export default function EditorPage() {
           </div>
         </div>
 
-        <div className="z-10 h-[480px] min-h-0">
+        {/* Audio Track Workspace Card */}
+        <div className="border-surface-3 bg-surface-1 z-10 h-[460px] overflow-hidden rounded-lg border shadow-sm">
           <AudioTrackWorkspace
             segments={data.segments}
             duration={data.playback.duration}

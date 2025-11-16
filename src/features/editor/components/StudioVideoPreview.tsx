@@ -168,7 +168,7 @@ export function StudioVideoPreview({
               ref={videoRef}
               controls={false}
               autoPlay={false}
-              className="h-auto max-h-[32em] min-h-[20em] w-full bg-black"
+              className={'h-auto max-h-[32em] min-h-[20em] w-full bg-black'}
               src={videoSrc}
               preload="metadata"
               muted
@@ -199,7 +199,7 @@ export function StudioVideoPreview({
       </div>
 
       {/* 재생 컨트롤 바 */}
-      <div className="border-surface-3 flex items-center justify-center border-t px-4 py-2">
+      <div className="border-surface-3 flex items-center justify-center border-t px-4 py-1">
         <Button
           variant="ghost"
           size="sm"
@@ -207,7 +207,7 @@ export function StudioVideoPreview({
           className="hover:bg-surface-3"
           aria-label={isPlaying ? '일시정지' : '재생'}
         >
-          {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+          {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
         </Button>
       </div>
     </section>
