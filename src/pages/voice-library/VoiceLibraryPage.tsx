@@ -1,13 +1,12 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useRef, useCallback } from 'react'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Heart, Search } from 'lucide-react'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Heart, Pause, Play, Search } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
-import { env } from '@/shared/config/env'
-
-import type { VoiceSample } from '@/entities/voice-sample/types'
+import type { VoiceSample, VoiceSamplesResponse } from '@/entities/voice-sample/types'
 import { fetchVoiceSamples, toggleFavorite } from '@/features/voice-samples/api/voiceSamplesApi'
+import { env } from '@/shared/config/env'
 import { routes } from '@/shared/config/routes'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
@@ -21,6 +20,7 @@ import {
 
 type LibraryTab = 'library' | 'mine' | 'favorites'
 
+const EMPTY_SAMPLES: VoiceSample[] = []
 const DEFAULT_AVATAR =
   'https://ui-avatars.com/api/?name=Voice&background=EEF2FF&color=1E1B4B&size=128'
 
@@ -47,11 +47,18 @@ export default function VoiceLibraryPage() {
   const [tab, setTab] = useState<LibraryTab>('library')
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState<'default' | 'favorite'>('default')
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [playingSampleId, setPlayingSampleId] = useState<string | null>(null)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
-  const queryKey = useMemo(() => ['voice-library', tab, search], [tab, search])
-  const voiceQuery = useQuery({
+  const queryKey = useMemo(() => ['voice-library', tab, search] as const, [tab, search])
+  const voiceQuery = useQuery<
+    VoiceSamplesResponse,
+    Error,
+    VoiceSamplesResponse,
+    readonly [string, LibraryTab, string]
+  >({
     queryKey,
     queryFn: () =>
       fetchVoiceSamples({
@@ -59,18 +66,102 @@ export default function VoiceLibraryPage() {
         favoritesOnly: tab === 'favorites',
         mySamplesOnly: tab === 'mine',
       }),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
   })
 
-  const favoriteMutation = useMutation({
-    mutationFn: ({ sample, next }: { sample: VoiceSample; next: boolean }) =>
-      toggleFavorite(sample.id, next),
+  const favoriteMutation = useMutation<
+    VoiceSample,
+    Error,
+    {
+      sample: VoiceSample
+      next: boolean
+    }
+  >({
+    mutationFn: ({ sample, next }) => toggleFavorite(sample.id, next),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey })
     },
   })
+  const mutateFavorite = favoriteMutation.mutate
+  const isFavoriteLoading = Boolean(favoriteMutation.isPending)
 
-  const samples = voiceQuery.data?.samples ?? []
+  const cleanupAudio = useCallback(() => {
+    const audio = audioRef.current
+    if (!audio) return
+    audio.pause()
+    audio.currentTime = 0
+    audio.src = ''
+    audio.load()
+    audioRef.current = null
+  }, [])
+
+  const stopPlayback = useCallback(() => {
+    cleanupAudio()
+    setPlayingSampleId(null)
+  }, [cleanupAudio])
+
+  useEffect(() => {
+    return () => {
+      stopPlayback()
+    }
+  }, [stopPlayback])
+
+  const resolveSampleAudioUrl = useCallback(async (sample: VoiceSample) => {
+    const storageSegment = '/storage/media/'
+    if (sample.audio_sample_url) {
+      if (sample.audio_sample_url.includes(storageSegment)) {
+        const path = sample.audio_sample_url.split(storageSegment).pop()
+        if (path) {
+          return getPresignedUrl(path)
+        }
+      } else {
+        return sample.audio_sample_url
+      }
+    }
+    if (sample.file_path_wav) {
+      return getPresignedUrl(sample.file_path_wav)
+    }
+    if (sample.previewUrl) {
+      return sample.previewUrl
+    }
+    return undefined
+  }, [])
+
+  const handlePlaySample = useCallback(
+    async (sample: VoiceSample) => {
+      const sampleId = sample.id
+      if (!sampleId) return
+
+      if (playingSampleId === sampleId) {
+        stopPlayback()
+        return
+      }
+
+      stopPlayback()
+
+      const audioUrl = await resolveSampleAudioUrl(sample)
+      if (!audioUrl) {
+        console.warn('재생 가능한 오디오 URL을 찾지 못했습니다.', sample)
+        return
+      }
+
+      const audio = new Audio(audioUrl)
+      audioRef.current = audio
+      setPlayingSampleId(sampleId)
+
+      audio.addEventListener('ended', () => {
+        stopPlayback()
+      })
+
+      audio.play().catch((error) => {
+        console.error('음성 재생 실패:', error)
+        stopPlayback()
+      })
+    },
+    [playingSampleId, resolveSampleAudioUrl, stopPlayback],
+  )
+
+  const samples = voiceQuery.data?.samples ?? EMPTY_SAMPLES
   const sortedSamples = useMemo(() => {
     if (sort === 'favorite') {
       return [...samples].sort(
@@ -122,34 +213,36 @@ export default function VoiceLibraryPage() {
         </div>
       </div>
 
-      <div className="rounded-3xl border border-surface-2 bg-surface-1 p-4 shadow-soft">
+      <div className="mt-0 rounded-3xl border border-surface-2 bg-surface-1 p-4 shadow-soft">
         {voiceQuery.isLoading ? (
           <p className="text-center text-muted text-sm">목록을 불러오는 중...</p>
         ) : sortedSamples.length === 0 ? (
           <p className="text-center text-muted text-sm">조건에 맞는 보이스가 없습니다.</p>
         ) : (
           <>
-            <div className="text-muted mb-2 grid grid-cols-[260px,150px,150px,120px,130px] text-xs font-semibold uppercase tracking-[0.2em]">
-              <span>이름</span>
-              <span>국가</span>
-              <span>성별</span>
-              <span>즐겨찾기</span>
-              <span className="text-right">미리듣기</span>
+            <div className="text-muted mb-1 grid grid-cols-[minmax(0,2.5fr)_minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] gap-4 text-xs font-semibold uppercase tracking-[0.2em]">
+              <span className="flex min-h-[1.5rem] items-start truncate">이름</span>
+              <span className="flex min-h-[1.5rem] items-start">국가</span>
+              <span className="flex min-h-[1.5rem] items-start">성별</span>
+              <span className="inline-flex min-h-[1.5rem] w-[74px] items-start justify-center">즐겨찾기</span>
+              <span className="flex min-h-[1.5rem] items-start justify-end text-right">미리듣기</span>
             </div>
             <ul className="divide-y divide-surface-3">
-            {sortedSamples.map((sample) => (
-              <VoiceLibraryRow
-                key={sample.id}
-                sample={sample}
-                onToggleFavorite={() =>
-                  favoriteMutation.mutate({
-                    sample,
-                    next: !sample.isFavorite,
-                  })
-                }
-                toggling={favoriteMutation.isLoading}
-              />
-            ))}
+              {sortedSamples.map((sample) => (
+                <VoiceLibraryRow
+                  key={sample.id}
+                  sample={sample}
+                  onToggleFavorite={() =>
+                    mutateFavorite({
+                      sample,
+                      next: !sample.isFavorite,
+                    })
+                  }
+                  toggling={isFavoriteLoading}
+                  onPlay={handlePlaySample}
+                  isPlaying={playingSampleId === sample.id}
+                />
+              ))}
             </ul>
           </>
         )}
@@ -183,10 +276,14 @@ function VoiceLibraryRow({
   sample,
   onToggleFavorite,
   toggling,
+  onPlay,
+  isPlaying,
 }: {
   sample: VoiceSample
   onToggleFavorite: () => void
   toggling: boolean
+  onPlay: (sample: VoiceSample) => void | Promise<void>
+  isPlaying: boolean
 }) {
   const [resolvedAvatar, setResolvedAvatar] = useState<string>(
     sample.avatarImageUrl && sample.avatarImageUrl.startsWith('http')
@@ -214,7 +311,7 @@ function VoiceLibraryRow({
   }, [sample.avatarImagePath, sample.avatarImageUrl])
 
   return (
-    <li className="grid grid-cols-[260px,150px,150px,120px,130px] items-center gap-4 py-4 text-sm">
+    <li className="grid grid-cols-[minmax(0,2.5fr)_minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] items-center gap-4 py-4 text-sm">
       <div className="flex items-center gap-3 overflow-hidden">
         <img
           src={resolvedAvatar}
@@ -237,20 +334,24 @@ function VoiceLibraryRow({
         type="button"
         onClick={onToggleFavorite}
         disabled={toggling}
-        className="inline-flex items-center gap-1 rounded-full border border-surface-3 px-3 py-1 text-xs font-medium"
+        className="inline-flex h-8 w-[74px] shrink-0 items-center justify-center gap-1 rounded-full border border-surface-3 px-1.5 text-xs font-medium"
       >
         <Heart className={`h-4 w-4 ${sample.isFavorite ? 'text-danger fill-danger/20' : 'text-muted'}`} />
         {sample.favoriteCount ?? 0}
       </button>
-      <div className="text-right">
+      <div className="flex justify-end">
         <Button
           type="button"
-          variant="secondary"
-          className="rounded-full px-4 py-1 text-xs"
-          onClick={() => window.open(sample.audio_sample_url ?? sample.file_path_wav ?? '#', '_blank')}
-          disabled={!sample.audio_sample_url && !sample.file_path_wav}
+          variant={isPlaying ? 'secondary' : 'outline'}
+          className="flex h-9 w-9 items-center justify-center rounded-full p-0"
+          onClick={() => onPlay(sample)}
+          disabled={!sample.audio_sample_url && !sample.file_path_wav && !sample.previewUrl}
         >
-          미리듣기
+          {isPlaying ? (
+            <Pause className="h-4 w-4" />
+          ) : (
+            <Play className="h-4 w-4" />
+          )}
         </Button>
       </div>
     </li>

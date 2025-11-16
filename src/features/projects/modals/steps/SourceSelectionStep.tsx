@@ -122,12 +122,12 @@ export function SourceSelectionStep({
         </Button>
 
         {fileSummary ? (
-          <p className="text-muted space-y-2">
+          <div className="text-muted space-y-2">
             {/* 선택된 파일 */}
-            <div className="text-muted overflow-hidden text-ellipsis whitespace-nowrap font-medium">
+            <p className="text-muted overflow-hidden text-ellipsis whitespace-nowrap font-medium">
               {fileSummary}
-            </div>
-          </p>
+            </p>
+          </div>
         ) : null}
         <ValidationMessage message={fileError ?? undefined} />
       </div>

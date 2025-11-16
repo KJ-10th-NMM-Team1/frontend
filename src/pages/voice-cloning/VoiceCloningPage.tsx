@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import { Button } from '@/shared/ui/Button'
+import { useNavigate } from 'react-router-dom'
+
 import { VoiceSampleForm } from '@/features/voice-samples/components/VoiceSampleForm'
 import { routes } from '@/shared/config/routes'
-import { useNavigate } from 'react-router-dom'
+import { Button } from '@/shared/ui/Button'
 
 type CloneStep = 'choose' | 'record-intro' | 'recording' | 'review' | 'details'
 
@@ -73,7 +74,7 @@ export default function VoiceCloningPage() {
     }
   }, [previewUrl, resetRecording])
 
-  const createProcessedStream = useCallback(async (stream: MediaStream) => {
+  const createProcessedStream = useCallback((stream: MediaStream): MediaStream => {
     const audioContext = new AudioContext()
     const source = audioContext.createMediaStreamSource(stream)
 
@@ -111,7 +112,7 @@ export default function VoiceCloningPage() {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       mediaStreamRef.current = stream
       recordedChunksRef.current = []
-      const processedStream = await createProcessedStream(stream)
+      const processedStream = createProcessedStream(stream)
       const options = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
         ? { mimeType: 'audio/webm;codecs=opus' }
         : undefined
@@ -165,7 +166,7 @@ export default function VoiceCloningPage() {
       setMicError('마이크 권한이 필요합니다.')
       resetRecording()
     }
-  }, [createProcessedStream, previewUrl, resetRecording, supportsRecording])
+  }, [createProcessedStream, previewUrl, recordingSeconds, resetRecording, supportsRecording])
 
   const handleStopRecording = useCallback(() => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
@@ -213,7 +214,7 @@ export default function VoiceCloningPage() {
     switch (step) {
       case 'choose':
         return (
-          <div className="border-surface-3 bg-surface-1/60 rounded-3xl border p-8 text-center">
+          <div className="border-surface-3 bg-surface-1/60 rounded-3xl border border-dashed p-10 text-center">
             <div className="space-y-4">
               <div className="text-3xl">+</div>
               <h2 className="text-xl font-semibold">Instant Voice Cloning</h2>
@@ -274,7 +275,13 @@ export default function VoiceCloningPage() {
               </button>
             </div>
             <div className="mt-8 flex justify-center">
-              <Button type="button" onClick={handleStartRecording} disabled={recordingState !== 'idle'}>
+              <Button
+                type="button"
+                onClick={() => {
+                  void handleStartRecording()
+                }}
+                disabled={recordingState !== 'idle'}
+              >
                 녹음 시작
               </Button>
             </div>
@@ -287,7 +294,7 @@ export default function VoiceCloningPage() {
             <p className="text-muted text-sm">녹음 중...</p>
             <p className="text-4xl font-bold mt-4">{formattedTime}</p>
             <div className="mt-6 flex justify-center gap-4">
-              <Button type="button" variant="destructive" onClick={handleStopRecording}>
+              <Button type="button" variant="danger" onClick={handleStopRecording}>
                 녹음 종료
               </Button>
               <Button type="button" variant="ghost" onClick={handleResetAll}>
