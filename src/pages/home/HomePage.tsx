@@ -22,7 +22,7 @@ const samples = {
 
 export default function HomePage() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)  
-  const [language, setLanguage] = useState<SampleLanguage>('en')
+  const [language, setLanguage] = useState<SampleLanguage>('ko')
   const navigate = useNavigate()
   const videoRef = useRef<HTMLVideoElement>(null)
   const audioRefs = useRef<Record<SampleLanguage, HTMLAudioElement> | null>(null)
@@ -32,8 +32,8 @@ export default function HomePage() {
       en: Object.assign(new Audio(samples.en.audioSrc), { loop: true, preload: 'auto' }),
     }
   }
-  const currentAudioLangRef = useRef<SampleLanguage>('en')
-  const [currentAudioLang, setCurrentAudioLang] = useState<SampleLanguage>('en')
+  const currentAudioLangRef = useRef<SampleLanguage>('ko')
+  const [currentAudioLang, setCurrentAudioLang] = useState<SampleLanguage>('ko')
 
   const getActiveAudio = () => audioRefs.current?.[currentAudioLangRef.current]
   const [isPlaying, setIsPlaying] = useState(false)  
