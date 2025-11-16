@@ -75,7 +75,7 @@ export default function EditorPage() {
           </div>
 
           {/* Summary/Translation Tabs Card */}
-          <div className="border-surface-3 bg-surface-1 w-1/3 overflow-hidden rounded-lg border shadow-sm">
+          <div className="border-surface-3 bg-surface-1 w-[35%] overflow-hidden rounded-lg border shadow-sm">
             <TabsRoot defaultValue="summary" className="flex h-full flex-col">
               <div className="border-surface-3 border-b px-3">
                 <TabsList className="h-auto gap-0 rounded-none border-0 bg-transparent p-0">
@@ -114,7 +114,7 @@ export default function EditorPage() {
         </div>
 
         {/* Audio Track Workspace Card */}
-        <div className="border-surface-3 bg-surface-1 z-10 h-[480px] overflow-hidden rounded-lg border shadow-sm">
+        <div className="border-surface-3 bg-surface-1 z-10 h-[460px] overflow-hidden rounded-lg border shadow-sm">
           <AudioTrackWorkspace
             segments={data.segments}
             duration={data.playback.duration}

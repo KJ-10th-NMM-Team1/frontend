@@ -166,7 +166,7 @@ export function StudioVideoPreview({
           {duration}s · {playbackRate.toFixed(1)}x
         </span>
       </header> */}
-      <div className="border-surface-3 relative flex h-full items-center justify-center border bg-black">
+      <div className="border-surface-3 relative flex flex-1 items-center justify-center overflow-hidden border bg-black">
         {videoSrc ? (
           <video
             ref={videoRef}
