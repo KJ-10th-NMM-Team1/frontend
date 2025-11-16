@@ -6,6 +6,7 @@ import { SummaryWorkspace } from '@/features/editor/components/SummaryWorkspace'
 import { TranslationSummarySection } from '@/features/editor/components/TranslationSummarySection'
 import { useAudioGenerationEvents } from '@/features/editor/hooks/useAudioGenerationEvents'
 import { useEditorState } from '@/features/editor/hooks/useEditorState'
+import { Breadcrumbs } from '@/shared/ui/Breadcrumbs'
 import { Spinner } from '@/shared/ui/Spinner'
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from '@/shared/ui/Tabs'
 
@@ -34,7 +35,16 @@ export default function EditorPage() {
 
   return (
     <div className="bg-surface-1 flex h-screen flex-col">
-      {/* <EditorToolbar /> */}
+      {/* Breadcrumbs */}
+      <div className="border-surface-3 bg-surface-1 border-b px-6 py-3">
+        <Breadcrumbs
+          items={[
+            { label: '홈', href: '/' },
+            { label: `프로젝트`, href: `/projects/${projectId}` },
+            { label: '에디터' },
+          ]}
+        />
+      </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-1">
         <div className="flex min-h-0 flex-1 gap-1">
