@@ -1,4 +1,4 @@
-import { LogOut, User, Waves } from 'lucide-react'
+import { LogOut, Mic, User, Waves } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import { useLogoutMutation } from '@/features/auth/hooks/useAuthMutations'
@@ -32,6 +32,10 @@ export function AppHeader() {
 
   const handleVoiceSamples = () => {
     navigate(routes.voiceSamples)
+  }
+
+  const handleVoiceCloning = () => {
+    navigate(routes.voiceCloning)
   }
 
   const handleMyInfo = () => {
@@ -92,6 +96,10 @@ export function AppHeader() {
               <DropdownMenuItem onSelect={handleVoiceSamples}>
                 <Waves className="text-muted h-4 w-4" />
                 음성 샘플
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={handleVoiceCloning}>
+                <Mic className="text-muted h-4 w-4" />
+                보이스 클로닝
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="text-danger" onSelect={handleSignOut}>
