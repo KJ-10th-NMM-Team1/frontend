@@ -23,6 +23,8 @@ type UiState = {
   openProjectCreation: (step?: ProjectCreationStep) => void
   closeProjectCreation: () => void
   setProjectCreationStep: (step: ProjectCreationStep) => void
+  workspaceSearchTerm: string
+  setWorkspaceSearchTerm: (value: string) => void
 }
 
 export const useUiStore = create<UiState>()(
@@ -48,6 +50,7 @@ export const useUiStore = create<UiState>()(
       open: false,
       step: 'source',
     },
+    workspaceSearchTerm: '',
     openProjectCreation: (step = 'source') =>
       set(
         {
@@ -81,6 +84,14 @@ export const useUiStore = create<UiState>()(
         }),
         false,
         { type: 'ui/setProjectCreationStep', payload: step },
+      ),
+    setWorkspaceSearchTerm: (value) =>
+      set(
+        {
+          workspaceSearchTerm: value,
+        },
+        false,
+        { type: 'ui/setWorkspaceSearchTerm', payload: value },
       ),
   })),
 )

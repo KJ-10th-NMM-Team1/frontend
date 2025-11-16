@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useEffect, useMemo, useCallback } from 'react'
 
-import { Search } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import type { ProjectSummary } from '@/entities/project/types'
@@ -11,7 +10,6 @@ import { UploadCard } from '@/features/workspace/components/upload-card/UploadCa
 import { routes } from '@/shared/config/routes'
 import { useAuthStore } from '@/shared/store/useAuthStore'
 import { useUiStore } from '@/shared/store/useUiStore'
-import { Input } from '@/shared/ui/Input'
 import { Spinner } from '@/shared/ui/Spinner'
 
 const stepMap = {
@@ -24,7 +22,6 @@ const stepMap = {
 export default function WorkspacePage() {
   const { data: projects = [], isLoading } = useProjects()
   const deleteProjectMutation = useDeleteProjectMutation()
-  const [searchTerm, setSearchTerm] = useState('')
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
@@ -33,6 +30,7 @@ export default function WorkspacePage() {
   const openProjectCreation = useUiStore((state) => state.openProjectCreation)
   const closeProjectCreation = useUiStore((state) => state.closeProjectCreation)
   const showToast = useUiStore((state) => state.showToast)
+  const workspaceSearchTerm = useUiStore((state) => state.workspaceSearchTerm)
 
   const stepParam = searchParams.get('create')
   const derivedStep = stepParam ? stepMap[stepParam as keyof typeof stepMap] : null
@@ -92,13 +90,13 @@ export default function WorkspacePage() {
   }, [stepParam, closeProjectCreation])
 
   const filteredProjects = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase()
-    if (!term) return projects
+    const term = workspaceSearchTerm.trim().toLowerCase()
     return projects.filter((project) => {
       const haystack = `${project.title} ${project.status}`
-      return haystack.toLowerCase().includes(term)
+      const matchesSearch = !term || haystack.toLowerCase().includes(term)
+      return matchesSearch
     })
-  }, [projects, searchTerm])
+  }, [projects, workspaceSearchTerm])
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -111,26 +109,20 @@ export default function WorkspacePage() {
   }
 
   return (
-    <div className="mx-auto grid w-full max-w-7xl gap-10 px-12 py-12">
-      <section className="flex-1 space-y-10">
-        <UploadCard />
-
-        <div className="flex justify-center">
-          <div className="relative w-full max-w-2xl">
-            <Search className="text-muted pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2" />
-            <Input
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="에피소드 제목 · 언어 · 상태로 검색"
-              className="h-14 rounded-[999px] pl-14 pr-6 text-base shadow-soft"
-            />
-          </div>
+    <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-6 py-8">
+      <div className="mb-10 flex flex-wrap items-center justify-between gap-6">
+        <div>
+          <p className="text-primary text-xs font-semibold uppercase tracking-[0.3em]">Workspace</p>
+          <h1 className="text-foreground text-3xl font-bold">Workspace</h1>
+          <p className="text-muted text-sm">AI 기반 자동 더빙으로 글로벌 콘텐츠를 만드세요.</p>
         </div>
-
+        <div className="flex-shrink-0">
+          <UploadCard />
+        </div>
+      </div>
+      <section className="flex flex-1 flex-col space-y-10">
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-foreground text-xl font-semibold">내 에피소드</h2>
-            <span className="text-muted text-xs">AI 더빙 진행률이 표시됩니다.</span>
           </div>
 
           {isLoading ? (

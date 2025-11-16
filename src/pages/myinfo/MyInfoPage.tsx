@@ -97,7 +97,7 @@ export default function MyInfoPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-12">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-8">
       <header className="bg-surface-1 border-surface-3 flex flex-col gap-4 rounded-3xl border px-5 py-5 shadow-soft">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-start gap-3">
@@ -114,7 +114,6 @@ export default function MyInfoPage() {
               <p className="text-primary text-xs font-semibold uppercase tracking-[0.35em]">
                 Account
               </p>
-              <h1 className="text-foreground text-3xl font-semibold">내 정보</h1>
               <p className="text-muted mt-1 text-sm">
                 계정 정보를 확인하고 알림, 보안 설정을 관리할 수 있습니다.
               </p>

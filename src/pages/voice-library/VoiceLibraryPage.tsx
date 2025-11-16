@@ -71,7 +71,6 @@ export default function VoiceLibraryPage() {
           <p className="text-primary text-xs font-semibold uppercase tracking-[0.3em]">
             Voice Library
           </p>
-          <h1 className="text-3xl font-bold">보이스 라이브러리</h1>
           <p className="text-muted text-sm">등록된 보이스 클론을 찾아보고, 즐겨찾기에 추가해보세요.</p>
         </div>
         <Button variant="primary" onClick={() => navigate(routes.voiceCloning)}>

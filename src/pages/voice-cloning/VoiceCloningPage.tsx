@@ -351,10 +351,9 @@ export default function VoiceCloningPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 px-4 py-8">
+    <div className="mx-auto max-w-4xl space-y-6 px-6 py-8">
       <div className="space-y-2 text-center">
         <p className="text-primary text-xs font-semibold tracking-[0.3em] uppercase">Voice cloning</p>
-        <h1 className="text-3xl font-bold">나만의 보이스를 만들어요</h1>
         <p className="text-muted text-sm">
           1분 이내의 샘플을 업로드하거나 직접 녹음하면, 해당 목소리로 TTS를 생성할 수 있습니다.
         </p>

@@ -44,7 +44,7 @@ const formatDuration = (seconds = 0) => {
 }
 
 // 상태
-const projectStatusLabelMap: Record<string, '업로드' | '편집중' | '완료' | '실패'> = {
+export const projectStatusLabelMap: Record<string, '업로드' | '편집중' | '완료' | '실패'> = {
   uploading: '업로드',
   processing: '업로드',
   uploaded: '업로드',
@@ -59,7 +59,7 @@ const projectStatusClassMap: Record<'업로드' | '편집중' | '완료' | '실�
   완료: 'bg-emerald-600/90 text-white',
   실패: 'bg-rose-600/90 text-white',
 }
-function getProjectStatusLabel(status?: string) {
+export function getProjectStatusLabel(status?: string) {
   return projectStatusLabelMap[status ?? ''] ?? '업로드'
 }
 const projectTargetStatusLabelMap: Record<string, '업로드' | '처리중' | '완료' | '실패'> = {
@@ -250,7 +250,7 @@ export function EpisodeCard({ project, onEdit, onDelete }: EpisodeCardProps) {
 
             return (
               <span
-                key={t.id}
+                key={key}
                 className={`rounded-full px-3 py-1 text-[11px] font-semibold ${statusClass}`}
               >
                 <ReactCountryFlag
