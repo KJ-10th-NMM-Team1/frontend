@@ -5,22 +5,23 @@
 @layer base {
   :root {
     color-scheme: light;
-    --background: 224 33% 98%;
+    /* Material Design Violet Theme */
+    --background: 270 20% 98%;
     --surface-1: 0 0% 100%;
-    --surface-2: 220 25% 98%;
-    --surface-3: 218 32% 95%;
-    --surface-4: 220 21% 88%;
-    --foreground: 221 47% 11%;
-    --muted: 225 15% 45%;
-    --accent: 261 83% 64%;
-    --accent-darker: 260 70% 48%;
+    --surface-2: 270 15% 98%;
+    --surface-3: 270 20% 95%;
+    --surface-4: 270 15% 90%;
+    --foreground: 265 15% 15%;
+    --muted: 265 10% 50%;
+    --accent: 270 87% 76%;
+    --accent-darker: 270 70% 65%;
     --primary: 265 100% 47%;
-    --primary-hover: 265 100% 37%;
+    --primary-hover: 265 100% 35%;
     --primary-foreground: 0 0% 100%;
     --success: 147 71% 38%;
     --success-darker: 149 60% 30%;
-    --info: 200 90% 50%;
-    --danger: 355 82% 66%;
+    --info: 174 100% 41%;
+    --danger: 351 74% 52%;
     --danger-foreground: 0 0% 100%;
     --warning: 40 98% 58%;
     --warning-darker: 38 92% 45%;

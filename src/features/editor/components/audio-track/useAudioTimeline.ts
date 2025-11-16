@@ -18,7 +18,7 @@ import type { TrackRow } from './types'
 
 const STATIC_TRACKS: TrackRow[] = [
   { id: 'track-original', label: 'Original', color: '#888', type: 'waveform', size: 'small' },
-  { id: 'track-fx', label: 'Music & FX', color: '#38bdf8', type: 'waveform', size: 'small' },
+  { id: 'track-fx', label: 'Music & FX', color: '#BB86FC', type: 'waveform', size: 'small' },
 ]
 
 const SPEAKER_ROW_HEIGHT = 84
@@ -202,10 +202,13 @@ export function useAudioTimeline(
   )
 
   // Resolve S3 key to presigned URL for original audio
-  const { data: originalAudioUrl, isLoading: originalUrlLoading } = usePresignedUrl(originalAudioSrc, {
-    staleTime: 5 * 60 * 1000,
-    enabled: true,
-  })
+  const { data: originalAudioUrl, isLoading: originalUrlLoading } = usePresignedUrl(
+    originalAudioSrc,
+    {
+      staleTime: 5 * 60 * 1000,
+      enabled: true,
+    },
+  )
 
   // Resolve S3 key to presigned URL for background audio (Music & FX)
   const { data: backgroundAudioUrl, isLoading: backgroundUrlLoading } = usePresignedUrl(

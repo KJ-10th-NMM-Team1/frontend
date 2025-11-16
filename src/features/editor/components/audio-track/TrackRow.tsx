@@ -51,24 +51,24 @@ export const TrackRow = memo(
     // Different styles for each track type
     const getTrackStyle = () => {
       if (track.type === 'waveform') {
-        // Original track: dark gray gradient
+        // Original track: neutral gray gradient
         if (track.id === 'track-original') {
           return {
             background: 'linear-gradient(to bottom, #e5e7eb 0%, #d1d5db 100%)',
             className: 'rounded-lg shadow-inner',
           }
         }
-        // Music & FX track: light cyan gradient
+        // Music & FX track: violet gradient (Material Design)
         if (track.id === 'track-fx') {
           return {
-            background: '#c7d8f2 100%',
+            background: 'linear-gradient(to bottom, #ede7f6 0%, #d1c4e9 100%)',
             className: 'rounded-lg shadow-inner',
           }
         }
       }
-      // Speaker tracks: alternating subtle background
+      // Speaker tracks: alternating subtle violet background
       return {
-        background: index % 2 === 0 ? 'rgba(15,23,42,0.02)' : 'transparent',
+        background: index % 2 === 0 ? 'rgba(101,0,238,0.02)' : 'transparent',
         className: '',
       }
     }
