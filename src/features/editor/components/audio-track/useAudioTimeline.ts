@@ -273,7 +273,7 @@ export function useAudioTimeline(
     playhead,
     isPlaying,
     isScrubbing,
-    isEnabled: audioPlaybackMode === 'target',
+    isEnabled: audioPlaybackMode !== 'original',
     playbackRate,
   })
 
