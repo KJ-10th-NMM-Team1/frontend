@@ -122,6 +122,7 @@ export function useSegmentAudioPlayer({
   const prevSegmentDataRef = useRef<SegmentData | null>(null)
   const isPlayingRef = useRef<boolean>(isPlaying)
   const lastOffsetUpdateTimeRef = useRef<number>(0)
+  const prevAudioUrlRef = useRef<string | null>(null) // Track previous URL to detect changes
 
   // Refs를 최신 상태로 유지 (가벼운 연산)
   useEffect(() => {
@@ -162,6 +163,11 @@ export function useSegmentAudioPlayer({
     prevSegmentDataRef.current = newData
     return newData
   }, [segments, playhead])
+
+  // 현재 세그먼트의 audioUrl 추적 (TTS 재생성 감지용)
+  const currentAudioUrl = useMemo(() => {
+    return currentSegmentData ? audioUrls.get(currentSegmentData.id) : null
+  }, [currentSegmentData, audioUrls])
 
   // Effect 1: isPlaying 변경 시 재생/일시정지 처리
   // Dependency: isPlaying
@@ -208,6 +214,44 @@ export function useSegmentAudioPlayer({
     )
     currentSegmentIdRef.current = currentSegmentData.id
   }, [currentSegmentData, audioUrls, audioObjects, readyAudioIds])
+
+  // Effect 2-1: 같은 세그먼트에서 audioUrl 변경 시 새 오디오 재생 (TTS 재생성 대응)
+  // Dependency: currentAudioUrl만 사용 (URL이 실제로 변경될 때만 실행)
+  useEffect(() => {
+    if (!isPlayingRef.current) return
+    if (!currentSegmentData || !currentAudioUrl) {
+      prevAudioUrlRef.current = null
+      return
+    }
+
+    // 세그먼트는 같지만 URL이 변경된 경우만 처리
+    const isSameSegment = currentSegmentIdRef.current === currentSegmentData.id
+    if (!isSameSegment) {
+      // 세그먼트 변경은 Effect 2에서 처리, URL은 업데이트
+      prevAudioUrlRef.current = currentAudioUrl
+      return
+    }
+
+    // URL이 실제로 변경되었는지 확인
+    if (prevAudioUrlRef.current === currentAudioUrl) {
+      return // URL 변경 없음, 재생하지 않음
+    }
+
+    // URL이 변경되었으므로 새 오디오 재생
+    console.debug(
+      `[Audio] URL changed for current segment ${currentSegmentData.id} (${prevAudioUrlRef.current} -> ${currentAudioUrl}), reloading audio`,
+    )
+    playOrCreateAudio(
+      currentSegmentData,
+      audioUrls,
+      audioObjects,
+      readyAudioIds,
+      audioRef,
+      lastPlayheadRef,
+    )
+    prevAudioUrlRef.current = currentAudioUrl
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentAudioUrl, audioUrls, audioObjects, readyAudioIds])
 
   // Effect 3: currentSegmentData 실행 중 변경 (resize/move)
   // Dependency: currentSegmentData

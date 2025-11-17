@@ -213,7 +213,7 @@ export function EpisodeCard({ project, onEdit, onDelete }: EpisodeCardProps) {
                 <button
                   type="button"
                   aria-label="에피소드 작업"
-                  className="focus-visible:outline-hidden focus-visible:ring-primary/40 flex h-8 w-8 items-center justify-center rounded-full bg-white/85 text-gray-900 shadow hover:bg-white focus-visible:ring-2"
+                  className="focus-visible:outline-hidden flex h-8 w-8 items-center justify-center rounded-full bg-white/85 text-gray-900 shadow hover:bg-white focus-visible:ring-2 focus-visible:ring-primary/40"
                   onClick={(event) => {
                     event.preventDefault()
                     event.stopPropagation()
@@ -305,7 +305,7 @@ export function EpisodeCard({ project, onEdit, onDelete }: EpisodeCardProps) {
       <div className="space-y-2 p-4">
         <div className="space-y-1">
           <p className="line-clamp-1 text-lg font-semibold">{project.title}</p>
-          <p className="text-muted text-xs">{registeredLabel}</p>
+          <p className="text-xs text-muted">{registeredLabel}</p>
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
           {project.targets?.map((t) => {
