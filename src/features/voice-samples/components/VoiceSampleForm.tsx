@@ -11,10 +11,7 @@ import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
 import { Label } from '@/shared/ui/Label'
 
-import {
-  useFinishUploadMutation,
-  usePrepareUploadMutation,
-} from '../hooks/useVoiceSampleStorage'
+import { useFinishUploadMutation, usePrepareUploadMutation } from '../hooks/useVoiceSampleStorage'
 import {
   finalizeVoiceSampleAvatarUpload,
   prepareVoiceSampleAvatarUpload,
@@ -88,6 +85,7 @@ export function VoiceSampleForm({
       const { upload_url, fields, object_key } = await prepareUploadMutation.mutateAsync({
         filename: audioFile.name,
         content_type: audioFile.type || 'audio/mpeg',
+        country,
       })
 
       setUploadStage('uploading')
@@ -114,11 +112,14 @@ export function VoiceSampleForm({
 
       if (avatarFile && createdSample.id) {
         try {
-          const { upload_url, fields, object_key: avatarKey } =
-            await prepareVoiceSampleAvatarUpload(createdSample.id, {
-              filename: avatarFile.name,
-              content_type: avatarFile.type || 'image/png',
-            })
+          const {
+            upload_url,
+            fields,
+            object_key: avatarKey,
+          } = await prepareVoiceSampleAvatarUpload(createdSample.id, {
+            filename: avatarFile.name,
+            content_type: avatarFile.type || 'image/png',
+          })
 
           await uploadFileWithProgress({
             uploadUrl: upload_url,
@@ -297,9 +298,9 @@ export function VoiceSampleForm({
             <div className="rounded-xl border border-dashed border-surface-4 p-4 text-center">
               <p className="text-sm font-medium">{selectedFileName}</p>
               {audioFile ? (
-                <p className="text-muted text-xs">{(audioFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                <p className="text-xs text-muted">{(audioFile.size / 1024 / 1024).toFixed(2)} MB</p>
               ) : (
-                <p className="text-muted text-xs">10~60초 길이의 음성 파일을 업로드해주세요.</p>
+                <p className="text-xs text-muted">10~60초 길이의 음성 파일을 업로드해주세요.</p>
               )}
             </div>
           </div>
@@ -320,7 +321,7 @@ export function VoiceSampleForm({
             id="country"
             value={country}
             onChange={(e) => setCountry(e.target.value)}
-            className="border-surface-4 bg-surface-1 text-foreground focus-visible:outline-hidden focus-visible:ring-accent w-full rounded-xl border px-4 py-3 text-sm"
+            className="focus-visible:outline-hidden w-full rounded-xl border border-surface-4 bg-surface-1 px-4 py-3 text-sm text-foreground focus-visible:ring-accent"
             disabled={isUploading}
           >
             <option value="ko">한국어</option>
@@ -334,7 +335,7 @@ export function VoiceSampleForm({
             id="gender"
             value={gender}
             onChange={(e) => setGender(e.target.value)}
-            className="border-surface-4 bg-surface-1 text-foreground focus-visible:outline-hidden focus-visible:ring-accent w-full rounded-xl border px-4 py-3 text-sm"
+            className="focus-visible:outline-hidden w-full rounded-xl border border-surface-4 bg-surface-1 px-4 py-3 text-sm text-foreground focus-visible:ring-accent"
             disabled={isUploading}
           >
             <option value="any">모든 성별</option>
@@ -364,7 +365,7 @@ export function VoiceSampleForm({
           <div className="space-y-1 text-xs text-muted">
             <p>원하는 이미지를 등록해 보이스 썸네일을 꾸밀 수 있어요.</p>
             <p>512x512 이하 PNG/JPG 권장, 미선택 시 기본 이미지가 사용됩니다.</p>
-            {avatarFile ? <p className="text-foreground text-sm">{avatarFile.name}</p> : null}
+            {avatarFile ? <p className="text-sm text-foreground">{avatarFile.name}</p> : null}
           </div>
           <input
             id="avatar-upload"
@@ -385,7 +386,7 @@ export function VoiceSampleForm({
           onChange={(e) => setNotes(e.target.value)}
           placeholder="이 목소리에 대한 정보를 간단히 적어주세요."
           rows={3}
-          className="border-surface-4 bg-surface-1 text-foreground focus-visible:outline-hidden focus-visible:ring-accent w-full rounded-xl border px-4 py-3 text-sm shadow-inner shadow-black/5 transition focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          className="focus-visible:outline-hidden w-full rounded-xl border border-surface-4 bg-surface-1 px-4 py-3 text-sm text-foreground shadow-inner shadow-black/5 transition focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           disabled={isUploading}
         />
       </div>
@@ -396,7 +397,11 @@ export function VoiceSampleForm({
             취소
           </Button>
         ) : null}
-        <Button type="submit" variant="primary" disabled={!name.trim() || !audioFile || isUploading}>
+        <Button
+          type="submit"
+          variant="primary"
+          disabled={!name.trim() || !audioFile || isUploading}
+        >
           {isUploading ? `${Math.round(uploadProgress)}%` : '보이스 클론 저장'}
         </Button>
       </div>

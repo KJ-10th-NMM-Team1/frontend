@@ -64,6 +64,7 @@ export async function fetchVoiceSamples(options?: {
 export interface PrepareUploadPayload {
   filename: string
   content_type: string
+  country?: string
 }
 
 export interface PrepareUploadResponse {
