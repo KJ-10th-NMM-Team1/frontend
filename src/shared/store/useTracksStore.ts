@@ -70,10 +70,21 @@ export const useTracksStore = create<TracksState>()(
           return max
         }, 0)
 
+      // 각 트랙의 segments를 start 시간 기준으로 정렬
+      const sortedTracks = tracks.map((track) => {
+        if (track.type === 'speaker') {
+          return {
+            ...track,
+            segments: [...track.segments].sort((a, b) => a.start - b.start),
+          }
+        }
+        return track
+      })
+
       set(
         {
-          tracks: [...tracks],
-          originalTracks: [...tracks],
+          tracks: sortedTracks,
+          originalTracks: sortedTracks,
           nextSpeakerNumber: maxSpeakerNumber + 1,
         },
         false,
