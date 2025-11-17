@@ -3,7 +3,7 @@
  * 모든 세그먼트의 번역 내용을 표시하고 편집 가능
  */
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 
 import { MoreVertical, Sparkles } from 'lucide-react'
 
@@ -38,12 +38,19 @@ export function TranslationSummarySection({
     activeSegmentId: state.activeSegmentId,
     setActiveSegment: state.setActiveSegment,
   }))
-  const { getAllSegments, updateSegment } = useTracksStore((state) => ({
-    getAllSegments: state.getAllSegments,
+  const { tracks, updateSegment } = useTracksStore((state) => ({
+    tracks: state.tracks,
     updateSegment: state.updateSegment,
   }))
 
-  const allSegments = getAllSegments()
+  // 모든 트랙의 세그먼트를 시간 순으로 정렬 (tracks가 변경될 때만 재계산)
+  const allSegments = useMemo(() => {
+    return tracks
+      .filter((track) => track.type === 'speaker')
+      .flatMap((track) => track.segments)
+      .sort((a, b) => a.start - b.start)
+  }, [tracks])
+
   const segmentRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   const [translatingSegments, setTranslatingSegments] = useState<Set<string>>(new Set())

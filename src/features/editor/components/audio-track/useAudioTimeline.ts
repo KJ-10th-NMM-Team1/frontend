@@ -10,6 +10,7 @@ import { useSegmentAudioPlayer } from '@/features/editor/hooks/useSegmentAudioPl
 import { useOriginalAudioPlayer } from '@/features/editor/hooks/useOriginalAudioPlayer'
 import { convertSegmentsToTracks } from '@/features/editor/utils/trackInitializer'
 import { pixelToTime } from '@/features/editor/utils/timeline-scale'
+import { findSegmentByPlayhead } from '@/features/editor/utils/segment-search'
 import { useEditorStore } from '@/shared/store/useEditorStore'
 import { useTracksStore } from '@/shared/store/useTracksStore'
 import { usePresignedUrl } from '@/shared/api/hooks'
@@ -73,7 +74,6 @@ export function useAudioTimeline(
   // Get speaker tracks from store (user-created tracks)
   const storedSpeakerTracks = useTracksStore((state) => state.tracks)
   const setTracks = useTracksStore((state) => state.setTracks)
-  const getAllSegments = useTracksStore((state) => state.getAllSegments)
 
   // Initialize tracks from segments only once on first load
   const isInitializedRef = useRef(false)
@@ -86,8 +86,13 @@ export function useAudioTimeline(
     isInitializedRef.current = true
   }, [segments, setTracks])
 
-  // Get all segments from tracks store for audio preloading and playback
-  const allSegments = getAllSegments()
+  // Get all segments from tracks store, sorted by time (for audio preloading and playback)
+  const allSegments = useMemo(() => {
+    return storedSpeakerTracks
+      .filter((track) => track.type === 'speaker')
+      .flatMap((track) => track.segments)
+      .sort((a, b) => a.start - b.start)
+  }, [storedSpeakerTracks])
 
   // Preload all segment audio URLs and Audio objects for seamless playback
   const { audioUrls, audioObjects, readyAudioIds, isInitialLoadComplete } =
@@ -186,32 +191,7 @@ export function useAudioTimeline(
     }
 
     // 이진 탐색으로 현재 세그먼트 찾기 (O(log n) - 성능 개선)
-    let current = null
-
-    // playhead가 마지막 세그먼트 이후인 경우
-    if (playhead >= allSegments[allSegments.length - 1].end) {
-      current = allSegments[allSegments.length - 1]
-    } else {
-      // 이진 탐색
-      let left = 0
-      let right = allSegments.length - 1
-
-      while (left <= right) {
-        const mid = Math.floor((left + right) / 2)
-        const segment = allSegments[mid]
-
-        if (playhead >= segment.start && playhead < segment.end) {
-          current = segment
-          break
-        }
-
-        if (playhead < segment.start) {
-          right = mid - 1
-        } else {
-          left = mid + 1
-        }
-      }
-    }
+    const current = findSegmentByPlayhead(allSegments, playhead)
 
     const nextId = current?.id ?? null
     if (nextId !== lastSegmentRef.current) {

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useMemo } from 'react'
 
 import type { Segment } from '@/entities/segment/types'
+import { findSegmentByPlayhead } from '@/features/editor/utils/segment-search'
 
 type UseSegmentAudioPlayerOptions = {
   segments: Segment[]
@@ -131,9 +132,9 @@ export function useSegmentAudioPlayer({
     lastPlayheadRef.current = playhead
   }, [playhead])
 
-  // Find current segment and extract needed properties
+  // Find current segment and extract needed properties (using binary search for O(log n) performance)
   const currentSegmentData = useMemo(() => {
-    const segment = segments.find((seg) => playhead >= seg.start && playhead < seg.end)
+    const segment = findSegmentByPlayhead(segments, playhead)
     if (!segment) {
       prevSegmentDataRef.current = null
       return null
