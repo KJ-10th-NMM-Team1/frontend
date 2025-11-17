@@ -22,7 +22,7 @@ export interface MergeSegmentsRequest {
 
 export interface MergeSegmentResponse {
   id: string
-  start: number
-  end: number
+  // start: number
+  // end: number
   audio_url: string
 }
