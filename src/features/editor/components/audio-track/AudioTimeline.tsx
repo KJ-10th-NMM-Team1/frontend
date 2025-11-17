@@ -1,6 +1,7 @@
 import type { PointerEvent as ReactPointerEvent, RefObject } from 'react'
 import { useEffect, useRef, useState, useCallback } from 'react'
 
+import { useSegmentSplit } from '@/features/editor/hooks/useSegmentSplit'
 import { getTimelineWidth } from '@/features/editor/utils/timeline-scale'
 import { useEditorStore } from '@/shared/store/useEditorStore'
 
@@ -60,10 +61,14 @@ export function AudioTimeline({
   playhead,
   readyAudioIds,
 }: AudioTimelineProps) {
-  const { scale, setDuration } = useEditorStore((state) => ({
+  const { scale, setDuration, isPlaying } = useEditorStore((state) => ({
     scale: state.scale,
     setDuration: state.setDuration,
+    isPlaying: state.isPlaying,
   }))
+
+  // Segment split logic
+  const { handleSplit } = useSegmentSplit()
 
   // Set duration when component mounts or duration changes
   useEffect(() => {
@@ -121,11 +126,19 @@ export function AudioTimeline({
     <div className="relative" style={{ width: `${timelineWidth}px` }}>
       {/* PlayheadIndicator - 절대 위치로 고정 */}
       <div className="pointer-events-none absolute inset-y-0 z-[31]">
-        <PlayheadIndicator playhead={playhead} duration={duration} scale={scale} />
+        <PlayheadIndicator
+          playhead={playhead}
+          duration={duration}
+          scale={scale}
+          tracks={trackRows}
+          isPlaying={isPlaying}
+          getTrackRowHeight={getTrackRowHeight}
+          onSplit={handleSplit}
+        />
       </div>
 
       {/* TimeRuler - 상단 고정 */}
-      <div className="bg-surface-1 sticky top-0 z-30">
+      <div className="sticky top-0 z-30 bg-surface-1">
         <TimeRuler
           timelineTicks={timelineTicks}
           duration={duration}
@@ -137,7 +150,7 @@ export function AudioTimeline({
       {/* 타임라인 콘텐츠 */}
       <div
         ref={timelineRef}
-        className="bg-surface-1 overflow-visible"
+        className="overflow-visible bg-surface-1"
         style={{
           width: `${timelineWidth}px`,
           minHeight: `${contentHeight}px`,

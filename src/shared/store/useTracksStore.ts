@@ -33,6 +33,7 @@ type TracksState = {
   updateSegmentPosition: (segmentId: string, start: number, end: number) => void
   updateSegmentSize: (segmentId: string, start: number, end: number, originalDuration: number) => void
   moveSegmentToTrack: (segmentId: string, targetTrackId: string) => void
+  replaceSegment: (segmentId: string, newSegments: Segment[]) => void
   getAllSegments: () => Segment[]
 }
 
@@ -256,6 +257,29 @@ export const useTracksStore = create<TracksState>()(
         },
         false,
         { type: 'tracks/moveSegmentToTrack', payload: { segmentId, targetTrackId } },
+      ),
+
+    replaceSegment: (segmentId, newSegments) =>
+      set(
+        (state) => ({
+          tracks: state.tracks.map((track) => {
+            if (track.type !== 'speaker') return track
+
+            // Check if this track contains the segment to replace
+            const hasSegment = track.segments.some((s) => s.id === segmentId)
+            if (!hasSegment) return track
+
+            // Replace the segment with new segments
+            return {
+              ...track,
+              segments: track.segments
+                .flatMap((segment) => (segment.id === segmentId ? newSegments : [segment]))
+                .sort((a, b) => a.start - b.start),
+            }
+          }),
+        }),
+        false,
+        { type: 'tracks/replaceSegment', payload: { segmentId, newSegments } },
       ),
 
     getAllSegments: () => {

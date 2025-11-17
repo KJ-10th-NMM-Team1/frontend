@@ -29,7 +29,7 @@ export function useSplitSegment(
   return useMutation({
     mutationFn: async (request: SplitSegmentRequest) => {
       const response = await apiClient
-        .post('segments/split', {
+        .post('api/segment/split', {
           json: request,
         })
         .json<SplitSegmentResponse>()

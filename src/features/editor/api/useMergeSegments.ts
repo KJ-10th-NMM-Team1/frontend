@@ -28,7 +28,7 @@ export function useMergeSegments(
   return useMutation({
     mutationFn: async (request: MergeSegmentsRequest) => {
       const response = await apiClient
-        .post('segments/merge', {
+        .post('api/segment/merge', {
           json: request,
         })
         .json<MergeSegmentResponse>()
