@@ -29,4 +29,6 @@ export interface MergeSegmentResponse {
   start: number
   end: number
   audio_url: string
+  source_text: string
+  target_text: string
 }
