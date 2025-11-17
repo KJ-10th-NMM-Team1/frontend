@@ -21,82 +21,58 @@ type SegmentData = {
 }
 
 /**
- * 캐시된 오디오 객체를 사용하거나 새로 생성하여 재생을 시작합니다.
- * 로드되지 않은 세그먼트는 재생하지 않습니다 (끊김 방지).
+ * Preloaded 오디오 객체를 사용하여 재생을 시작합니다.
+ * 모든 오디오는 usePreloadSegmentAudios에서 미리 로드되어 있어야 합니다.
  */
 function playOrCreateAudio(
   segmentData: SegmentData,
-  audioUrls: Map<string, string>,
   audioObjects: Map<string, HTMLAudioElement> | undefined,
   readyAudioIds: Set<string> | undefined,
   audioRef: React.MutableRefObject<HTMLAudioElement | null>,
   playheadRef: React.MutableRefObject<number>,
+  isPlayingRef: React.MutableRefObject<boolean>,
 ) {
   // 이전 오디오 정지
   if (audioRef.current) {
     audioRef.current.pause()
   }
 
-  // 현재 playhead 기준으로 오디오 offset 계산
-  const offset = playheadRef.current - segmentData.start
-
-  // Try to use preloaded Audio object first
-  let audio = audioObjects?.get(segmentData.id)
-
-  if (audio) {
-    // Check if audio is ready for playback
-    const isReady = readyAudioIds?.has(segmentData.id) ?? true // Default to true if not tracking
-
-    if (!isReady) {
-      console.warn(
-        `[Audio] Segment ${segmentData.id} is not ready yet (still loading). Skipping playback to prevent lag.`,
-      )
-      return // Don't play unloaded audio
-    }
-
-    // Use preloaded audio object
-    console.debug(`[Audio] Using preloaded audio for segment ${segmentData.id}`)
-    audio.currentTime = offset
-    audio.playbackRate = segmentData.playbackRate
-    audioRef.current = audio
-  } else {
-    // Fallback: create new Audio object (legacy behavior)
-    const audioUrl = audioUrls.get(segmentData.id)
-    if (!audioUrl) {
-      console.warn(`No audio URL found for segment ${segmentData.id}`)
-      return
-    }
-
-    console.debug(`[Audio] Creating new audio for segment ${segmentData.id}`)
-    audio = new Audio(audioUrl)
-    audio.crossOrigin = 'anonymous'
-    audio.currentTime = offset
-    audio.playbackRate = segmentData.playbackRate
-    audioRef.current = audio
-  }
-
-  // Ensure audio is not null before proceeding
-  if (!audio) {
-    console.error('Failed to create or retrieve audio object')
+  // audioObjects가 없으면 에러 (preload가 안 된 상태)
+  if (!audioObjects) {
+    console.error('[Audio] audioObjects is undefined - preloading not initialized')
     return
   }
 
-  // 재생 시작
-  const playAudio = () => {
-    if (audio) {
-      void audio.play().catch((error) => {
-        console.error('Audio playback failed:', error)
-      })
-    }
+  // Preloaded Audio 객체 가져오기
+  const audio = audioObjects.get(segmentData.id)
+  if (!audio) {
+    console.error(`[Audio] No preloaded audio found for segment ${segmentData.id}`)
+    return
   }
 
-  if (audio.readyState >= 2) {
-    // Audio is ready, play immediately
-    playAudio()
-  } else {
-    // Wait for audio to be ready
-    audio.addEventListener('canplay', playAudio, { once: true })
+  // Ready 상태 확인 (경고만 출력, 재생은 진행)
+  const isReady = readyAudioIds?.has(segmentData.id) ?? false
+  if (!isReady) {
+    console.warn(`[Audio] Segment ${segmentData.id} is still loading (will play when ready)`)
   }
+
+  // 현재 playhead 기준으로 오디오 offset 계산 및 설정
+  const offset = playheadRef.current - segmentData.start
+  audio.currentTime = offset
+  audio.playbackRate = segmentData.playbackRate
+  audioRef.current = audio
+
+  // Race condition 방지: 재생 중이 아니면 재생하지 않음
+  if (!isPlayingRef.current) {
+    console.debug('[Audio] Skipping playback - not in playing state')
+    return
+  }
+
+  // 재생 시작 (이미 preload되어 있으므로 바로 재생 가능)
+  console.debug(`[Audio] Playing preloaded audio for segment ${segmentData.id}`)
+  void audio.play().catch((error) => {
+    console.error('Audio playback failed:', error)
+  })
 }
 
 /**
@@ -191,7 +167,7 @@ export function useSegmentAudioPlayer({
   // Dependency: currentSegmentData
   useEffect(() => {
     // 재생 중이 아니면 아무것도 안함
-    if (!isPlayingRef.current) return
+    if (!isPlayingRef.current && !isScrubbing) return
 
     // currentSegmentData가 null이면 오디오 정지
     if (!currentSegmentData) {
@@ -203,17 +179,19 @@ export function useSegmentAudioPlayer({
     const segmentChanged = currentSegmentIdRef.current !== currentSegmentData.id
     if (!segmentChanged) return
 
-    // 새로운 세그먼트: 캐시된 오디오 사용 또는 새로 생성
+    // 새로운 세그먼트: preloaded 오디오 재생
     playOrCreateAudio(
       currentSegmentData,
-      audioUrls,
       audioObjects,
       readyAudioIds,
       audioRef,
       lastPlayheadRef,
+      isPlayingRef,
     )
     currentSegmentIdRef.current = currentSegmentData.id
-  }, [currentSegmentData, audioUrls, audioObjects, readyAudioIds])
+    // Effect 2-1과의 중복 실행 방지: 현재 URL 기록
+    prevAudioUrlRef.current = currentAudioUrl ?? null
+  }, [currentSegmentData, audioObjects, readyAudioIds, isScrubbing, currentAudioUrl])
 
   // Effect 2-1: 같은 세그먼트에서 audioUrl 변경 시 새 오디오 재생 (TTS 재생성 대응)
   // Dependency: currentAudioUrl만 사용 (URL이 실제로 변경될 때만 실행)
@@ -237,21 +215,21 @@ export function useSegmentAudioPlayer({
       return // URL 변경 없음, 재생하지 않음
     }
 
-    // URL이 변경되었으므로 새 오디오 재생
+    // URL이 변경되었으므로 새 오디오 재생 (TTS 재생성 시)
     console.debug(
       `[Audio] URL changed for current segment ${currentSegmentData.id} (${prevAudioUrlRef.current} -> ${currentAudioUrl}), reloading audio`,
     )
     playOrCreateAudio(
       currentSegmentData,
-      audioUrls,
       audioObjects,
       readyAudioIds,
       audioRef,
       lastPlayheadRef,
+      isPlayingRef,
     )
     prevAudioUrlRef.current = currentAudioUrl
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentAudioUrl, audioUrls, audioObjects, readyAudioIds])
+  }, [currentAudioUrl, audioObjects, readyAudioIds])
 
   // Effect 3: currentSegmentData 실행 중 변경 (resize/move)
   // Dependency: currentSegmentData
@@ -274,7 +252,7 @@ export function useSegmentAudioPlayer({
     const now = performance.now()
     const timeSinceLastUpdate = now - lastOffsetUpdateTimeRef.current
 
-    if (timeSinceLastUpdate >= 1000) {
+    if (timeSinceLastUpdate >= 500) {
       const expectedOffset = lastPlayheadRef.current - currentSegmentData.start
       audio.currentTime = expectedOffset
       lastOffsetUpdateTimeRef.current = now
