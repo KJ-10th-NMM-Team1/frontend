@@ -13,6 +13,7 @@ type AudioTrackWorkspaceProps = {
   duration: number
   originalAudioSrc?: string
   backgroundAudioSrc?: string
+  onSave?: () => void
 }
 
 export function AudioTrackWorkspace({
@@ -20,6 +21,7 @@ export function AudioTrackWorkspace({
   duration,
   originalAudioSrc,
   backgroundAudioSrc,
+  onSave,
 }: AudioTrackWorkspaceProps) {
   // Segments are now managed directly in tracks store via useAudioTimeline
 
@@ -53,6 +55,7 @@ export function AudioTrackWorkspace({
     duration,
     setPlaying,
     togglePlayback,
+    onSave,
   })
   // Show loading indicator while initial segments are loading
   if (!isInitialLoadComplete) {

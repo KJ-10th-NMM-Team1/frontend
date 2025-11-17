@@ -10,7 +10,7 @@ import { useCallback } from 'react'
 import { useHotkeys } from '@/shared/lib/hotkeys'
 import { useEditorStore } from '@/shared/store/useEditorStore'
 
-import { PLAYBACK_HOTKEYS, TIMELINE_HOTKEYS } from '../config/hotkeys'
+import { GENERAL_HOTKEYS, PLAYBACK_HOTKEYS, TIMELINE_HOTKEYS } from '../config/hotkeys'
 
 type EditorHotkeysOptions = {
   playhead: number
@@ -18,6 +18,7 @@ type EditorHotkeysOptions = {
   duration: number
   setPlaying: (playing: boolean) => void
   togglePlayback: () => void
+  onSave?: () => void
 }
 
 const JUMP_TIME = 1 // seconds
@@ -31,11 +32,17 @@ export function useEditorHotkeys({
   duration,
   setPlaying,
   togglePlayback,
+  onSave,
 }: EditorHotkeysOptions) {
   const { scale, setScale } = useEditorStore((state) => ({
     scale: state.scale,
     setScale: state.setScale,
   }))
+
+  // General handlers
+  const handleSave = useCallback(() => {
+    onSave?.()
+  }, [onSave])
 
   // Playback handlers
   const handleJumpBackward = useCallback(() => {
@@ -71,6 +78,11 @@ export function useEditorHotkeys({
 
   // Register hotkeys
   useHotkeys([
+    // General controls
+    {
+      config: GENERAL_HOTKEYS.bindings.save,
+      handler: handleSave,
+    },
     // Playback controls
     {
       config: PLAYBACK_HOTKEYS.bindings.togglePlayback,

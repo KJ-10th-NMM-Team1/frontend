@@ -4,11 +4,13 @@ import { useParams } from 'react-router-dom'
 
 import { AudioTrackWorkspace } from '@/features/editor/components/AudioTrackWorkspace'
 import { LanguageSelector } from '@/features/editor/components/LanguageSelector'
+import { SaveIndicator } from '@/features/editor/components/SaveIndicator'
 import { StudioVideoPreview } from '@/features/editor/components/StudioVideoPreview'
 import { SummaryWorkspace } from '@/features/editor/components/SummaryWorkspace'
 import { TranslationSummarySection } from '@/features/editor/components/TranslationSummarySection'
 import { useAudioGenerationEvents } from '@/features/editor/hooks/useAudioGenerationEvents'
 import { useEditorState } from '@/features/editor/hooks/useEditorState'
+import { useSaveSegments } from '@/features/editor/hooks/useSaveSegments'
 import { useEditorStore } from '@/shared/store/useEditorStore'
 import { Breadcrumbs } from '@/shared/ui/Breadcrumbs'
 import { Spinner } from '@/shared/ui/Spinner'
@@ -21,6 +23,12 @@ export default function EditorPage() {
   }>()
   const { data, isLoading } = useEditorState(projectId, languageCode)
   const setAudioPlaybackMode = useEditorStore((state) => state.setAudioPlaybackMode)
+
+  // Save functionality
+  const { saveStatus, hasChanges, handleSave } = useSaveSegments({
+    projectId,
+    languageCode,
+  })
 
   // Set initial audio playback mode to current language code (first target language)
   useEffect(() => {
@@ -61,7 +69,10 @@ export default function EditorPage() {
               className="opacity-50"
             />
           </div>
-          <LanguageSelector projectId={projectId} currentLanguageCode={languageCode} />
+          <div className="flex items-center gap-4">
+            <SaveIndicator status={saveStatus} hasChanges={hasChanges} />
+            <LanguageSelector projectId={projectId} currentLanguageCode={languageCode} />
+          </div>
         </div>
         <div className="flex min-h-0 flex-1 gap-2">
           {/* Video Preview Card */}
@@ -120,6 +131,7 @@ export default function EditorPage() {
             duration={data.playback.duration}
             originalAudioSrc={data.playback.audio_source}
             backgroundAudioSrc={data.playback.background_audio_source}
+            onSave={handleSave}
           />
         </div>
       </div>
