@@ -34,6 +34,7 @@ type TracksState = {
   updateSegmentSize: (segmentId: string, start: number, end: number, originalDuration: number) => void
   moveSegmentToTrack: (segmentId: string, targetTrackId: string) => void
   replaceSegment: (segmentId: string, newSegments: Segment[]) => void
+  replaceMultipleSegments: (segmentIds: string[], newSegment: Segment) => void
   getAllSegments: () => Segment[]
 }
 
@@ -291,6 +292,29 @@ export const useTracksStore = create<TracksState>()(
         }),
         false,
         { type: 'tracks/replaceSegment', payload: { segmentId, newSegments } },
+      ),
+
+    replaceMultipleSegments: (segmentIds, newSegment) =>
+      set(
+        (state) => ({
+          tracks: state.tracks.map((track) => {
+            if (track.type !== 'speaker') return track
+
+            // Check if this track contains any of the segments to replace
+            const hasAnySegment = track.segments.some((s) => segmentIds.includes(s.id))
+            if (!hasAnySegment) return track
+
+            // Remove all segments to be merged and add the new merged segment
+            const filteredSegments = track.segments.filter((s) => !segmentIds.includes(s.id))
+
+            return {
+              ...track,
+              segments: [...filteredSegments, newSegment].sort((a, b) => a.start - b.start),
+            }
+          }),
+        }),
+        false,
+        { type: 'tracks/replaceMultipleSegments', payload: { segmentIds, newSegment } },
       ),
 
     getAllSegments: () => {

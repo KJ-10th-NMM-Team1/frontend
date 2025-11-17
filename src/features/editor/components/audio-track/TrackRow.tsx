@@ -105,6 +105,7 @@ export const TrackRow = memo(
                 trackLayouts={trackLayouts}
                 voiceSampleId={track.voiceSampleId}
                 isAudioReady={readyAudioIds?.has(segment.id) ?? true}
+                trackSegments={track.segments}
               />
             ))}
           </>

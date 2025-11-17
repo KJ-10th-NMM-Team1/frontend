@@ -1,15 +1,18 @@
-import { useRef } from 'react'
+import { useRef, useMemo } from 'react'
 
 import type { Segment } from '@/entities/segment/types'
 import { useAudioWaveform } from '@/features/editor/hooks/useAudioWaveform'
 import { useSegmentContextMenu } from '@/features/editor/hooks/useSegmentContextMenu'
 import { useSegmentDrag } from '@/features/editor/hooks/useSegmentDrag'
+import { useSegmentMerge } from '@/features/editor/hooks/useSegmentMerge'
+import { findAdjacentSegments } from '@/features/editor/utils/segment-constraints'
 import { timeToPixel } from '@/features/editor/utils/timeline-scale'
 import { usePresignedUrl } from '@/shared/api/hooks'
 import { useIntersectionObserverOnce } from '@/shared/lib/hooks/useIntersectionObserver'
 import { cn } from '@/shared/lib/utils'
 import { useEditorStore } from '@/shared/store/useEditorStore'
 
+import { MergeButton } from './MergeButton'
 import { SegmentContextMenu } from './SegmentContextMenu'
 import { SegmentResizeHandle } from './SegmentResizeHandle'
 import { SegmentLoadingSpinner, SegmentWaveform } from './SegmentWaveform'
@@ -29,6 +32,7 @@ type SpeakerSegmentProps = {
   trackLayouts?: TrackLayout[]
   voiceSampleId?: string
   isAudioReady?: boolean
+  trackSegments: Segment[]
 }
 
 export function SpeakerSegment({
@@ -40,6 +44,7 @@ export function SpeakerSegment({
   trackLayouts,
   voiceSampleId,
   isAudioReady = true,
+  trackSegments,
 }: SpeakerSegmentProps) {
   const isSegmentLoading = useEditorStore((state) => state.isSegmentLoading)
   const startPx = timeToPixel(segment.start, duration, scale)
@@ -47,6 +52,21 @@ export function SpeakerSegment({
 
   // Check if this segment is currently generating audio
   const isGenerating = isSegmentLoading(segment.id)
+
+  // Merge functionality
+  const { handleMerge } = useSegmentMerge()
+
+  // Find next segment and check if it's touching (no gap)
+  // Only show merge button on the left segment (current segment)
+  // to avoid duplicate buttons between two segments
+  const nextTouchingSegment = useMemo(() => {
+    const { next } = findAdjacentSegments(trackSegments, segment.id)
+
+    // Check if next segment is actually touching (no gap)
+    const isTouching = next && next.start === segment.end
+
+    return isTouching ? next : null
+  }, [trackSegments, segment.id, segment.end])
 
   // Drag functionality (supports both horizontal and vertical movement)
   const { onPointerDown, isDragging, verticalOffset } = useSegmentDrag({
@@ -158,6 +178,17 @@ export function SpeakerSegment({
           edge="end"
           color={color}
         />
+
+        {/* Merge button - show only when there's a touching next segment */}
+        {/* This prevents duplicate buttons between two segments */}
+        {nextTouchingSegment && (
+          <MergeButton
+            currentSegment={segment}
+            nextSegment={nextTouchingSegment}
+            onMerge={handleMerge}
+            color={color}
+          />
+        )}
       </div>
 
       {/* Context Menu */}
