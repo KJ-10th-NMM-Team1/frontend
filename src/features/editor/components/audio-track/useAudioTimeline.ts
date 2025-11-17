@@ -113,7 +113,7 @@ export function useAudioTimeline(
       const next = playheadRef.current + delta * playbackRate
       const stopAt = segmentEnd ?? duration
       if (next >= stopAt) {
-        setPlayhead(stopAt)
+        setPlayhead(0)
         setPlaying(false)
         return
       }
