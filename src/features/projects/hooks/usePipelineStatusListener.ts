@@ -136,6 +136,7 @@ export function PipelineStatusListener({ project }: { project: ProjectSummary })
       lastStatusRef.current = undefined
       return
     }
+
     const source = new EventSource(`${env.apiBaseUrl}/api/pipeline/${project.id}/events`)
     const maybeNotify = (item: PipelineProgressItem) => {
       if (lastStatusRef.current !== 'completed' && item.status === 'completed') {
