@@ -187,8 +187,12 @@ export function usePreloadSegmentAudios(segments: Segment[], enabled = true) {
   // Count ready audio (fully loaded and playable)
   const readyCount = readyAudioIds.size
 
-  // Initial load complete when first N segments are ready
-  const isInitialLoadComplete = readyCount >= Math.min(INITIAL_LOAD_COUNT, totalCount)
+  // Initial load complete when:
+  // 1. First N segments are ready (for initial page load)
+  // 2. OR more than 50% of segments are already loaded (for split/TTS updates)
+  // This prevents unnecessary loading screens when most segments are already cached
+  const isInitialLoadComplete =
+    readyCount >= Math.min(INITIAL_LOAD_COUNT, totalCount) || readyCount > totalCount * 0.5
 
   return {
     audioUrls,

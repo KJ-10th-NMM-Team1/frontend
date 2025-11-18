@@ -373,5 +373,9 @@ export function useAudioTimeline(
     scale,
     isInitialLoadComplete, // Audio loading state for initial segments
     readyAudioIds, // Track which segments are ready for playback
+    loadingProgress: {
+      readyCount: readyAudioIds.size,
+      totalCount: allSegments.length,
+    },
   }
 }
