@@ -2,10 +2,12 @@
  * Hotkey utility functions
  */
 
-import type { HotkeyConfig, Modifier } from './types'
+import type { HotkeyConfig } from './types'
 
 /**
  * Checks if the pressed key matches the hotkey configuration
+ *
+ * Cross-platform support: 'ctrl' modifier matches both Ctrl (Windows/Linux) and Cmd (Mac)
  */
 export function matchesHotkey(event: KeyboardEvent, config: HotkeyConfig): boolean {
   // Normalize key for case-insensitive comparison
@@ -24,12 +26,28 @@ export function matchesHotkey(event: KeyboardEvent, config: HotkeyConfig): boole
   const hasAlt = modifiers.includes('alt')
   const hasMeta = modifiers.includes('meta')
 
-  return (
-    event.ctrlKey === hasCtrl &&
-    event.shiftKey === hasShift &&
-    event.altKey === hasAlt &&
-    event.metaKey === hasMeta
-  )
+  // Cross-platform Ctrl/Meta matching
+  let ctrlMetaMatch = true
+  if (hasCtrl || hasMeta) {
+    // At least one of ctrl or meta should be pressed
+    const ctrlOrMetaPressed = event.ctrlKey || event.metaKey
+    if (!ctrlOrMetaPressed) {
+      ctrlMetaMatch = false
+    }
+    // If meta is explicitly required, metaKey must be pressed (not cross-platform)
+    else if (hasMeta && !hasCtrl && !event.metaKey) {
+      ctrlMetaMatch = false
+    }
+    // If only ctrl is required (not meta), allow both ctrl and meta for cross-platform support
+    // This is already satisfied by the ctrlOrMetaPressed check above
+  } else {
+    // Neither ctrl nor meta should be pressed
+    if (event.ctrlKey || event.metaKey) {
+      ctrlMetaMatch = false
+    }
+  }
+
+  return ctrlMetaMatch && event.shiftKey === hasShift && event.altKey === hasAlt
 }
 
 /**
