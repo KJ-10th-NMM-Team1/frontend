@@ -58,6 +58,7 @@ export function VoiceSampleForm({
   const [name, setName] = useState('')
   const [languageCode, setLanguageCode] = useState('ko')
   const [gender, setGender] = useState('any')
+  const [category, setCategory] = useState<string>('')
   const [audioFile, setAudioFile] = useState<File | null>(initialFile)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
@@ -149,6 +150,8 @@ export function VoiceSampleForm({
         object_key,
         country: languageCode,
         gender,
+        category: category || undefined,
+        is_default: false,
       })
 
       if (avatarFile && createdSample.id) {
@@ -288,6 +291,7 @@ export function VoiceSampleForm({
     setName('')
     setLanguageCode('ko')
     setGender('any')
+    setCategory('')
     setAvatarFile(null)
     setAvatarPreview(null)
     setUploadStage('idle')
@@ -405,6 +409,26 @@ export function VoiceSampleForm({
             <option value="male">남성</option>
           </select>
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="category">카테고리 (선택)</Label>
+        <select
+          id="category"
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="focus-visible:outline-hidden w-full rounded-xl border border-surface-4 bg-surface-1 px-4 py-3 text-sm text-foreground focus-visible:ring-accent"
+          disabled={isUploading}
+        >
+          <option value="">카테고리 선택 안 함</option>
+          <option value="Narrative & Story">Narrative & Story</option>
+          <option value="Conversational">Conversational</option>
+          <option value="Characters & Animation">Characters & Animation</option>
+          <option value="Social Media">Social Media</option>
+          <option value="Entertainment & TV">Entertainment & TV</option>
+          <option value="Advertisement">Advertisement</option>
+          <option value="Informative & Educational">Informative & Educational</option>
+        </select>
       </div>
 
       <div className="space-y-2">

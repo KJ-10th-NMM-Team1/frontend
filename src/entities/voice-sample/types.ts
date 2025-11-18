@@ -11,8 +11,10 @@ export interface VoiceSampleApiResponse {
   audio_sample_url?: string | null
   prompt_text?: string | null
   created_at: string
-  is_favorite: boolean
-  favorite_count?: number
+  is_in_my_voices: boolean
+  added_count: number
+  category?: string | null
+  is_default: boolean
   country?: string | null
   gender?: string | null
   avatar_image_url?: string | null
@@ -33,10 +35,11 @@ export interface VoiceSample {
   file_path_wav?: string
   prompt_text?: string
   isPublic: boolean
-  isFavorite: boolean
-  favoriteCount?: number
+  isInMyVoices: boolean
+  addedCount: number
+  category?: string
+  isDefault: boolean
   country?: string
-  gender?: string
   avatarImageUrl?: string
   avatarImagePath?: string
   provider?: string
@@ -44,7 +47,6 @@ export interface VoiceSample {
   createdAt?: string
   updatedAt?: string
   owner_id?: string
-  favoriteCount?: number
 }
 
 export interface VoiceSamplePayload {
@@ -75,7 +77,9 @@ export const sampleVoices: VoiceSample[] = [
     gender: 'female',
     previewUrl: '/assets/sample-voice-amy.mp3',
     isPublic: true,
-    isFavorite: false,
+    isInMyVoices: false,
+    addedCount: 0,
+    isDefault: false,
   },
   {
     id: 'voice-hiro',
@@ -84,7 +88,9 @@ export const sampleVoices: VoiceSample[] = [
     gender: 'male',
     previewUrl: '/assets/sample-voice-hiro.mp3',
     isPublic: true,
-    isFavorite: false,
+    isInMyVoices: false,
+    addedCount: 0,
+    isDefault: false,
   },
   {
     id: 'voice-lee',
@@ -93,6 +99,8 @@ export const sampleVoices: VoiceSample[] = [
     gender: 'neutral',
     previewUrl: '/assets/sample-voice-lee.mp3',
     isPublic: true,
-    isFavorite: false,
+    isInMyVoices: false,
+    addedCount: 0,
+    isDefault: false,
   },
 ]

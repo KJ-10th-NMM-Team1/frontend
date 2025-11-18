@@ -18,7 +18,13 @@ export const queryKeys = {
   },
   voiceSamples: {
     all: ['voice-samples'] as const,
-    list: (options?: { favoritesOnly?: boolean; mySamplesOnly?: boolean; q?: string }) => {
+    list: (options?: {
+      myVoicesOnly?: boolean
+      mySamplesOnly?: boolean
+      category?: string
+      isDefault?: boolean
+      q?: string
+    }) => {
       if (!options) return ['voice-samples', 'list'] as const
       return ['voice-samples', 'list', options] as const
     },

@@ -1,51 +1,38 @@
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react'
 
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Heart, MoreVertical, Pause, Play, Search } from 'lucide-react'
-import ReactCountryFlag from 'react-country-flag'
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ArrowDown, ArrowUp, ChevronDown, Filter, Globe, Search } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 import type { VoiceSample, VoiceSamplesResponse } from '@/entities/voice-sample/types'
-import { fetchVoiceSamples, toggleFavorite } from '@/features/voice-samples/api/voiceSamplesApi'
-import { useDeleteVoiceSample } from '@/features/voice-samples/hooks/useVoiceSamples'
+import { fetchVoiceSamples } from '@/features/voice-samples/api/voiceSamplesApi'
+import {
+  useAddToMyVoices,
+  useDeleteVoiceSample,
+  useRemoveFromMyVoices,
+} from '@/features/voice-samples/hooks/useVoiceSamples'
 import { VoiceSampleEditModal } from '@/features/voice-samples/modals/VoiceSampleEditModal'
 import { env } from '@/shared/config/env'
 import { routes } from '@/shared/config/routes'
-import { cn } from '@/shared/lib/utils'
+import { Button } from '@/shared/ui/Button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/shared/ui/Dropdown'
-import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/Select'
-import { Spinner } from '@/shared/ui/Spinner'
 
-type LibraryTab = 'library' | 'mine' | 'favorites'
+import { VoiceFiltersModal, type VoiceFilters } from './components/VoiceFiltersModal'
+import { VoiceLibraryTabs } from './components/VoiceLibraryTabs'
+import { CharacterVoicesSection } from './sections/CharacterVoicesSection'
+import { TrendingVoicesSection } from './sections/TrendingVoicesSection'
+import { UseCaseCarouselSection } from './sections/UseCaseCarouselSection'
+import { VoiceListSection } from './sections/VoiceListSection'
+
+type LibraryTab = 'library' | 'mine' | 'default'
 
 const EMPTY_SAMPLES: VoiceSample[] = []
-const DEFAULT_AVATAR =
-  'https://ui-avatars.com/api/?name=Voice&background=EEF2FF&color=1E1B4B&size=128'
-const COUNTRY_DISPLAY_MAP: Record<string, { code: string; label: string }> = {
-  ko: { code: 'KR', label: '한국' },
-  kr: { code: 'KR', label: '한국' },
-  en: { code: 'US', label: '영어권' },
-  us: { code: 'US', label: '미국' },
-  uk: { code: 'GB', label: '영국' },
-  gb: { code: 'GB', label: '영국' },
-  ja: { code: 'JP', label: '일본' },
-  jp: { code: 'JP', label: '일본' },
-  zh: { code: 'CN', label: '중국' },
-  cn: { code: 'CN', label: '중국' },
-}
 
 const getPresignedUrl = async (path: string): Promise<string | undefined> => {
   try {
@@ -69,7 +56,9 @@ const getPresignedUrl = async (path: string): Promise<string | undefined> => {
 export default function VoiceLibraryPage() {
   const [tab, setTab] = useState<LibraryTab>('library')
   const [search, setSearch] = useState('')
-  const [sort, setSort] = useState<'default' | 'favorite'>('default')
+  const [sort, setSort] = useState<
+    'trending' | 'added-desc' | 'added-asc' | 'created-desc' | 'created-asc'
+  >('added-desc')
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [editingSample, setEditingSample] = useState<VoiceSample | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -79,39 +68,42 @@ export default function VoiceLibraryPage() {
   const queryClient = useQueryClient()
   const deleteVoiceSample = useDeleteVoiceSample()
   const processingSourcesRef = useRef<Map<string, EventSource>>(new Map())
+  const [addingToMyVoices, setAddingToMyVoices] = useState<Set<string>>(new Set())
+  const [removingFromMyVoices, setRemovingFromMyVoices] = useState<Set<string>>(new Set())
+  const [isFiltersModalOpen, setIsFiltersModalOpen] = useState(false)
+  const [filters, setFilters] = useState<VoiceFilters>({
+    gender: 'any',
+  })
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
-  const queryKey = useMemo(() => ['voice-library', tab, search] as const, [tab, search])
+  const queryKey = useMemo(
+    () => ['voice-library', tab, search, filters] as const,
+    [tab, search, filters],
+  )
   const voiceQuery = useQuery<
     VoiceSamplesResponse,
     Error,
     VoiceSamplesResponse,
-    readonly [string, LibraryTab, string]
+    readonly [string, LibraryTab, string, VoiceFilters]
   >({
     queryKey,
     queryFn: () =>
       fetchVoiceSamples({
         q: search.trim() || undefined,
-        favoritesOnly: tab === 'favorites',
         mySamplesOnly: tab === 'mine',
+        myVoicesOnly: tab === 'mine' ? true : undefined,
+        isDefault:
+          tab === 'default' ? true : tab === 'library' || tab === 'mine' ? false : undefined,
+        gender: filters.gender && filters.gender !== 'any' ? filters.gender : undefined,
+        languages:
+          filters.languages && filters.languages.length > 0 ? filters.languages : undefined,
+        category: filters.category && filters.category.length > 0 ? filters.category[0] : undefined,
       }),
     placeholderData: keepPreviousData,
   })
 
-  const favoriteMutation = useMutation<
-    VoiceSample,
-    Error,
-    {
-      sample: VoiceSample
-      next: boolean
-    }
-  >({
-    mutationFn: ({ sample, next }) => toggleFavorite(sample.id, next),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['voice-library'], exact: false })
-    },
-  })
-  const mutateFavorite = favoriteMutation.mutate
-  const isFavoriteLoading = Boolean(favoriteMutation.isPending)
+  const addToMyVoices = useAddToMyVoices()
+  const removeFromMyVoices = useRemoveFromMyVoices()
   const isMyTab = tab === 'mine'
 
   const cleanupAudio = useCallback(() => {
@@ -139,7 +131,6 @@ export default function VoiceLibraryPage() {
       sources.clear()
     }
   }, [stopPlayback])
-
 
   const resolveSampleAudioUrl = useCallback(async (sample: VoiceSample) => {
     const storageSegment = '/storage/media/'
@@ -226,12 +217,28 @@ export default function VoiceLibraryPage() {
 
   const samples = voiceQuery.data?.samples ?? EMPTY_SAMPLES
   const sortedSamples = useMemo(() => {
-    if (sort === 'favorite') {
-      return [...samples].sort(
-        (a, b) => (b.favoriteCount ?? 0) - (a.favoriteCount ?? 0),
-      )
+    const sorted = [...samples]
+    switch (sort) {
+      case 'trending':
+      case 'added-desc':
+        return sorted.sort((a, b) => (b.addedCount ?? 0) - (a.addedCount ?? 0))
+      case 'added-asc':
+        return sorted.sort((a, b) => (a.addedCount ?? 0) - (b.addedCount ?? 0))
+      case 'created-desc':
+        return sorted.sort((a, b) => {
+          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0
+          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0
+          return dateB - dateA
+        })
+      case 'created-asc':
+        return sorted.sort((a, b) => {
+          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0
+          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0
+          return dateA - dateB
+        })
+      default:
+        return sorted
     }
-    return samples
   }, [samples, sort])
 
   useEffect(() => {
@@ -297,95 +304,243 @@ export default function VoiceLibraryPage() {
       })
     }
   }, [queryClient, sortedSamples])
-  const gridColumnsClass = isMyTab
-    ? 'grid-cols-[minmax(0,2.4fr)_minmax(0,1.1fr)_minmax(0,0.9fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.9fr)]'
-    : 'grid-cols-[minmax(0,2.6fr)_minmax(0,1.1fr)_minmax(0,0.9fr)_minmax(0,1fr)_minmax(0,1fr)]'
+  // Trending voices (인기 보이스) - 추가 횟수 순으로 정렬된 상위 6개
+  const trendingVoices = useMemo(() => {
+    return [...sortedSamples].sort((a, b) => (b.addedCount ?? 0) - (a.addedCount ?? 0)).slice(0, 6)
+  }, [sortedSamples])
+
+  // Character voices (캐릭터 보이스) - 설명이 있는 보이스들
+  const characterVoices = useMemo(() => {
+    return sortedSamples.filter((sample) => sample.description).slice(0, 6)
+  }, [sortedSamples])
+
+  // Add to my voices 핸들러
+  const handleAddToMyVoices = useCallback(
+    (sample: VoiceSample) => {
+      if (!sample.id || sample.isInMyVoices) return
+
+      setAddingToMyVoices((prev) => new Set(prev).add(sample.id))
+      addToMyVoices.mutate(sample.id, {
+        onSettled: () => {
+          setAddingToMyVoices((prev) => {
+            const next = new Set(prev)
+            next.delete(sample.id)
+            return next
+          })
+        },
+      })
+    },
+    [addToMyVoices],
+  )
+
+  // Remove from my voices 핸들러
+  const handleRemoveFromMyVoices = useCallback(
+    (sample: VoiceSample) => {
+      if (!sample.id || !sample.isInMyVoices) return
+
+      setRemovingFromMyVoices((prev) => new Set(prev).add(sample.id))
+      removeFromMyVoices.mutate(sample.id, {
+        onSettled: () => {
+          setRemovingFromMyVoices((prev) => {
+            const next = new Set(prev)
+            next.delete(sample.id)
+            return next
+          })
+        },
+      })
+    },
+    [removeFromMyVoices],
+  )
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-6 py-8">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <p className="text-primary text-xs font-semibold uppercase tracking-[0.3em]">
-            Voice Library
-          </p>
-          <p className="text-muted text-sm">등록된 보이스 클론을 찾아보고, 즐겨찾기에 추가해보세요.</p>
-        </div>
-        <Button variant="primary" onClick={() => navigate(routes.voiceCloning)}>
-          보이스 클로닝 시작
-        </Button>
-      </div>
-
-      <div className="space-y-3">
-        <div>
-          {tabButton('library', '라이브러리', tab, setTab)}
-          {tabButton('mine', '내 보이스', tab, setTab)}
-          {tabButton('favorites', '즐겨찾기', tab, setTab)}
-        </div>
-        <div className="flex flex-1 min-w-[240px] items-center gap-3 rounded-3xl border border-surface-3 bg-surface-1/70 px-4 py-3 shadow-soft">
-          <div className="relative flex-1">
-            <Search className="text-muted absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="보이스 검색"
-              className="pl-9"
-            />
-          </div>
-          <Select value={sort} onValueChange={(value) => setSort(value as 'default' | 'favorite')}>
-            <SelectTrigger className="w-36 rounded-full border-surface-3 bg-surface-1 text-sm shadow-soft">
-              <SelectValue placeholder="정렬" />
-            </SelectTrigger>
-            <SelectContent align="end">
-              <SelectItem value="default">기본</SelectItem>
-              <SelectItem value="favorite">좋아요순</SelectItem>
-            </SelectContent>
-          </Select>
+    <div className="mx-auto max-w-7xl space-y-8 px-6 py-6">
+      {/* 상단 네비게이션 */}
+      <div className="flex items-center justify-between gap-4">
+        <VoiceLibraryTabs activeTab={tab} onChange={setTab} />
+        <div className="flex items-center gap-4">
+          <Button variant="primary" onClick={() => navigate(routes.voiceCloning)} className="gap-2">
+            <Globe className="h-4 w-4" />
+            보이스 생성
+          </Button>
         </div>
       </div>
 
-      <div className="mt-0 rounded-3xl border border-surface-2 bg-surface-1 p-4 shadow-soft">
-        {voiceQuery.isLoading ? (
-          <p className="text-center text-muted text-sm">목록을 불러오는 중...</p>
-        ) : sortedSamples.length === 0 ? (
-          <p className="text-center text-muted text-sm">조건에 맞는 보이스가 없습니다.</p>
-        ) : (
-          <>
-            <div
-              className={`text-muted mb-1 grid ${gridColumnsClass} gap-4 text-xs font-semibold uppercase tracking-[0.2em]`}
-            >
-              <span className="flex min-h-[1.5rem] items-start truncate">이름</span>
-              <span className="flex min-h-[1.5rem] items-start">국가</span>
-              <span className="flex min-h-[1.5rem] items-start">성별</span>
-              {isMyTab ? <span className="flex min-h-[1.5rem] items-start">공개 여부</span> : null}
-              <span className="inline-flex min-h-[1.5rem] w-[74px] items-start justify-center">즐겨찾기</span>
-              <span className="flex min-h-[1.5rem] items-start justify-end text-right" aria-hidden />
+      {/* 검색 및 필터 */}
+      <div className="flex items-center gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search library voices..."
+            className="h-10 rounded-full border-surface-3 bg-surface-1 py-2.5 pl-9 pr-3 text-sm shadow-sm focus:border-primary focus:ring-2 focus:ring-primary/20"
+          />
+        </div>
+        <div className="flex items-center gap-2 text-xs">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="primary"
+                className="h-8 gap-1 rounded-full px-3 py-1.5 text-xs font-medium"
+              >
+                {sort === 'trending' && (
+                  <>
+                    Trending <ArrowDown className="h-3 w-3" />
+                  </>
+                )}
+                {sort === 'added-desc' && (
+                  <>
+                    Trending <ArrowDown className="h-3 w-3" />
+                  </>
+                )}
+                {sort === 'added-asc' && (
+                  <>
+                    Trending <ArrowUp className="h-3 w-3" />
+                  </>
+                )}
+                {sort === 'created-desc' && (
+                  <>
+                    Newest <ArrowDown className="h-3 w-3" />
+                  </>
+                )}
+                {sort === 'created-asc' && (
+                  <>
+                    Oldest <ArrowUp className="h-3 w-3" />
+                  </>
+                )}
+                <ChevronDown className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem onClick={() => setSort('added-desc')}>
+                <div className="flex items-center gap-1">
+                  Trending <ArrowDown className="h-3 w-3" />
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSort('added-asc')}>
+                <div className="flex items-center gap-1">
+                  Trending <ArrowUp className="h-3 w-3" />
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSort('created-desc')}>
+                <div className="flex items-center gap-1">
+                  Newest <ArrowDown className="h-3 w-3" />
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSort('created-asc')}>
+                <div className="flex items-center gap-1">
+                  Oldest <ArrowUp className="h-3 w-3" />
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button
+            variant="secondary"
+            onClick={() => setIsFiltersModalOpen(true)}
+            className="h-8 gap-1 rounded-full border-surface-3 px-3 py-1.5 text-xs"
+          >
+            <Filter className="h-3 w-3" />
+            Filters
+          </Button>
+        </div>
+      </div>
+
+      {/* Trending voices 섹션 */}
+      {tab === 'library' && trendingVoices.length > 0 && !search.trim() && !selectedCategory && (
+        <TrendingVoicesSection
+          voices={trendingVoices}
+          onPlay={handlePlaySample}
+          playingSampleId={playingSampleId}
+          onAddToMyVoices={handleAddToMyVoices}
+          onRemoveFromMyVoices={handleRemoveFromMyVoices}
+          addingToMyVoices={addingToMyVoices}
+          removingFromMyVoices={removingFromMyVoices}
+          onSortChange={() => {
+            // 드롭다운이 열리도록 하려면 별도 처리가 필요하지만,
+            // 일단 trending으로 설정
+            setSort('trending')
+          }}
+        />
+      )}
+
+      {/* Handpicked for your use case 캐러셀 */}
+      {tab === 'library' && !search.trim() && !selectedCategory && (
+        <UseCaseCarouselSection
+          onCategoryClick={(category) => {
+            setSelectedCategory(category)
+            setFilters({ ...filters, category: [category] })
+          }}
+        />
+      )}
+
+      {/* 카테고리 필터링된 결과 */}
+      {tab === 'library' && selectedCategory && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCategory(null)
+                  setFilters({ ...filters, category: undefined })
+                }}
+                className="text-sm text-muted hover:text-foreground"
+              >
+                ← Back
+              </button>
+              <h2 className="text-lg font-semibold">{selectedCategory}</h2>
             </div>
-            <ul className="divide-y divide-surface-3">
-              {sortedSamples.map((sample) => (
-                <VoiceLibraryRow
-                  key={sample.id}
-                  sample={sample}
-                  onToggleFavorite={() =>
-                    mutateFavorite({
-                      sample,
-                      next: !sample.isFavorite,
-                    })
-                  }
-                  toggling={isFavoriteLoading}
-                  onPlay={handlePlaySample}
-                  isPlaying={playingSampleId === sample.id}
-                  showVisibilityColumn={isMyTab}
-                  showActions={isMyTab}
-                  onEdit={handleEditSample}
-                  onDelete={handleDeleteSample}
-                  isDeleting={deletingId === sample.id}
-                  gridClassName={gridColumnsClass}
-                />
-              ))}
-            </ul>
-          </>
-        )}
-      </div>
+          </div>
+          <VoiceListSection
+            title=""
+            samples={sortedSamples}
+            isLoading={voiceQuery.isLoading}
+            onPlay={handlePlaySample}
+            playingSampleId={playingSampleId}
+            onAddToMyVoices={handleAddToMyVoices}
+            onRemoveFromMyVoices={handleRemoveFromMyVoices}
+            addingToMyVoices={addingToMyVoices}
+            removingFromMyVoices={removingFromMyVoices}
+            showActions={false}
+            onEdit={undefined}
+            onDelete={undefined}
+            deletingId={null}
+          />
+        </div>
+      )}
+
+      {/* Character voices 섹션 */}
+      {tab === 'library' && characterVoices.length > 0 && !selectedCategory && (
+        <CharacterVoicesSection
+          voices={characterVoices}
+          onPlay={handlePlaySample}
+          playingSampleId={playingSampleId}
+          onAddToMyVoices={handleAddToMyVoices}
+          onRemoveFromMyVoices={handleRemoveFromMyVoices}
+          addingToMyVoices={addingToMyVoices}
+          removingFromMyVoices={removingFromMyVoices}
+          showTitle={!search.trim()}
+        />
+      )}
+
+      {/* 전체 목록 (내 보이스/Default Voices 탭에서만 표시) */}
+      {tab !== 'library' && (
+        <VoiceListSection
+          title={tab === 'mine' ? 'My Voices' : 'Default Voices'}
+          samples={sortedSamples}
+          isLoading={voiceQuery.isLoading}
+          onPlay={handlePlaySample}
+          playingSampleId={playingSampleId}
+          onAddToMyVoices={tab === 'default' ? undefined : handleAddToMyVoices}
+          onRemoveFromMyVoices={tab === 'default' ? undefined : handleRemoveFromMyVoices}
+          addingToMyVoices={addingToMyVoices}
+          removingFromMyVoices={removingFromMyVoices}
+          showActions={isMyTab}
+          onEdit={handleEditSample}
+          onDelete={handleDeleteSample}
+          deletingId={deletingId}
+        />
+      )}
 
       <VoiceSampleEditModal
         open={isEditModalOpen}
@@ -398,213 +553,17 @@ export default function VoiceLibraryPage() {
         sample={editingSample}
         onSuccess={handleEditSuccess}
       />
+
+      <VoiceFiltersModal
+        open={isFiltersModalOpen}
+        onOpenChange={setIsFiltersModalOpen}
+        filters={filters}
+        onFiltersChange={setFilters}
+        onApply={() => {
+          // TODO: 필터 적용 로직
+          console.log('Filters applied:', filters)
+        }}
+      />
     </div>
-  )
-}
-
-function tabButton(
-  value: LibraryTab,
-  label: string,
-  current: LibraryTab,
-  setTab: (tab: LibraryTab) => void,
-) {
-  const isActive = current === value
-  return (
-    <button
-      type="button"
-      onClick={() => setTab(value)}
-      className={`rounded-2xl px-5 py-2 text-sm font-semibold transition ${
-        isActive
-          ? 'bg-primary text-primary-foreground shadow'
-          : 'bg-transparent text-muted hover:bg-surface-2 hover:text-foreground'
-      }`}
-    >
-      {label}
-    </button>
-  )
-}
-function VoiceLibraryRow({
-  sample,
-  onToggleFavorite,
-  toggling,
-  onPlay,
-  isPlaying,
-  showVisibilityColumn = false,
-  showActions = false,
-  onEdit,
-  onDelete,
-  isDeleting = false,
-  gridClassName,
-}: {
-  sample: VoiceSample
-  onToggleFavorite: () => void
-  toggling: boolean
-  onPlay: (sample: VoiceSample) => void
-  isPlaying: boolean
-  showVisibilityColumn?: boolean
-  showActions?: boolean
-  onEdit?: (sample: VoiceSample) => void
-  onDelete?: (sample: VoiceSample) => void
-  isDeleting?: boolean
-  gridClassName: string
-}) {
-  const [resolvedAvatar, setResolvedAvatar] = useState<string>(
-    sample.avatarImageUrl && sample.avatarImageUrl.startsWith('http')
-      ? sample.avatarImageUrl
-      : DEFAULT_AVATAR,
-  )
-  const isProcessing = !sample.audio_sample_url
-
-  useEffect(() => {
-    let active = true
-    const path = sample.avatarImagePath
-    if (path && !path.startsWith('http')) {
-      void getPresignedUrl(path).then((url) => {
-        if (url && active) {
-          setResolvedAvatar(url)
-        }
-      })
-    } else if (sample.avatarImageUrl && sample.avatarImageUrl.startsWith('http')) {
-      setResolvedAvatar(sample.avatarImageUrl)
-    } else {
-      setResolvedAvatar(DEFAULT_AVATAR)
-    }
-    return () => {
-      active = false
-    }
-  }, [sample.avatarImagePath, sample.avatarImageUrl])
-
-  return (
-    <li className={`grid ${gridClassName} items-center gap-4 py-4 text-sm`}>
-      <div className="flex items-center gap-3 overflow-hidden">
-        <div className="group relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-surface-2">
-          <img
-            src={resolvedAvatar}
-            onError={(event) => {
-              event.currentTarget.src = DEFAULT_AVATAR
-            }}
-            alt={sample.name}
-            className="h-12 w-12 object-cover"
-          />
-          {isProcessing ? (
-            <>
-              <div className="absolute inset-0 rounded-full bg-black/70" />
-              <div className="absolute inset-0 flex items-center justify-center rounded-full">
-                <Spinner size="sm" />
-              </div>
-            </>
-          ) : null}
-          {!isProcessing && sample.audio_sample_url ? (
-            <button
-              type="button"
-              className={`absolute inset-0 flex items-center justify-center rounded-full text-white transition ${
-                isPlaying ? 'bg-primary/80 opacity-100' : 'bg-black/70 opacity-0 group-hover:opacity-100'
-              }`}
-              onClick={(event) => {
-                event.stopPropagation()
-                onPlay(sample)
-              }}
-            >
-              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-            </button>
-          ) : null}
-        </div>
-        <div className="min-w-0">
-          <p className="font-semibold text-base">{sample.name}</p>
-          {sample.description ? (
-            <p className="text-muted text-xs truncate">{sample.description}</p>
-          ) : null}
-        </div>
-      </div>
-      <CountryCell country={sample.country} />
-      <p className="text-muted">{sample.gender ?? '성별 미상'}</p>
-      {showVisibilityColumn ? <VisibilityBadge isPublic={sample.isPublic} /> : null}
-      <button
-        type="button"
-        onClick={onToggleFavorite}
-        disabled={toggling}
-        className="inline-flex h-8 w-[74px] shrink-0 items-center justify-center gap-1 rounded-full border border-surface-3 px-1.5 text-xs font-medium"
-      >
-        <Heart className={`h-4 w-4 ${sample.isFavorite ? 'text-danger fill-danger/20' : 'text-muted'}`} />
-        {sample.favoriteCount ?? 0}
-      </button>
-      <div className="flex items-center justify-end gap-2">
-        {showActions ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-surface-3 p-0 text-muted transition hover:bg-surface-2"
-                onClick={(event) => event.stopPropagation()}
-                disabled={isDeleting}
-              >
-                <MoreVertical className="h-4 w-4" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  onEdit?.(sample)
-                }}
-              >
-                편집
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-danger"
-                onClick={() => {
-                  onDelete?.(sample)
-                }}
-                disabled={isDeleting}
-              >
-                삭제
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : null}
-      </div>
-    </li>
-  )
-}
-
-function CountryCell({ country }: { country?: string }) {
-  const countryCode = useMemo(() => {
-    if (!country) return undefined
-    const normalized = country.trim().toLowerCase()
-    const mapped = COUNTRY_DISPLAY_MAP[normalized]
-    if (mapped) return mapped.code
-    if (country.length === 2) {
-      return country.toUpperCase()
-    }
-    return undefined
-  }, [country])
-
-  return (
-    <div className="flex items-center text-muted">
-      {countryCode ? (
-        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-200 text-emerald-900">
-          <ReactCountryFlag
-            countryCode={countryCode}
-            svg
-            style={{ width: '1.25em', height: '1.25em' }}
-            title={country ?? '국적'}
-          />
-        </span>
-      ) : null}
-    </div>
-  )
-}
-
-function VisibilityBadge({ isPublic }: { isPublic?: boolean }) {
-  if (typeof isPublic === 'undefined') {
-    return <span className="text-muted text-sm">-</span>
-  }
-  return (
-    <span
-      className={`inline-flex min-w-[72px] items-center justify-center rounded-full px-3 py-1 text-xs font-semibold ${
-        isPublic ? 'bg-emerald-100 text-emerald-900' : 'bg-slate-200 text-slate-700'
-      }`}
-    >
-      {isPublic ? '공개' : '비공개'}
-    </span>
   )
 }

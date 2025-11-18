@@ -20,13 +20,15 @@ function transformVoiceSample(apiSample: VoiceSampleApiResponse): VoiceSample {
     name: apiSample.name,
     description: apiSample.description || undefined,
     isPublic: apiSample.is_public,
-    isFavorite: apiSample.is_favorite,
+    isInMyVoices: apiSample.is_in_my_voices,
+    addedCount: apiSample.added_count,
+    category: apiSample.category ?? undefined,
+    isDefault: apiSample.is_default,
     file_path_wav: apiSample.file_path_wav,
     audio_sample_url: apiSample.audio_sample_url || undefined,
     prompt_text: apiSample.prompt_text || undefined,
     createdAt: apiSample.created_at,
     owner_id: apiSample.owner_id ? String(apiSample.owner_id) : undefined,
-    favoriteCount: apiSample.favorite_count ?? 0,
     country: apiSample.country ?? undefined,
     gender: apiSample.gender ?? undefined,
     avatarImageUrl: apiSample.avatar_image_url ?? undefined,
@@ -36,16 +38,34 @@ function transformVoiceSample(apiSample: VoiceSampleApiResponse): VoiceSample {
 
 // 음성 샘플 목록 조회
 export async function fetchVoiceSamples(options?: {
-  favoritesOnly?: boolean
+  myVoicesOnly?: boolean
   mySamplesOnly?: boolean
+  category?: string
+  isDefault?: boolean
+  gender?: string
+  languages?: string[]
   q?: string
 }): Promise<VoiceSamplesResponse> {
   const params = new URLSearchParams()
-  if (options?.favoritesOnly) {
-    params.append('favorites_only', 'true')
+  if (options?.myVoicesOnly) {
+    params.append('my_voices_only', 'true')
   }
   if (options?.mySamplesOnly) {
     params.append('my_samples_only', 'true')
+  }
+  if (options?.category) {
+    params.append('category', options.category)
+  }
+  if (options?.isDefault !== undefined) {
+    params.append('is_default', String(options.isDefault))
+  }
+  if (options?.gender && options.gender !== 'any') {
+    params.append('gender', options.gender)
+  }
+  if (options?.languages && options.languages.length > 0) {
+    options.languages.forEach((lang) => {
+      params.append('languages', lang)
+    })
   }
   if (options?.q) {
     params.append('q', options.q)
@@ -89,6 +109,8 @@ export interface FinishUploadPayload {
   object_key: string
   country?: string
   gender?: string
+  category?: string
+  is_default?: boolean
 }
 
 export async function finishVoiceSampleUpload(payload: FinishUploadPayload): Promise<VoiceSample> {
@@ -170,7 +192,9 @@ export function createVoiceSample(payload: VoiceSamplePayload): Promise<VoiceSam
     name: payload.name,
     description: payload.description,
     isPublic: payload.isPublic,
-    isFavorite: false,
+    isInMyVoices: false,
+    addedCount: 0,
+    isDefault: false,
   } as VoiceSample)
 }
 
@@ -195,21 +219,34 @@ export async function deleteVoiceSample(id: string): Promise<{ id: string }> {
   return { id }
 }
 
-export async function toggleFavorite(id: string, isFavorite: boolean): Promise<VoiceSample> {
-  // isFavorite가 true면 좋아요 추가 (POST), false면 좋아요 제거 (DELETE)
-  if (isFavorite) {
-    // 좋아요 추가
-    await apiClient.post(`api/me/favorites/voice-samples/${id}`)
-  } else {
-    // 좋아요 제거
-    await apiClient.delete(`api/me/favorites/voice-samples/${id}`)
+// 보이스를 내 라이브러리에 추가
+export async function addToMyVoices(id: string): Promise<void> {
+  await apiClient.post(`api/me/voices/${id}`)
+}
+
+// 내 라이브러리에서 보이스 제거
+export async function removeFromMyVoices(id: string): Promise<void> {
+  await apiClient.delete(`api/me/voices/${id}`)
+}
+
+// 내가 추가한 보이스 목록 조회
+export async function getMyVoices(options?: {
+  page?: number
+  limit?: number
+}): Promise<VoiceSamplesResponse> {
+  const params = new URLSearchParams()
+  if (options?.page) {
+    params.append('page', String(options.page))
+  }
+  if (options?.limit) {
+    params.append('limit', String(options.limit))
   }
 
-  // 업데이트된 샘플 정보를 가져오기 위해 목록을 다시 조회하거나,
-  // 개별 샘플을 조회할 수 있습니다. 여기서는 목록 갱신을 위해 빈 객체 반환
-  // (실제로는 쿼리 무효화로 목록이 자동 갱신됨)
+  const queryString = params.toString()
+  const url = queryString ? `api/me/voices?${queryString}` : 'api/me/voices'
+  const response = await apiGet<VoiceSamplesApiResponse>(url)
   return {
-    id,
-    isFavorite,
-  } as VoiceSample
+    samples: response.samples.map(transformVoiceSample),
+    total: response.total,
+  }
 }

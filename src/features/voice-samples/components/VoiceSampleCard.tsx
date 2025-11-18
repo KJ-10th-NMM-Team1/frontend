@@ -1,6 +1,6 @@
 import { memo, useCallback } from 'react'
 
-import { Heart, MoreVertical, Pause, Play } from 'lucide-react'
+import { MoreVertical, Pause, Play } from 'lucide-react'
 
 import type { VoiceSample } from '@/entities/voice-sample/types'
 import { cn } from '@/shared/lib/utils'
@@ -15,32 +15,7 @@ import {
 } from '@/shared/ui/Dropdown'
 import { Spinner } from '@/shared/ui/Spinner'
 
-import { useDeleteVoiceSample, useToggleFavorite } from '../hooks/useVoiceSamples'
-
-// 하트 버튼 컴포넌트 - isFavorite만 변경될 때 리렌더링
-type FavoriteButtonProps = {
-  isFavorite: boolean
-  onClick: (event: React.MouseEvent) => void
-}
-
-const FavoriteButton = memo(({ isFavorite, onClick }: FavoriteButtonProps) => {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="focus-visible:outline-hidden focus-visible:ring-accent hover:bg-surface-3 rounded-full p-1.5 transition-colors focus-visible:ring-2"
-    >
-      <Heart
-        className={cn(
-          'h-5 w-5 transition-colors',
-          isFavorite ? 'fill-red-500 text-red-500' : 'text-muted hover:text-red-500',
-        )}
-      />
-    </button>
-  )
-})
-
-FavoriteButton.displayName = 'FavoriteButton'
+import { useDeleteVoiceSample } from '../hooks/useVoiceSamples'
 
 type VoiceSampleCardProps = {
   sample: VoiceSample
@@ -63,19 +38,10 @@ function VoiceSampleCardComponent({
   onDelete,
   onEdit,
 }: VoiceSampleCardProps) {
-  const toggleFavorite = useToggleFavorite()
   const deleteVoiceSample = useDeleteVoiceSample()
 
   // audio_sample_url이 없으면 로딩 상태 (음성 샘플링 처리 중)
   const isLoading = !sample.audio_sample_url
-
-  const handleFavoriteClick = useCallback(
-    (event: React.MouseEvent) => {
-      event.stopPropagation()
-      toggleFavorite.mutate({ id: sample.id, isFavorite: !sample.isFavorite })
-    },
-    [sample.id, sample.isFavorite, toggleFavorite],
-  )
 
   const handlePlayClick = (event: React.MouseEvent) => {
     event.stopPropagation()
@@ -119,7 +85,6 @@ function VoiceSampleCardComponent({
             )}
           </div>
           <div className="flex items-center gap-2">
-            <FavoriteButton isFavorite={sample.isFavorite} onClick={handleFavoriteClick} />
             {isOwner && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
