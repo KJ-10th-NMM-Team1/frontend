@@ -1,3 +1,4 @@
+import type { Dispatch, SetStateAction } from 'react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { convertBlobToWav } from '../utils/audioConverter'
@@ -13,6 +14,7 @@ interface UseRecordingReturn {
   startRecording: () => Promise<void>
   stopRecording: () => void
   resetRecording: (options?: { preserveDuration?: boolean }) => void
+  setRecordedDuration: Dispatch<SetStateAction<number>>
 }
 
 interface UseRecordingProps {
@@ -35,6 +37,7 @@ export function useRecording({
   const audioContextRef = useRef<AudioContext | null>(null)
   const recordedChunksRef = useRef<BlobPart[]>([])
   const timerRef = useRef<number | null>(null)
+  const durationRef = useRef<number>(0)
 
   const resetRecording = useCallback((options?: { preserveDuration?: boolean }) => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
@@ -100,7 +103,7 @@ export function useRecording({
       }
 
       recorder.onstop = () => {
-        const finalDuration = recordingSeconds
+        const finalDuration = durationRef.current
         setRecordedDuration(finalDuration)
         const blob = new Blob(recordedChunksRef.current, {
           type: options?.mimeType ?? 'audio/webm',
@@ -129,11 +132,10 @@ export function useRecording({
       recorder.start()
       setRecordingSeconds(0)
       setRecordedDuration(0)
+      durationRef.current = 0
       timerRef.current = window.setInterval(() => {
-        setRecordingSeconds((prev) => {
-          setRecordedDuration(prev + 1)
-          return prev + 1
-        })
+        durationRef.current += 1
+        setRecordingSeconds((prev) => prev + 1)
       }, 1000)
       setRecordingState('recording')
     } catch (error) {
@@ -143,7 +145,7 @@ export function useRecording({
       onRecordingError?.(errorMsg)
       resetRecording()
     }
-  }, [onRecordingComplete, onRecordingError, recordingSeconds, resetRecording])
+  }, [onRecordingComplete, onRecordingError, resetRecording])
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
@@ -163,5 +165,6 @@ export function useRecording({
     startRecording,
     stopRecording,
     resetRecording,
+    setRecordedDuration,
   }
 }

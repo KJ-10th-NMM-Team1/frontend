@@ -72,32 +72,37 @@ export function AppHeader() {
   //   : []
 
   return (
-    <header className="bg-[#E2E8F0]/95 sticky top-0 z-40 backdrop-blur">
-      <div className={`mx-auto flex ${containerWidthClass} items-center justify-between gap-6 px-6 py-4`}>
+    <header className="sticky top-0 z-40 bg-[#E2E8F0]/95 backdrop-blur">
+      <div
+        className={`mx-auto flex ${containerWidthClass} items-center justify-between gap-6 px-6 py-2`}
+      >
         <Link
           to={routes.home}
-          className="focus-visible:outline-hidden focus-visible:ring-primary group flex flex-col leading-tight focus-visible:ring-2 focus-visible:ring-offset-2"
+          className="focus-visible:outline-hidden group flex flex-col leading-tight focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           aria-label="Dupliot 홈으로 이동"
         >
-          <span className="text-foreground text-2xl font-semibold tracking-tight">
+          <span className="text-2xl font-semibold tracking-tight text-foreground">
             Dupliot
             <span className="text-primary">.</span>
           </span>
-          <span className="text-muted group-hover:text-foreground text-xs uppercase tracking-[0.35em] transition-colors duration-150">
+          <span className="text-xs uppercase tracking-[0.35em] text-muted transition-colors duration-150 group-hover:text-foreground">
             studio workspace
           </span>
         </Link>
 
         <div className="flex flex-1 items-center justify-start px-10">
           {currentTitle ? (
-            <h2 className="text-foreground text-lg font-semibold">{currentTitle}</h2>
+            <h2 className="text-lg font-semibold text-foreground">{currentTitle}</h2>
           ) : null}
         </div>
 
         <div className="ml-auto flex items-center gap-3">
           {showWorkspaceSearch ? (
             <div className="relative flex items-center">
-              <Search className="text-muted absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" aria-hidden="true" />
+              <Search
+                className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
+                aria-hidden="true"
+              />
               <Input
                 value={workspaceSearchTerm}
                 onChange={(event) => setWorkspaceSearchTerm(event.target.value)}
@@ -112,20 +117,23 @@ export function AppHeader() {
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="bg-surface-2 text-foreground border-surface-4 inline-flex h-11 w-11 items-center justify-center rounded-full border text-sm font-semibold uppercase shadow-inner"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-surface-4 bg-surface-2 text-sm font-semibold uppercase text-foreground shadow-inner"
                 >
                   {initials}
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-60">
                 <DropdownMenuLabel>
-                  <p className="text-muted text-xs font-medium uppercase tracking-[0.3em]">Creator</p>
-                  <p className="text-foreground mt-1 text-sm font-semibold">{userName ?? '미등록'}</p>
+                  <p className="text-xs font-medium uppercase tracking-[0.3em] text-muted">
+                    Creator
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-foreground">
+                    {userName ?? '미등록'}
+                  </p>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={handleMyInfo}>
-                  <User className="text-muted h-4 w-4" />
-                  내 정보
+                  <User className="h-4 w-4 text-muted" />내 정보
                 </DropdownMenuItem>
                 <DropdownMenuItem className="text-danger" onSelect={handleSignOut}>
                   <LogOut className="h-4 w-4" />
@@ -139,7 +147,7 @@ export function AppHeader() {
                 asChild
                 variant="ghost"
                 size="sm"
-                className="text-foreground/70 hover:bg-surface-2/80 hover:text-foreground rounded-md px-4"
+                className="rounded-md px-4 text-foreground/70 hover:bg-surface-2/80 hover:text-foreground"
               >
                 <Link to={routes.login}>로그인</Link>
               </Button>
@@ -147,7 +155,7 @@ export function AppHeader() {
                 asChild
                 variant="ghost"
                 size="sm"
-                className="border-surface-3 bg-surface-1 text-foreground rounded-md border px-5 font-semibold shadow-soft hover:bg-white"
+                className="rounded-md border border-surface-3 bg-surface-1 px-5 font-semibold text-foreground shadow-soft hover:bg-white"
               >
                 <Link to={routes.signup}>회원가입</Link>
               </Button>
