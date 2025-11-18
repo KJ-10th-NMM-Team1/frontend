@@ -10,6 +10,6 @@ type SummaryWorkspaceProps = {
 
 export function SummaryWorkspace({ projectId, segments, duration }: SummaryWorkspaceProps) {
   return (
-    <ProjectSummarySection projectId={projectId} segments={segments.length} duration={duration} />
+    <ProjectSummarySection projectId={projectId} segments={segments} duration={duration} />
   )
 }

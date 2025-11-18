@@ -3,6 +3,7 @@
  * Converts server response (snake_case) to client format (camelCase)
  */
 
+import type { Issue } from '@/entities/issue/types'
 import type { Segment } from '@/entities/segment/types'
 
 /**
@@ -20,6 +21,7 @@ export type SegmentDTO = {
   segment_audio_url?: string
   playback_rate?: number // Server response uses snake_case
   trackId?: string
+  issues?: Issue[]
 }
 
 /**
@@ -41,5 +43,6 @@ export function transformSegmentFromServer(dto: SegmentDTO): Segment {
     segment_audio_url: dto.segment_audio_url,
     playbackRate: dto.playback_rate, // Convert snake_case to camelCase
     trackId: dto.trackId,
+    issues: dto.issues,
   }
 }

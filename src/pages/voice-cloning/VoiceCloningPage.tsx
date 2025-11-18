@@ -110,7 +110,7 @@ export default function VoiceCloningPage() {
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              // eslint-disable-next-line @typescript-eslint/no-misused-promises
+               
               onFileSelect={handleFileSelect}
               onRecordClick={() => setStep('record-intro')}
             />

@@ -9,6 +9,8 @@
 //   reviewing: boolean
 // }
 
+import type { Issue } from '@/entities/issue/types'
+
 export interface Segment {
   id: string // `_id` → `id`로 변환하려면 응답에서 매핑하거나 여기서 alias 처리
   project_id: string
@@ -21,6 +23,7 @@ export interface Segment {
   segment_audio_url?: string
   playbackRate?: number // 재생 속도 배율 (기본값: 1.0)
   trackId?: string // 현재 세그먼트가 속한 트랙 ID (UI 상태용, 트랙 간 이동 시 업데이트)
+  issues?: Issue[] // 세그먼트 이슈 목록
 }
 
 export interface EditorPlaybackState {
