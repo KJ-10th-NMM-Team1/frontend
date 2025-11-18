@@ -295,13 +295,11 @@ export default function VoiceLibraryPage() {
     })
 
     return () => {
-      pendingIds.forEach((sampleId) => {
-        const source = sources.get(sampleId)
-        if (source) {
-          source.close()
-          sources.delete(sampleId)
-        }
+      // cleanup 시 모든 EventSource를 닫아야 함 (pendingIds만이 아닌 전체)
+      sources.forEach((source) => {
+        source.close()
       })
+      sources.clear()
     }
   }, [queryClient, sortedSamples])
   // Trending voices (인기 보이스) - 추가 횟수 순으로 정렬된 상위 6개

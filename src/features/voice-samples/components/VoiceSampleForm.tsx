@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { useQueryClient } from '@tanstack/react-query'
 import { HTTPError } from 'ky'
@@ -75,6 +75,19 @@ export function VoiceSampleForm({
   const showToast = useUiStore((state) => state.showToast)
   const { data: languageResponse, isLoading: languagesLoading } = useLanguage()
   const languageOptions = useMemo(() => languageResponse ?? [], [languageResponse])
+
+  // EventSource를 ref로 관리하여 cleanup 가능하도록 함
+  const eventSourceRef = useRef<EventSource | null>(null)
+
+  // 컴포넌트 언마운트 시 EventSource cleanup
+  useEffect(() => {
+    return () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close()
+        eventSourceRef.current = null
+      }
+    }
+  }, [])
 
   useEffect(() => {
     if (languageOptions.length === 0) return
@@ -195,6 +208,12 @@ export function VoiceSampleForm({
       void queryClient.invalidateQueries({ queryKey: ['voice-library'], exact: false })
 
       if (createdSample.id) {
+        // 기존 EventSource가 있으면 먼저 닫기
+        if (eventSourceRef.current) {
+          eventSourceRef.current.close()
+          eventSourceRef.current = null
+        }
+
         const source = new EventSource(
           `${env.apiBaseUrl}/api/voice-samples/${createdSample.id}/stream`,
         )
@@ -211,6 +230,7 @@ export function VoiceSampleForm({
 
             if (data.has_audio_sample && data.audio_sample_url) {
               source.close()
+              eventSourceRef.current = null
               void queryClient.invalidateQueries({
                 queryKey: queryKeys.voiceSamples.all,
                 exact: false,
@@ -223,6 +243,7 @@ export function VoiceSampleForm({
               })
             } else if (data.error) {
               source.close()
+              eventSourceRef.current = null
               showToast({
                 id: 'voice-sample-stream-error',
                 title: '상태 확인 실패',
@@ -238,7 +259,11 @@ export function VoiceSampleForm({
         source.onerror = (error) => {
           console.error('SSE connection error:', error)
           source.close()
+          eventSourceRef.current = null
         }
+
+        // ref에 저장하여 cleanup 시 사용
+        eventSourceRef.current = source
       }
     } catch (error) {
       console.error('Failed to create voice sample:', error)
