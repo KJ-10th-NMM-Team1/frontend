@@ -11,6 +11,7 @@ import { TranslationSummarySection } from '@/features/editor/components/Translat
 import { useAudioGenerationEvents } from '@/features/editor/hooks/useAudioGenerationEvents'
 import { useEditorState } from '@/features/editor/hooks/useEditorState'
 import { useSaveSegments } from '@/features/editor/hooks/useSaveSegments'
+import { useMux } from '@/features/editor/hooks/useMux'
 import { useEditorStore } from '@/shared/store/useEditorStore'
 import { Breadcrumbs } from '@/shared/ui/Breadcrumbs'
 import { Spinner } from '@/shared/ui/Spinner'
@@ -23,6 +24,12 @@ export default function EditorPage() {
   }>()
   const { data, isLoading } = useEditorState(projectId, languageCode)
   const setAudioPlaybackMode = useEditorStore((state) => state.setAudioPlaybackMode)
+  // Mux 핸들러 - 나중에 버튼 추가 시 사용 예정
+  // TODO: 버튼 추가 시 mux.handleMux와 mux.isMuxing 사용
+  const mux = useMux({
+    projectId,
+    editorData: data,
+  })
 
   // Save functionality
   const { saveStatus, hasChanges, handleSave } = useSaveSegments({
@@ -45,7 +52,7 @@ export default function EditorPage() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-2">
         <Spinner size="lg" />
-        <p className="text-muted text-sm">에디터 상태를 불러오는 중…</p>
+        <p className="text-sm text-muted">에디터 상태를 불러오는 중…</p>
       </div>
     )
   }
@@ -54,7 +61,7 @@ export default function EditorPage() {
   const targetLanguage = data.playback.active_language || '번역본'
 
   return (
-    <div className="bg-background flex h-screen flex-col">
+    <div className="flex h-screen flex-col bg-background">
       {/* Main Content - 패딩과 카드 스타일 적용 */}
       <div className="flex min-h-0 flex-1 flex-col gap-2 p-2">
         {/* Breadcrumbs with Language Selector */}
@@ -76,7 +83,7 @@ export default function EditorPage() {
         </div>
         <div className="flex min-h-0 flex-1 gap-2">
           {/* Video Preview Card */}
-          <div className="border-surface-3 bg-surface-1 flex-1 overflow-hidden rounded-lg border shadow-sm">
+          <div className="flex-1 overflow-hidden rounded-lg border border-surface-3 bg-surface-1 shadow-sm">
             <StudioVideoPreview
               activeLanguage={targetLanguage}
               duration={data.playback.duration}
@@ -86,19 +93,19 @@ export default function EditorPage() {
           </div>
 
           {/* Summary/Translation Tabs Card */}
-          <div className="border-surface-3 bg-surface-1 w-[35%] overflow-hidden rounded-lg border shadow-sm">
+          <div className="w-[35%] overflow-hidden rounded-lg border border-surface-3 bg-surface-1 shadow-sm">
             <TabsRoot defaultValue="summary" className="flex h-full flex-col">
-              <div className="border-surface-3 border-b px-3">
+              <div className="border-b border-surface-3 px-3">
                 <TabsList className="h-auto gap-0 rounded-none border-0 bg-transparent p-0">
                   <TabsTrigger
                     value="summary"
-                    className="border-primary data-[state=active]:text-balck data-[state=active]:bg-tran rounded-none px-4 py-2 text-xs font-semibold data-[state=active]:border-b-2"
+                    className="data-[state=active]:text-balck data-[state=active]:bg-tran rounded-none border-primary px-4 py-2 text-xs font-semibold data-[state=active]:border-b-2"
                   >
                     요약
                   </TabsTrigger>
                   <TabsTrigger
                     value="translation"
-                    className="border-primary data-[state=active]:text-balck data-[state=active]:bg-tran rounded-none px-4 py-2 text-xs font-semibold data-[state=active]:border-b-2"
+                    className="data-[state=active]:text-balck data-[state=active]:bg-tran rounded-none border-primary px-4 py-2 text-xs font-semibold data-[state=active]:border-b-2"
                   >
                     번역
                   </TabsTrigger>
@@ -125,7 +132,7 @@ export default function EditorPage() {
         </div>
 
         {/* Audio Track Workspace Card */}
-        <div className="border-surface-3 bg-surface-1 z-10 h-[445px] overflow-hidden rounded-lg border shadow-sm">
+        <div className="z-10 h-[445px] overflow-hidden rounded-lg border border-surface-3 bg-surface-1 shadow-sm">
           <AudioTrackWorkspace
             segments={data.segments}
             duration={data.playback.duration}
