@@ -37,6 +37,7 @@ export function StudioVideoPreview({
   })
 
   const videoRef = useRef<HTMLVideoElement>(null)
+  const lastSyncedPlayheadRef = useRef<number>(0)
   const { playhead, isPlaying, setPlayhead, setPlaying } = useEditorStore(
     (state) => ({
       playhead: state.playhead,
@@ -48,6 +49,7 @@ export function StudioVideoPreview({
   )
 
   // playhead와 비디오 currentTime 동기화 (playhead -> video)
+  // 최적화: 재생 중이 아닐 때만 동기화 (재생 중에는 비디오가 자체적으로 재생)
   useEffect(() => {
     const video = videoRef.current
     if (!video) return
@@ -55,12 +57,22 @@ export function StudioVideoPreview({
     // 비디오가 로드되지 않았으면 스킵
     if (video.readyState < 2) return
 
-    // 차이가 0.1초 이상일 때만 동기화 (무한 루프 방지)
-    const timeDiff = Math.abs(video.currentTime - playhead)
-    if (timeDiff > 0.1) {
-      video.currentTime = playhead
+    // 재생 중에는 동기화하지 않음 (60fps 업데이트로 인한 성능 저하 방지)
+    if (isPlaying) {
+      lastSyncedPlayheadRef.current = playhead
+      return
     }
-  }, [playhead])
+
+    // 일시정지 상태에서만 동기화
+    // 수동 탐색(seek)이나 외부에서 playhead 변경 시에만 비디오 위치 업데이트
+    const timeDiff = Math.abs(video.currentTime - playhead)
+    const playheadChanged = Math.abs(playhead - lastSyncedPlayheadRef.current) > 0.01
+
+    if (playheadChanged && timeDiff > 0.05) {
+      video.currentTime = playhead
+      lastSyncedPlayheadRef.current = playhead
+    }
+  }, [playhead, isPlaying])
 
   // 비디오의 play/pause 이벤트로 isPlaying 상태 동기화
   useEffect(() => {
