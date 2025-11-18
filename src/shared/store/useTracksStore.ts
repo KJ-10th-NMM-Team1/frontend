@@ -131,9 +131,23 @@ export const useTracksStore = create<TracksState>()(
     updateTrack: (id, updates) =>
       set(
         (state) => ({
-          tracks: state.tracks.map((track) =>
-            track.id === id ? ({ ...track, ...updates } as TrackRow) : track,
-          ),
+          tracks: state.tracks.map((track) => {
+            if (track.id !== id) return track
+
+            // If label is updated for speaker track, update speaker_tag for all segments
+            if ('label' in updates && track.type === 'speaker') {
+              return {
+                ...track,
+                ...updates,
+                segments: track.segments.map((segment) => ({
+                  ...segment,
+                  speaker_tag: updates.label as string,
+                })),
+              } as TrackRow
+            }
+
+            return { ...track, ...updates } as TrackRow
+          }),
         }),
         false,
         { type: 'tracks/updateTrack', payload: { id, updates } },
@@ -240,8 +254,18 @@ export const useTracksStore = create<TracksState>()(
             return state // No change needed
           }
 
-          // Update segment's trackId and move it to target track
-          const updatedSegment = { ...segmentToMove, trackId: targetTrackId }
+          // Find target track to get its label (for speaker_tag update)
+          const targetTrack = state.tracks.find((t) => t.id === targetTrackId && t.type === 'speaker')
+          if (!targetTrack) {
+            return state // Target track not found
+          }
+
+          // Update segment's trackId AND speaker_tag to match target track's label
+          const updatedSegment = {
+            ...segmentToMove,
+            trackId: targetTrackId,
+            speaker_tag: targetTrack.label,
+          }
 
           return {
             tracks: state.tracks.map((track) => {

@@ -8,13 +8,15 @@ import { resolvePresignedUrl } from '@/shared/lib/utils'
 
 // Number of segments to fully load before showing the page
 const INITIAL_LOAD_COUNT = 5
+// Maximum number of presigned URL requests to run concurrently (to avoid browser connection limit)
+const MAX_CONCURRENT_REQUESTS = 4
 
 /**
  * Hook to preload Audio objects for all segment audios with progressive loading
  *
  * Progressive loading strategy:
  * 1. Load first 5 segments completely before showing page
- * 2. Load remaining segments in background
+ * 2. Load remaining segments in background with chunked requests (max 4 concurrent)
  * 3. Track loading state to prevent playback of non-loaded segments
  *
  * @param segments - Array of segments to preload
@@ -22,12 +24,25 @@ const INITIAL_LOAD_COUNT = 5
  * @returns Audio objects, loading states, and ready segment IDs
  */
 export function usePreloadSegmentAudios(segments: Segment[], enabled = true) {
-  // Create queries for all segment audio URLs
+  // Track how many presigned URLs have been successfully loaded
+  const [loadedUrlCount, setLoadedUrlCount] = useState(0)
+
+  // Create queries for all segment audio URLs with chunked loading
+  // Only enable MAX_CONCURRENT_REQUESTS queries at a time to avoid browser connection limit
   const queries = useQueries({
-    queries: segments.map((segment) => ({
+    queries: segments.map((segment, index) => ({
       queryKey: queryKeys.storage.presignedUrl(segment.segment_audio_url ?? ''),
-      queryFn: () => resolvePresignedUrl(segment.segment_audio_url!),
-      enabled: enabled && !!segment.segment_audio_url,
+      queryFn: async () => {
+        const url = await resolvePresignedUrl(segment.segment_audio_url!)
+        // Increment loaded count when a URL is successfully fetched
+        setLoadedUrlCount((prev) => prev + 1)
+        return url
+      },
+      // Enable queries in chunks: first MAX_CONCURRENT_REQUESTS, then next batch after some complete
+      enabled:
+        enabled &&
+        !!segment.segment_audio_url &&
+        index < loadedUrlCount + MAX_CONCURRENT_REQUESTS,
       staleTime: 5 * 60 * 1000, // 5 minutes
       gcTime: 10 * 60 * 1000, // 10 minutes
     })),

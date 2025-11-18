@@ -28,6 +28,7 @@ export default function EditorPage() {
   const [isExportOpen, setIsExportOpen] = useState(false)
   const { data, isLoading } = useEditorState(projectId, languageCode)
   const setAudioPlaybackMode = useEditorStore((state) => state.setAudioPlaybackMode)
+  const resetEditorState = useEditorStore((state) => state.reset)
   const { handleMux, isMuxing } = useMux({
     projectId,
     editorData: data,
@@ -39,12 +40,13 @@ export default function EditorPage() {
     languageCode,
   })
 
-  // Set initial audio playback mode to current language code (first target language)
+  // Reset editor state and set audio playback mode when project or language changes
   useEffect(() => {
+    resetEditorState()
     if (languageCode) {
       setAudioPlaybackMode(languageCode)
     }
-  }, [languageCode, setAudioPlaybackMode])
+  }, [projectId, languageCode, resetEditorState, setAudioPlaybackMode])
 
   // Subscribe to audio generation events via SSE
   // When worker completes audio generation, this will update the segment data automatically

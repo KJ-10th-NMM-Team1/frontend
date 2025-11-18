@@ -72,10 +72,6 @@ export function useSegmentSplit() {
 
       // Replace the original segment with the two new segments
       replaceSegment(originalSegment.id, newSegments)
-      // showToast({
-      //   title: 'Segment Split',
-      //   description: 'Segment split successfully',
-      // })
 
       // Clear ref
       splitSegmentRef.current = null
@@ -109,11 +105,13 @@ export function useSegmentSplit() {
       // Calculate split position relative to segment start (offset in seconds)
       const offset = splitTime - segment.start
 
-      // Call split API
+      // Call split API with current start/end values
       splitMutation.mutate({
         segment_id: segment.id,
         language_code: segment.language_code,
         split_time: offset,
+        current_start: segment.start,
+        current_end: segment.end,
       })
     },
     [splitMutation, showToast],

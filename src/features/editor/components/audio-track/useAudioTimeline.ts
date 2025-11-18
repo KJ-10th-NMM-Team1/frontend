@@ -86,12 +86,20 @@ export function useAudioTimeline(
     isInitializedRef.current = true
   }, [segments, setTracks])
 
-  // Get all segments from tracks store, sorted by time (for audio preloading and playback)
+  // Get all segments from tracks store, sorted by time (for audio preloading and active segment detection)
   const allSegments = useMemo(() => {
     return storedSpeakerTracks
       .filter((track) => track.type === 'speaker')
       .flatMap((track) => track.segments)
       .sort((a, b) => a.start - b.start)
+  }, [storedSpeakerTracks])
+
+  // Get track-separated segments for multi-track audio playback
+  // Each track's segments are already sorted in the store
+  const trackSegments = useMemo(() => {
+    return storedSpeakerTracks
+      .filter((track) => track.type === 'speaker')
+      .map((track) => track.segments)
   }, [storedSpeakerTracks])
 
   // Preload all segment audio URLs and Audio objects for seamless playback
@@ -225,12 +233,12 @@ export function useAudioTimeline(
 
   // Audio playback synchronized with playhead
   // Only play segment audio when in 'target' mode
+  // Pass track-separated segments for multi-track simultaneous playback
   useSegmentAudioPlayer({
-    segments: allSegments,
+    trackSegments,
     playhead,
     isPlaying: isPlaying && audioPlaybackMode !== 'original',
     isScrubbing,
-    audioUrls,
     audioObjects, // Pass preloaded Audio objects for instant playback
     readyAudioIds, // Track which segments are fully loaded and ready for playback
   })

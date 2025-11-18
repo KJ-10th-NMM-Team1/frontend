@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 
 import type { Segment } from '@/entities/segment/types'
+import { findSegmentByPlayhead } from '@/features/editor/utils/segment-search'
 import { timeToPixel } from '@/features/editor/utils/timeline-scale'
 
 import { SplitButton } from './SplitButton'
@@ -44,6 +45,7 @@ export function PlayheadIndicator({
   const position = timeToPixel(playhead, duration, scale)
 
   // Find all segments at the current playhead position with their Y offsets
+  // 최적화: O(t × log s) binary search (이전: O(t × s) 중첩 루프)
   const segmentsAtPlayhead = useMemo<SegmentWithPosition[]>(() => {
     if (isPlaying) return [] // Don't show split buttons while playing
 
@@ -55,16 +57,15 @@ export function PlayheadIndicator({
 
       // Only check speaker tracks for segments
       if (track.type === 'speaker') {
-        for (const segment of track.segments) {
-          // Check if playhead is within this segment
-          if (playhead >= segment.start && playhead < segment.end) {
-            result.push({
-              segment,
-              yOffset: currentY,
-              color: track.color,
-            })
-            break // Only one segment per track at a given time
-          }
+        // Binary search로 playhead가 속한 세그먼트 찾기 (O(log s))
+        // 이전: 모든 세그먼트를 순회하며 확인 (O(s))
+        const segment = findSegmentByPlayhead(track.segments, playhead)
+        if (segment) {
+          result.push({
+            segment,
+            yOffset: currentY,
+            color: track.color,
+          })
         }
       }
 

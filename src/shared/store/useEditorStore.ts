@@ -39,6 +39,7 @@ type EditorUiState = {
   setSegmentLoading: (segmentId: string, isLoading: boolean) => void
   isSegmentLoading: (segmentId: string) => boolean
   setAudioPlaybackMode: (mode: AudioPlaybackMode) => void
+  reset: () => void
 }
 
 const MIN_SCALE = 0.35
@@ -111,5 +112,23 @@ export const useEditorStore = create<EditorUiState>()(
         type: 'editor/setAudioPlaybackMode',
         payload: mode,
       }),
+
+    reset: () =>
+      set(
+        {
+          playhead: 0,
+          duration: 0,
+          scale: 1,
+          isPlaying: false,
+          playbackRate: 1,
+          segmentEnd: null,
+          activeSegmentId: null,
+          splitMode: false,
+          loadingSegments: new Set(),
+          // audioPlaybackMode는 언어 변경 시 별도로 설정되므로 초기화하지 않음
+        },
+        false,
+        { type: 'editor/reset' },
+      ),
   })),
 )

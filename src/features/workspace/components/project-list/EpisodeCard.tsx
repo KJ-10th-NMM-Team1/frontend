@@ -220,10 +220,10 @@ export function EpisodeCard({ project, onEdit, onDelete }: EpisodeCardProps) {
         ) : (
           <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-80`} />
         )}
-        <div
+        {/* <div
           className="absolute inset-y-0 right-0 bg-black/60 transition-[width] duration-700 ease-out"
           style={{ width: `${overlayWidth}%` }}
-        />
+        /> */}
         {/* 상태별 오버레이 */}
         {isRunning ? (
           <div className="absolute inset-0 bg-black/45" />

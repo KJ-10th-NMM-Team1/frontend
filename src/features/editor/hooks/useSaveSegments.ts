@@ -10,7 +10,10 @@
 
 import { useCallback, useEffect, useState } from 'react'
 
+import { useQueryClient } from '@tanstack/react-query'
+
 import { useUpdateSegments } from '@/features/editor/api/useUpdateSegments'
+import { queryKeys } from '@/shared/config/queryKeys'
 import { useTracksStore } from '@/shared/store/useTracksStore'
 import { useUiStore } from '@/shared/store/useUiStore'
 
@@ -22,6 +25,7 @@ type UseSaveSegmentsOptions = {
 }
 
 export function useSaveSegments({ projectId, languageCode }: UseSaveSegmentsOptions) {
+  const queryClient = useQueryClient()
   const getAllSegments = useTracksStore((state) => state.getAllSegments)
   const hasChanges = useTracksStore((state) => state.hasChanges)
   const setTracks = useTracksStore((state) => state.setTracks)
@@ -42,6 +46,12 @@ export function useSaveSegments({ projectId, languageCode }: UseSaveSegmentsOpti
       // This ensures hasChanges() returns false after save
       const tracks = useTracksStore.getState().tracks
       setTracks(tracks)
+
+      // Invalidate editor state query to refetch latest data on next page visit
+      // This ensures that cached data is updated with the saved changes
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.editor.state(projectId, languageCode),
+      })
     },
     onError: (error) => {
       setSaveStatus('idle')
@@ -75,7 +85,7 @@ export function useSaveSegments({ projectId, languageCode }: UseSaveSegmentsOpti
         start: seg.start,
         end: seg.end,
         speaker_tag: seg.speaker_tag,
-        playbackRate: seg.playbackRate,
+        playbackRate: seg.playbackRate, // Server accepts camelCase in requests
         source_text: seg.source_text,
         target_text: seg.target_text,
       })),

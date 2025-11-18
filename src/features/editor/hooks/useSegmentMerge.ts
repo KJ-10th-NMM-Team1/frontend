@@ -102,7 +102,10 @@ export function useSegmentMerge() {
         return
       }
 
-      // Validate playback_rate for all segments
+      // Collect segment data with current start/end values
+      const segmentsToMerge: Array<{ id: string; start: number; end: number }> = []
+
+      // Validate playback_rate and collect segment data
       for (const track of tracks) {
         if (track.type === 'speaker') {
           for (const segment of track.segments) {
@@ -115,17 +118,32 @@ export function useSegmentMerge() {
                 })
                 return
               }
+              // Collect segment data with current start/end
+              segmentsToMerge.push({
+                id: segment.id,
+                start: segment.start,
+                end: segment.end,
+              })
             }
           }
         }
       }
 
+      // Validate that we found all segments
+      if (segmentsToMerge.length !== segmentIds.length) {
+        showToast({
+          title: 'Cannot Merge Segments',
+          description: 'Some segments were not found',
+        })
+        return
+      }
+
       // Store original segment IDs for success callback
       mergeSegmentIdsRef.current = segmentIds
 
-      // Call merge API
+      // Call merge API with current start/end values
       mergeMutation.mutate({
-        segment_ids: segmentIds,
+        segments: segmentsToMerge,
         language_code: languageCode,
       })
     },

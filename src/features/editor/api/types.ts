@@ -6,6 +6,8 @@ export interface SplitSegmentRequest {
   segment_id: string
   language_code: string
   split_time: number
+  current_start: number
+  current_end: number
 }
 
 export interface SegmentSplitResponseItem {
@@ -19,8 +21,14 @@ export interface SplitSegmentResponse {
   segments: [SegmentSplitResponseItem, SegmentSplitResponseItem]
 }
 
+export interface MergeSegmentData {
+  id: string
+  start: number
+  end: number
+}
+
 export interface MergeSegmentsRequest {
-  segment_ids: string[]
+  segments: MergeSegmentData[]
   language_code: string
 }
 
