@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useTracksStore } from '@/shared/store/useTracksStore'
 import { useUiStore } from '@/shared/store/useUiStore'
 
-import { createMux, type MuxRequest } from '../api/muxApi'
+import { createMux } from '../api/muxApi'
 import type { EditorState } from './useEditorState'
 
 type UseMuxOptions = {
