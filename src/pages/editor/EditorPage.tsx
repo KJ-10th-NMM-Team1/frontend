@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-import { Upload } from 'lucide-react'
+import { Upload, Video } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 
 import { AudioTrackWorkspace } from '@/features/editor/components/AudioTrackWorkspace'
@@ -28,9 +28,7 @@ export default function EditorPage() {
   const [isExportOpen, setIsExportOpen] = useState(false)
   const { data, isLoading } = useEditorState(projectId, languageCode)
   const setAudioPlaybackMode = useEditorStore((state) => state.setAudioPlaybackMode)
-  // Mux 핸들러 - 나중에 버튼 추가 시 사용 예정
-  // TODO: 버튼 추가 시 mux.handleMux와 mux.isMuxing 사용
-  const mux = useMux({
+  const { handleMux, isMuxing } = useMux({
     projectId,
     editorData: data,
   })
@@ -86,6 +84,15 @@ export default function EditorPage() {
               <Button type="button" onClick={() => setIsExportOpen(true)} className="h-9">
                 <Upload className="mr-2 h-4 w-4" />
                 Export
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleMux}
+                disabled={isMuxing || isLoading}
+              >
+                <Video className="h-4 w-4" />
+                {isMuxing ? 'Mux 중...' : 'Mux'}
               </Button>
               <LanguageSelector projectId={projectId} currentLanguageCode={languageCode} />
             </div>
