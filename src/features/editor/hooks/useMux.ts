@@ -4,6 +4,7 @@ import { useTracksStore } from '@/shared/store/useTracksStore'
 import { useUiStore } from '@/shared/store/useUiStore'
 
 import { createMux } from '../api/muxApi'
+
 import type { EditorState } from './useEditorState'
 
 type UseMuxOptions = {
