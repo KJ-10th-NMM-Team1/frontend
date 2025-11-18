@@ -28,7 +28,6 @@ export default function EditorPage() {
   const [isExportOpen, setIsExportOpen] = useState(false)
   const { data, isLoading } = useEditorState(projectId, languageCode)
   const setAudioPlaybackMode = useEditorStore((state) => state.setAudioPlaybackMode)
-  const resetEditorState = useEditorStore((state) => state.reset)
   const { handleMux, isMuxing } = useMux({
     projectId,
     editorData: data,
@@ -90,9 +89,7 @@ export default function EditorPage() {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => {
-                  void handleMux()
-                }}
+                onClick={handleMux}
                 disabled={isMuxing || isLoading}
               >
                 <Video className="h-4 w-4" />
