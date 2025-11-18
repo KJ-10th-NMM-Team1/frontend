@@ -60,30 +60,29 @@ export function AudioTrackWorkspace({
   // Show loading indicator while initial segments are loading
   if (!isInitialLoadComplete) {
     return (
-      <section className="border-surface-3 bg-surface-1 flex h-full flex-col border-t">
-        <div className="border-surface-3 flex h-full flex-col items-center justify-center rounded-lg border">
+      <section className="flex h-full flex-col">
+        <div className="flex h-full flex-col items-center justify-center">
           <Spinner size="lg" />
-          <p className="text-muted mt-3 text-sm">초기 오디오 세그먼트 로딩 중...</p>
+          <p className="mt-3 text-sm text-muted">초기 오디오 세그먼트 로딩 중...</p>
         </div>
       </section>
     )
   }
 
   return (
-    <section className="border-surface-3 bg-surface-1 flex h-full flex-col border-t">
-      <div className="border-surface-3 flex h-full flex-col rounded-lg border">
+    <section className="flex h-full flex-col">
+      <div className="flex h-full flex-col">
         {/* Controls - 항상 상단에 고정 */}
         <AudioTimelineControls />
 
         {/* Timeline 영역 - 스크롤 가능 */}
         <div className="timeline-scroll-container grid flex-1 overflow-auto lg:grid-cols-[220px,1fr]">
-          {/* Sidebar - sticky로 좌측 고정 */}
-          <div className="border-surface-3 bg-surface-1 sticky left-0 z-40 hidden border-r lg:block">
-            {/* Sidebar 콘텐츠 */}
+          {/* Sidebar */}
+          <div className="sticky left-0 z-40 hidden border-r border-surface-3 bg-surface-1 lg:block">
             <AudioTrackSidebar trackRows={trackRows} getTrackRowHeight={getTrackRowHeight} />
           </div>
 
-          {/* Timeline 콘텐츠 */}
+          {/* Timeline */}
           <div className="bg-surface-1">
             <AudioTimeline
               trackRows={trackRows}
