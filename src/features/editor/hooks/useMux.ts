@@ -67,6 +67,7 @@ export function useMux({ projectId, editorData }: UseMuxOptions): UseMuxReturn {
         start: seg.start,
         end: seg.end,
         audio_file: seg.segment_audio_url!, // S3 키
+        playback_rate: seg.playbackRate ?? 1.0,
       }))
 
     if (muxSegments.length === 0) {
