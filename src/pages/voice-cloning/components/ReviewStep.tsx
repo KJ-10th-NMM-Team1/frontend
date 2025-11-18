@@ -63,8 +63,8 @@ export function ReviewStep({
           <span className="text-sm text-gray-600">녹음 길이</span>
           <span className="text-sm font-semibold text-gray-900">{recordedDuration}초</span>
         </div>
-        {recordedDuration < 10 && (
-          <p className="mt-2 text-xs text-amber-600">최소 10초 이상 녹음해주세요</p>
+        {recordedDuration < 2 && (
+          <p className="mt-2 text-xs text-amber-600">최소 2초 이상 녹음해주세요</p>
         )}
       </div>
 
@@ -74,7 +74,7 @@ export function ReviewStep({
           variant="primary"
           className="rounded-full px-6 py-3 text-sm font-semibold"
           onClick={onProceed}
-          disabled={recordedDuration < 10}
+          disabled={recordedDuration < 2}
         >
           다음 단계로
         </Button>
