@@ -89,7 +89,9 @@ export default function EditorPage() {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={handleMux}
+                onClick={() => {
+                  void handleMux()
+                }}
                 disabled={isMuxing || isLoading}
               >
                 <Video className="h-4 w-4" />
