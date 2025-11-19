@@ -26,7 +26,6 @@ async function bootstrap() {
       <AppProviders>
         <AppRouter />
       </AppProviders>
-      ,
     </StrictMode>,
   )
 }
