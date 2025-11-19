@@ -7,6 +7,7 @@ import { useMemo } from 'react'
 import type { Issue } from '@/entities/issue/types'
 import type { Segment } from '@/entities/segment/types'
 import { useEditorStore } from '@/shared/store/useEditorStore'
+import { useTracksStore } from '@/shared/store/useTracksStore'
 
 type IssueWithSegment = Issue & {
   segmentId: string
@@ -20,6 +21,10 @@ type DubbingIssuesSectionProps = {
 export function DubbingIssuesSection({ segments }: DubbingIssuesSectionProps) {
   const setPlayhead = useEditorStore((state) => state.setPlayhead)
   const setPlaying = useEditorStore((state) => state.setPlaying)
+  const { getAllSegments } = useTracksStore((state) => ({
+    getAllSegments: state.getAllSegments,
+  }))
+  const storeSegments = getAllSegments()
 
   // 모든 세그먼트에서 이슈들을 추출
   const issues = useMemo(() => {
@@ -126,8 +131,12 @@ export function DubbingIssuesSection({ segments }: DubbingIssuesSectionProps) {
     return `${mins}:${String(secs).padStart(2, '0')}`
   }
 
-  const handleIssueClick = (segmentStart: number, event?: React.MouseEvent | React.KeyboardEvent) => {
-    setPlayhead(segmentStart)
+  const handleIssueClick = (segmentId: string, event?: React.MouseEvent | React.KeyboardEvent) => {
+    // segments에서 현재 segmentId에 해당하는 세그먼트를 찾아서 최신 start 값을 사용
+    const segment = storeSegments.find((seg) => seg.id === segmentId)
+    if (!segment) return
+
+    setPlayhead(segment.start - 0.025)
     setPlaying(false)
 
     // 클릭 후 포커스 제거하여 스페이스바가 비디오 재생에 사용되도록 함
@@ -210,13 +219,13 @@ export function DubbingIssuesSection({ segments }: DubbingIssuesSectionProps) {
               className={`cursor-pointer rounded border p-3 text-sm transition-opacity hover:bg-surface-1 ${
                 issue.resolved ? 'opacity-50' : ''
               }`}
-              onClick={(e) => handleIssueClick(issue.segmentStart, e)}
+              onClick={(e) => handleIssueClick(issue.segmentId, e)}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault()
-                  handleIssueClick(issue.segmentStart, e)
+                  handleIssueClick(issue.segmentId, e)
                 }
               }}
             >
