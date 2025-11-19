@@ -138,7 +138,7 @@ export default function EditorPage() {
         >
           <div className="flex min-h-0 flex-1 flex-col gap-0">
             {/* Breadcrumbs with Language Selector */}
-            <div className="flex items-center justify-between border-b-[5px] border-neutral-300 px-2 py-2">
+            <div className="flex items-center justify-between border-b-[3px] border-neutral-200 px-2 py-2">
               <div className="text-xs">
                 <Breadcrumbs
                   items={[
@@ -185,11 +185,11 @@ export default function EditorPage() {
 
               {/* 좌/우 경계 드래그바 */}
               <div
-                className="group relative w-[5px] cursor-col-resize self-stretch"
+                className="group relative w-[3px] cursor-col-resize self-stretch"
                 onPointerDown={startHorizontalDrag}
               >
-                {/* 두께 5px짜리 세로 경계선 */}
-                <div className="pointer-events-none absolute inset-y-0 left-1/2 w-[5px] -translate-x-1/2 bg-neutral-300 group-hover:bg-neutral-400" />
+                {/* 두께 3px짜리 세로 경계선 */}
+                <div className="pointer-events-none absolute inset-y-0 left-1/2 w-[3px] -translate-x-1/2 bg-neutral-200 group-hover:bg-neutral-400" />
               </div>
 
               {/* Summary/Translation Tabs Card */}
@@ -241,8 +241,8 @@ export default function EditorPage() {
           className="group relative -my-[2px] h-[8px] cursor-row-resize"
           onPointerDown={startVerticalDrag}
         >
-          {/* 두께 5px짜리 가로 경계선 */}
-          <div className="pointer-events-none absolute inset-x-0 top-1/2 h-[5px] -translate-y-1/2 bg-neutral-300 group-hover:bg-neutral-400" />
+          {/* 두께 3px짜리 가로 경계선 */}
+          <div className="pointer-events-none absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 bg-neutral-200 group-hover:bg-neutral-400" />
         </div>
 
         {/* 하단: Audio Track Workspace (보컬/세그먼트 타임라인) */}
