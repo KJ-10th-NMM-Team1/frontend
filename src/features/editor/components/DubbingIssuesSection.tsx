@@ -126,9 +126,15 @@ export function DubbingIssuesSection({ segments }: DubbingIssuesSectionProps) {
     return `${mins}:${String(secs).padStart(2, '0')}`
   }
 
-  const handleIssueClick = (segmentStart: number) => {
+  const handleIssueClick = (segmentStart: number, event?: React.MouseEvent | React.KeyboardEvent) => {
     setPlayhead(segmentStart)
     setPlaying(false)
+
+    // 클릭 후 포커스 제거하여 스페이스바가 비디오 재생에 사용되도록 함
+    if (event) {
+      const target = event.currentTarget as HTMLElement
+      target.blur()
+    }
   }
 
   // Sync diff를 시각화하는 컴포넌트 (크기 축소)
@@ -204,13 +210,13 @@ export function DubbingIssuesSection({ segments }: DubbingIssuesSectionProps) {
               className={`cursor-pointer rounded border p-3 text-sm transition-opacity hover:bg-surface-1 ${
                 issue.resolved ? 'opacity-50' : ''
               }`}
-              onClick={() => handleIssueClick(issue.segmentStart)}
+              onClick={(e) => handleIssueClick(issue.segmentStart, e)}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault()
-                  handleIssueClick(issue.segmentStart)
+                  handleIssueClick(issue.segmentStart, e)
                 }
               }}
             >

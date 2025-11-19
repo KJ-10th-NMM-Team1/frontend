@@ -93,6 +93,9 @@ export function TranslationSummarySection({
   }
 
   const handleTranslate = async (segmentId: string) => {
+    // 드롭다운 트리거 버튼의 포커스 제거
+    ;(document.activeElement as HTMLElement)?.blur()
+
     if (translatingSegments.has(segmentId)) return
 
     const segment = allSegments.find((s) => s.id === segmentId)
@@ -256,6 +259,8 @@ export function TranslationSummarySection({
 
                     <DropdownMenuItem
                       onClick={() => {
+                        // 드롭다운 트리거 버튼의 포커스 제거
+                        ;(document.activeElement as HTMLElement)?.blur()
                         setActiveSegment(segment.id)
                         openAiDialog()
                       }}
