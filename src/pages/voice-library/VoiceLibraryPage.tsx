@@ -16,7 +16,6 @@ import { VoiceSampleEditModal } from '@/features/voice-samples/modals/VoiceSampl
 import { env } from '@/shared/config/env'
 import { routes } from '@/shared/config/routes'
 import { Button } from '@/shared/ui/Button'
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -93,7 +92,7 @@ export default function VoiceLibraryPage() {
       fetchVoiceSamples({
         q: search.trim() || undefined,
         mySamplesOnly: tab === 'mine',
-        myVoicesOnly: tab === 'mine' ? true : undefined,
+        // myVoicesOnly는 제거 - mySamplesOnly만 사용 (자신이 만든 보이스는 자동으로 user_voices에 추가됨)
         isDefault:
           tab === 'default' ? true : tab === 'library' || tab === 'mine' ? false : undefined,
         gender: filters.gender && filters.gender !== 'any' ? filters.gender : undefined,
