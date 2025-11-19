@@ -17,6 +17,7 @@ interface VoiceListSectionProps {
   onEdit?: (sample: VoiceSample) => void
   onDelete?: (sample: VoiceSample) => void
   deletingId: string | null
+  currentUserId?: string
 }
 
 export function VoiceListSection({
@@ -33,7 +34,14 @@ export function VoiceListSection({
   onEdit,
   onDelete,
   deletingId,
+  currentUserId,
 }: VoiceListSectionProps) {
+  // owner 확인 함수
+  const isOwner = (sample: VoiceSample) => {
+    if (!currentUserId || !sample.owner_id) return false
+    return String(currentUserId) === String(sample.owner_id)
+  }
+
   return (
     <section className="space-y-3">
       <h2 className="text-lg font-semibold">{title}</h2>
@@ -47,26 +55,58 @@ export function VoiceListSection({
         </div>
       ) : (
         <ul className="space-y-1">
-          {samples.map((sample) => (
-            <li
-              key={sample.id}
-              className="grid grid-cols-[minmax(0,3fr)_minmax(0,2fr)_auto] items-center rounded-xl px-1 py-2 hover:bg-surface-1"
-            >
-              <VoiceSpotlightCard
-                sample={sample}
-                onAddToMyVoices={onAddToMyVoices ? () => onAddToMyVoices(sample) : undefined}
-                onRemoveFromMyVoices={
-                  onRemoveFromMyVoices ? () => onRemoveFromMyVoices(sample) : undefined
-                }
-                isAdding={onAddToMyVoices ? addingToMyVoices.has(sample.id) : false}
-                isRemoving={onRemoveFromMyVoices ? removingFromMyVoices.has(sample.id) : false}
-                isInMyVoices={sample.isInMyVoices ?? false}
-                onPlay={onPlay}
-                isPlaying={playingSampleId === sample.id}
-                isTableRow
-              />
-            </li>
-          ))}
+          {samples.map((sample) => {
+            const sampleIsOwner = isOwner(sample)
+            const canEdit = showActions && sampleIsOwner && onEdit
+            const canDelete = showActions && sampleIsOwner && onDelete
+
+            return (
+              <li
+                key={sample.id}
+                className="grid grid-cols-[minmax(0,3fr)_minmax(0,2fr)_auto] items-center rounded-xl px-1 py-2 hover:bg-surface-1"
+              >
+                <VoiceSpotlightCard
+                  sample={sample}
+                  onAddToMyVoices={
+                    sampleIsOwner
+                      ? undefined
+                      : onAddToMyVoices
+                        ? () => onAddToMyVoices(sample)
+                        : undefined
+                  }
+                  onRemoveFromMyVoices={
+                    sampleIsOwner
+                      ? undefined
+                      : onRemoveFromMyVoices
+                        ? () => onRemoveFromMyVoices(sample)
+                        : undefined
+                  }
+                  isAdding={
+                    sampleIsOwner
+                      ? false
+                      : onAddToMyVoices
+                        ? addingToMyVoices.has(sample.id)
+                        : false
+                  }
+                  isRemoving={
+                    sampleIsOwner
+                      ? false
+                      : onRemoveFromMyVoices
+                        ? removingFromMyVoices.has(sample.id)
+                        : false
+                  }
+                  isInMyVoices={sample.isInMyVoices ?? false}
+                  onPlay={onPlay}
+                  isPlaying={playingSampleId === sample.id}
+                  isTableRow
+                  onEdit={canEdit ? () => onEdit(sample) : undefined}
+                  onDelete={canDelete ? () => onDelete(sample) : undefined}
+                  isDeleting={canDelete && deletingId === sample.id}
+                  isOwner={sampleIsOwner}
+                />
+              </li>
+            )
+          })}
         </ul>
       )}
     </section>

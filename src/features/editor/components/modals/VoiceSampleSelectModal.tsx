@@ -34,21 +34,51 @@ export function VoiceSampleSelectModal({
   const [selectedId, setSelectedId] = useState<string | undefined>(
     currentVoiceSampleId || DEFAULT_VOICE_MODEL,
   )
-  const { data, isLoading } = useVoiceSamples()
 
-  // voiceSamples에 기본 clone 모델 추가
+  // 내가 추가한 보이스와 기본 보이스 모두 가져오기
+  const { data: myVoicesData, isLoading: isLoadingMyVoices } = useVoiceSamples({
+    myVoicesOnly: true,
+  })
+  const { data: defaultVoicesData, isLoading: isLoadingDefault } = useVoiceSamples({
+    isDefault: true,
+  })
+
+  const isLoading = isLoadingMyVoices || isLoadingDefault
+
+  // voiceSamples에 기본 clone 모델 추가하고 중복 제거
   const voiceSamples = useMemo(() => {
-    const samples = data?.samples || []
+    const myVoices = myVoicesData?.samples || []
+    const defaultVoices = defaultVoicesData?.samples || []
+
+    // 중복 제거 (id 기준)
+    const allSamplesMap = new Map<string, VoiceSample>()
+
+    // 내가 추가한 보이스 추가
+    myVoices.forEach((sample) => {
+      allSamplesMap.set(sample.id, sample)
+    })
+
+    // 기본 보이스 추가 (중복이면 덮어쓰지 않음 - 내가 추가한 것이 우선)
+    defaultVoices.forEach((sample) => {
+      if (!allSamplesMap.has(sample.id)) {
+        allSamplesMap.set(sample.id, sample)
+      }
+    })
+
+    const samples = Array.from(allSamplesMap.values())
+
     const cloneModel: VoiceSample = {
       id: 'clone',
       name: 'Clone',
       description: 'Default voice cloning model',
       attributes: 'Auto-detect voice characteristics',
       isPublic: true,
-      isFavorite: false,
+      isInMyVoices: false,
+      addedCount: 0,
+      isDefault: false,
     }
     return [cloneModel, ...samples]
-  }, [data])
+  }, [myVoicesData, defaultVoicesData])
 
   // Reset selectedId when modal opens with currentVoiceSampleId
   useEffect(() => {
@@ -80,14 +110,14 @@ export function VoiceSampleSelectModal({
         {/* Header */}
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
-            <div className="bg-primary/10 text-primary flex h-9 w-9 items-center justify-center rounded-lg">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
               <Mic2 className="h-4.5 w-4.5" />
             </div>
             <div className="flex-1">
               <DialogTitle className="text-base">Voice Sample Configuration</DialogTitle>
               <DialogDescription className="text-xs">
                 Assign a voice sample to{' '}
-                <span className="text-foreground font-medium">{trackLabel}</span>
+                <span className="font-medium text-foreground">{trackLabel}</span>
               </DialogDescription>
             </div>
           </div>
@@ -103,7 +133,7 @@ export function VoiceSampleSelectModal({
             <>
               {/* Select Component */}
               <div className="space-y-2">
-                <label className="text-foreground text-sm font-medium">Voice Sample</label>
+                <label className="text-sm font-medium text-foreground">Voice Sample</label>
                 <Select value={selectedId} onValueChange={setSelectedId}>
                   <SelectTrigger className="h-12">
                     <SelectValue placeholder="Select a voice sample..." />
@@ -113,11 +143,11 @@ export function VoiceSampleSelectModal({
                       {voiceSamples.map((sample: VoiceSample) => (
                         <SelectItem key={sample.id} value={sample.id} className="pl-8">
                           <div className="flex flex-col gap-0.5">
-                            <span className="text-foreground text-sm font-medium">
+                            <span className="text-sm font-medium text-foreground">
                               {sample.name}
                             </span>
                             {sample.attributes && (
-                              <span className="text-muted text-xs">{sample.attributes}</span>
+                              <span className="text-xs text-muted">{sample.attributes}</span>
                             )}
                           </div>
                         </SelectItem>
@@ -129,29 +159,29 @@ export function VoiceSampleSelectModal({
 
               {/* Selected Sample Details */}
               {selectedSample && (
-                <div className="border-surface-3 bg-surface-2/50 rounded-xl border p-4">
+                <div className="rounded-xl border border-surface-3 bg-surface-2/50 p-4">
                   <div className="mb-2 flex items-center gap-2">
-                    <Info className="text-muted h-4 w-4" />
-                    <span className="text-foreground text-sm font-medium">Sample Details</span>
+                    <Info className="h-4 w-4 text-muted" />
+                    <span className="text-sm font-medium text-foreground">Sample Details</span>
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 space-y-1">
                         <div className="flex items-center gap-2">
-                          <Check className="text-primary h-4 w-4" />
-                          <span className="text-foreground text-sm font-semibold">
+                          <Check className="h-4 w-4 text-primary" />
+                          <span className="text-sm font-semibold text-foreground">
                             {selectedSample.name}
                           </span>
                         </div>
                         {selectedSample.description && (
-                          <p className="text-muted pl-6 text-xs leading-relaxed">
+                          <p className="pl-6 text-xs leading-relaxed text-muted">
                             {selectedSample.description}
                           </p>
                         )}
                         {selectedSample.attributes && (
-                          <div className="bg-surface-3/50 mt-2 inline-flex items-center gap-1.5 rounded-md px-2 py-1">
-                            <span className="text-muted text-xs font-medium">Attributes:</span>
-                            <span className="text-foreground text-xs">
+                          <div className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-surface-3/50 px-2 py-1">
+                            <span className="text-xs font-medium text-muted">Attributes:</span>
+                            <span className="text-xs text-foreground">
                               {selectedSample.attributes}
                             </span>
                           </div>
@@ -163,13 +193,13 @@ export function VoiceSampleSelectModal({
               )}
             </>
           ) : (
-            <div className="border-surface-3 bg-surface-2/30 flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed py-12">
-              <div className="bg-surface-3 flex h-12 w-12 items-center justify-center rounded-full">
-                <Mic2 className="text-muted h-5 w-5" />
+            <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-surface-3 bg-surface-2/30 py-12">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-3">
+                <Mic2 className="h-5 w-5 text-muted" />
               </div>
               <div className="text-center">
-                <p className="text-foreground text-sm font-medium">No voice samples available</p>
-                <p className="text-muted mt-1 text-xs">
+                <p className="text-sm font-medium text-foreground">No voice samples available</p>
+                <p className="mt-1 text-xs text-muted">
                   Create voice samples in the Voice Samples page first
                 </p>
               </div>
@@ -178,7 +208,7 @@ export function VoiceSampleSelectModal({
         </div>
 
         {/* Footer */}
-        <div className="border-surface-3 flex items-center justify-end gap-2 border-t pt-4">
+        <div className="flex items-center justify-end gap-2 border-t border-surface-3 pt-4">
           <Button variant="ghost" onClick={handleCancel} size="sm">
             Cancel
           </Button>

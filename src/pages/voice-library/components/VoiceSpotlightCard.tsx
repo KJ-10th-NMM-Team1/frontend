@@ -1,11 +1,17 @@
 import { useMemo, useState, useEffect } from 'react'
 
-import { Check, MoreHorizontal, Pause, Play, Plus } from 'lucide-react'
+import { Check, Crown, MoreHorizontal, MoreVertical, Pause, Play, Plus } from 'lucide-react'
 import ReactCountryFlag from 'react-country-flag'
 
 import type { VoiceSample } from '@/entities/voice-sample/types'
 import { env } from '@/shared/config/env'
 import { cn } from '@/shared/lib/utils'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/shared/ui/Dropdown'
 import { Spinner } from '@/shared/ui/Spinner'
 
 const DEFAULT_AVATAR =
@@ -52,6 +58,10 @@ interface VoiceSpotlightCardProps {
   onPlay: (sample: VoiceSample) => void
   isPlaying: boolean
   isTableRow?: boolean
+  onEdit?: () => void
+  onDelete?: () => void
+  isDeleting?: boolean
+  isOwner?: boolean
 }
 
 export function VoiceSpotlightCard({
@@ -64,6 +74,10 @@ export function VoiceSpotlightCard({
   onPlay,
   isPlaying,
   isTableRow = false,
+  onEdit,
+  onDelete,
+  isDeleting = false,
+  isOwner = false,
 }: VoiceSpotlightCardProps) {
   const [resolvedAvatar, setResolvedAvatar] = useState<string>(
     sample.avatarImageUrl && sample.avatarImageUrl.startsWith('http')
@@ -170,42 +184,94 @@ export function VoiceSpotlightCard({
           >
             {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
           </button>
-          {(onAddToMyVoices || onRemoveFromMyVoices) && (
+          {/* 오너인 경우 오너 아이콘 표시, 아닌 경우 add/remove 버튼 */}
+          {isOwner ? (
+            <div
+              className="flex items-center gap-1 rounded-full px-2 py-1 text-xs text-primary"
+              title="내가 만든 보이스"
+            >
+              <Crown className="h-4 w-4" />
+              <span className="text-[10px] font-medium">Owner</span>
+            </div>
+          ) : (
+            (onAddToMyVoices || onRemoveFromMyVoices) && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (isInMyVoices && onRemoveFromMyVoices) {
+                    onRemoveFromMyVoices()
+                  } else if (!isInMyVoices && onAddToMyVoices) {
+                    onAddToMyVoices()
+                  }
+                }}
+                disabled={isAdding || isRemoving}
+                title={isInMyVoices ? '내 보이스에서 제거' : '내 보이스에 추가'}
+                className={cn(
+                  'rounded-full p-1 transition-colors',
+                  isInMyVoices
+                    ? 'text-primary hover:bg-surface-2'
+                    : 'text-muted hover:bg-surface-2 hover:text-foreground',
+                  (isAdding || isRemoving) && 'cursor-not-allowed opacity-50',
+                )}
+              >
+                {isAdding || isRemoving ? (
+                  <Spinner size="sm" />
+                ) : isInMyVoices ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <Plus className="h-4 w-4" />
+                )}
+              </button>
+            )
+          )}
+          {/* 수정/삭제 드롭다운 메뉴 */}
+          {onEdit || onDelete ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="rounded-full p-1 text-muted transition-colors hover:bg-surface-2 hover:text-foreground"
+                  onClick={(e) => e.stopPropagation()}
+                  disabled={isDeleting}
+                  title="더보기"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {onEdit && (
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onEdit()
+                    }}
+                  >
+                    편집
+                  </DropdownMenuItem>
+                )}
+                {onDelete && (
+                  <DropdownMenuItem
+                    className="text-danger"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onDelete()
+                    }}
+                    disabled={isDeleting}
+                  >
+                    삭제
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
             <button
               type="button"
-              onClick={(e) => {
-                e.stopPropagation()
-                if (isInMyVoices && onRemoveFromMyVoices) {
-                  onRemoveFromMyVoices()
-                } else if (!isInMyVoices && onAddToMyVoices) {
-                  onAddToMyVoices()
-                }
-              }}
-              disabled={isAdding || isRemoving}
-              title={isInMyVoices ? '내 보이스에서 제거' : '내 보이스에 추가'}
-              className={cn(
-                'rounded-full p-1 transition-colors',
-                isInMyVoices
-                  ? 'text-primary hover:bg-surface-2'
-                  : 'text-muted hover:bg-surface-2 hover:text-foreground',
-                (isAdding || isRemoving) && 'cursor-not-allowed opacity-50',
-              )}
+              className="rounded-full p-1 text-muted transition-colors hover:bg-surface-2"
             >
-              {isAdding || isRemoving ? (
-                <Spinner size="sm" />
-              ) : isInMyVoices ? (
-                <Check className="h-4 w-4" />
-              ) : (
-                <Plus className="h-4 w-4" />
-              )}
+              <MoreHorizontal className="h-4 w-4" />
             </button>
           )}
-          <button
-            type="button"
-            className="rounded-full p-1 text-muted transition-colors hover:bg-surface-2"
-          >
-            <MoreHorizontal className="h-4 w-4" />
-          </button>
         </div>
       </>
     )
@@ -270,35 +336,46 @@ export function VoiceSpotlightCard({
                 {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
               </button>
             )}
-            {(onAddToMyVoices || onRemoveFromMyVoices) && (
-              <button
-                type="button"
-                onClick={() => {
-                  if (isInMyVoices && onRemoveFromMyVoices) {
-                    onRemoveFromMyVoices()
-                  } else if (!isInMyVoices && onAddToMyVoices) {
-                    onAddToMyVoices()
-                  }
-                }}
-                disabled={isAdding || isRemoving}
-                className={cn(
-                  'flex items-center gap-1 rounded-full px-2 py-1 text-xs transition-colors',
-                  isInMyVoices
-                    ? 'text-primary hover:bg-surface-2'
-                    : 'text-muted hover:bg-surface-2',
-                  (isAdding || isRemoving) && 'cursor-not-allowed opacity-50',
-                )}
-                title={isInMyVoices ? '내 보이스에서 제거' : '내 보이스에 추가'}
+            {/* 오너인 경우 오너 아이콘 표시, 아닌 경우 add/remove 버튼 */}
+            {isOwner ? (
+              <div
+                className="flex items-center gap-1 rounded-full px-2 py-1 text-xs text-primary"
+                title="내가 만든 보이스"
               >
-                {isAdding || isRemoving ? (
-                  <Spinner size="sm" />
-                ) : isInMyVoices ? (
-                  <Check className="h-4 w-4" />
-                ) : (
-                  <Plus className="h-4 w-4" />
-                )}
-                <span className="text-xs text-muted">{sample.addedCount ?? 0}명 추가</span>
-              </button>
+                <Crown className="h-4 w-4" />
+                <span className="text-[10px] font-medium">Owner</span>
+              </div>
+            ) : (
+              (onAddToMyVoices || onRemoveFromMyVoices) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isInMyVoices && onRemoveFromMyVoices) {
+                      onRemoveFromMyVoices()
+                    } else if (!isInMyVoices && onAddToMyVoices) {
+                      onAddToMyVoices()
+                    }
+                  }}
+                  disabled={isAdding || isRemoving}
+                  className={cn(
+                    'flex items-center gap-1 rounded-full px-2 py-1 text-xs transition-colors',
+                    isInMyVoices
+                      ? 'text-primary hover:bg-surface-2'
+                      : 'text-muted hover:bg-surface-2',
+                    (isAdding || isRemoving) && 'cursor-not-allowed opacity-50',
+                  )}
+                  title={isInMyVoices ? '내 보이스에서 제거' : '내 보이스에 추가'}
+                >
+                  {isAdding || isRemoving ? (
+                    <Spinner size="sm" />
+                  ) : isInMyVoices ? (
+                    <Check className="h-4 w-4" />
+                  ) : (
+                    <Plus className="h-4 w-4" />
+                  )}
+                  <span className="text-xs text-muted">{sample.addedCount ?? 0}명 추가</span>
+                </button>
+              )
             )}
           </div>
         </div>

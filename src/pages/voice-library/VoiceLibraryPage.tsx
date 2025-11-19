@@ -5,6 +5,7 @@ import { ArrowDown, ArrowUp, ChevronDown, Filter, Globe, Search } from 'lucide-r
 import { useNavigate } from 'react-router-dom'
 
 import type { VoiceSample, VoiceSamplesResponse } from '@/entities/voice-sample/types'
+import { getCurrentUser } from '@/features/auth/api/authApi'
 import { fetchVoiceSamples } from '@/features/voice-samples/api/voiceSamplesApi'
 import {
   useAddToMyVoices,
@@ -105,6 +106,13 @@ export default function VoiceLibraryPage() {
   const addToMyVoices = useAddToMyVoices()
   const removeFromMyVoices = useRemoveFromMyVoices()
   const isMyTab = tab === 'mine'
+
+  // 현재 사용자 정보 가져오기
+  const { data: currentUser } = useQuery({
+    queryKey: ['auth', 'current-user'],
+    queryFn: getCurrentUser,
+    staleTime: Infinity,
+  })
 
   const cleanupAudio = useCallback(() => {
     const audio = audioRef.current
@@ -539,6 +547,7 @@ export default function VoiceLibraryPage() {
           onEdit={handleEditSample}
           onDelete={handleDeleteSample}
           deletingId={deletingId}
+          currentUserId={currentUser?._id}
         />
       )}
 
