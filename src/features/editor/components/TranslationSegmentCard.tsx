@@ -41,15 +41,15 @@ export function TranslationSegmentCard({
         isActive ? 'border-primary bg-primary/5 shadow-primary/20' : ''
       }`}
     >
-      <div className="text-muted flex items-center justify-between text-xs font-semibold uppercase tracking-[0.2em]">
+      <div className="text-muted flex items-center justify-between text-sm font-semibold uppercase tracking-[0.2em]">
         <span>{String(index + 1).padStart(2, '0')}</span>
         <span>{segment.speaker_tag}</span>
       </div>
-      <div className="grid gap-1 lg:grid-cols-[1fr_auto_1fr]">
+      <div className="grid gap-2 lg:grid-cols-[1fr_auto_1fr]">
         {/* 왼쪽 패널: 원문 */}
         <div className="flex flex-col gap-3">
           <textarea
-            className="bg-surface-1 text-foreground border-primary/40 focus-visible:outline-hidden focus-visible:ring-primary h-32 w-full resize-none rounded-md border p-3 text-sm focus-visible:ring-2"
+            className="scrollbar-thin bg-surface-1 text-foreground border-primary/40 focus-visible:outline-hidden focus-visible:ring-primary h-36 w-full resize-none rounded-md border p-3 text-sm focus-visible:ring-2"
             value={sourceText}
             onClick={onSegmentClick}
             onChange={(event) => onSourceChange(event.target.value)}
@@ -76,7 +76,7 @@ export function TranslationSegmentCard({
         <div className="flex flex-col gap-3">
           <div className="relative">
             <textarea
-              className="bg-surface-1 text-foreground border-primary/40 focus-visible:outline-hidden focus-visible:ring-primary h-32 w-full resize-none rounded-md border p-3 text-sm focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="scrollbar-thin bg-surface-1 text-foreground border-primary/40 focus-visible:outline-hidden focus-visible:ring-primary h-36 w-full resize-none rounded-md border p-3 text-sm focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50"
               value={targetText}
               onClick={onSegmentClick}
               onChange={(event) => onTargetChange(event.target.value)}
@@ -87,7 +87,7 @@ export function TranslationSegmentCard({
               <div className="bg-surface-1/80 absolute inset-0 flex items-center justify-center rounded-2xl">
                 <div className="flex flex-col items-center gap-2">
                   <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
-                  <span className="text-muted text-xs">번역 중...</span>
+                  <span className="text-muted text-sm">번역 중...</span>
                 </div>
               </div>
             )}

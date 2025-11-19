@@ -187,7 +187,7 @@ export function TranslationSummarySection({
   return (
     <>
       <div className="flex h-full flex-col">
-        <div className="flex-1 space-y-1.5 overflow-y-auto p-3">
+        <div className="scrollbar-thin flex-1 space-y-2 overflow-y-auto p-4">
           {allSegments.map((segment) => {
             const isActive = activeSegmentId === segment.id
             const isTranslating = translatingSegments.has(segment.id)
@@ -199,31 +199,31 @@ export function TranslationSummarySection({
                 ref={(node) => {
                   segmentRefs.current[segment.id] = node
                 }}
-                className={`group flex items-start gap-2 rounded px-2 py-1.5 transition ${
+                className={`group flex items-start gap-2 rounded px-3 py-2 transition ${
                   isActive ? 'border-primary bg-primary/5' : 'hover:bg-surface-2'
                 }`}
               >
                 <div className="flex-1">
                   {/* 원본 텍스트 */}
                   <input
-                    className="mb-0.5 w-full border-0 bg-transparent px-0 py-0 text-xs text-foreground focus:outline-none"
+                    className="mb-1 w-full border-0 bg-transparent px-0 py-0 text-sm text-foreground focus:outline-none"
                     value={segment.source_text || ''}
                     onChange={(e) => handleSourceChange(segment.id, e.target.value)}
                     placeholder="원문 없음"
                   />
 
                   {/* 번역 텍스트 */}
-                  <div className="relative flex items-center gap-1">
-                    <span className="text-xs text-muted">→</span>
+                  <div className="relative flex items-center gap-1.5">
+                    <span className="text-sm text-muted">→</span>
                     <input
-                      className="flex-1 border-0 bg-transparent px-0 py-0 text-xs font-medium text-primary focus:outline-none disabled:opacity-50"
+                      className="flex-1 border-0 bg-transparent px-0 py-0 text-sm font-medium text-primary focus:outline-none disabled:opacity-50"
                       value={segment.target_text || ''}
                       onChange={(e) => handleTargetChange(segment.id, e.target.value)}
                       placeholder={isTranslating ? '번역 중...' : '번역 없음'}
                       disabled={isTranslating}
                     />
                     {isTranslating && (
-                      <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                     )}
                   </div>
                 </div>
@@ -234,9 +234,9 @@ export function TranslationSummarySection({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-5 w-5 shrink-0 p-0 opacity-0 transition group-hover:opacity-100"
+                      className="h-6 w-6 shrink-0 p-0 opacity-0 transition group-hover:opacity-100"
                     >
-                      <MoreVertical className="h-3.5 w-3.5" />
+                      <MoreVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -260,7 +260,7 @@ export function TranslationSummarySection({
                         openAiDialog()
                       }}
                     >
-                      <Sparkles className="mr-2 h-3.5 w-3.5" />
+                      <Sparkles className="mr-2 h-4 w-4" />
                       AI 제안 받기
                     </DropdownMenuItem>
                   </DropdownMenuContent>

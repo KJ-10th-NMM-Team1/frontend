@@ -30,34 +30,34 @@ export function ProjectSummarySection({
   }
 
   return (
-    <div className="flex h-full flex-col gap-3 p-3">
+    <div className="flex h-full flex-col gap-4 p-4">
       {/* 이슈 섹션 */}
       <DubbingIssuesSection segments={segments} />
 
       {/* 프로젝트 정보 */}
-      <section className="flex-1 overflow-y-auto rounded border border-surface-3 bg-white p-3">
-        <h3 className="mb-3 text-xs font-semibold text-foreground">프로젝트 정보</h3>
+      <section className="scrollbar-thin flex-1 overflow-y-auto rounded border border-surface-3 bg-white p-4">
+        <h3 className="mb-4 text-sm font-semibold text-foreground">프로젝트 정보</h3>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-6">
             <Spinner size="sm" />
           </div>
         ) : project ? (
-          <div className="space-y-3 text-xs">
+          <div className="space-y-4 text-sm">
             {/* 번역 언어 */}
             {project.targets && project.targets.length > 0 && (
               <div>
-                <span className="mb-1.5 block text-muted">번역 언어</span>
-                <div className="flex flex-wrap gap-1.5">
+                <span className="mb-2 block text-muted">번역 언어</span>
+                <div className="flex flex-wrap gap-2">
                   {project.targets.map((target) => (
                     <div
                       key={target.id}
-                      className="flex items-center gap-1.5 rounded bg-surface-2 px-2 py-1"
+                      className="flex items-center gap-2 rounded bg-surface-2 px-3 py-1.5"
                     >
-                      <span className="text-base leading-none">
+                      <span className="text-lg leading-none">
                         {getLanguageFlag(target.language_code)}
                       </span>
-                      <span className="text-xs font-medium text-foreground">
+                      <span className="text-sm font-medium text-foreground">
                         {getLanguageName(target.language_code)}
                       </span>
                     </div>
@@ -98,7 +98,7 @@ export function ProjectSummarySection({
             </div>
           </div>
         ) : (
-          <div className="py-6 text-center text-xs text-muted">
+          <div className="py-6 text-center text-sm text-muted">
             프로젝트 정보를 불러올 수 없습니다
           </div>
         )}

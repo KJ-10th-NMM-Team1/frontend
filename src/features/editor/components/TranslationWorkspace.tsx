@@ -302,9 +302,9 @@ export function TranslationWorkspace({
 
   return (
     <>
-      <section className="flex h-full flex-col p-2">
-        <header className="flex flex-wrap items-center justify-between gap-2 pb-2">
-          <div className="text-muted flex items-center gap-2 text-xs font-medium">
+      <section className="flex h-full flex-col p-3">
+        <header className="flex flex-wrap items-center justify-between gap-2 pb-3">
+          <div className="text-muted flex items-center gap-2 text-sm font-medium">
             <span>{sourceLanguage}</span>
             <ArrowRight className="h-4 w-4" />
             <span>{languageNameMap[targetLanguage]}</span>
@@ -314,7 +314,7 @@ export function TranslationWorkspace({
               type="button"
               variant="secondary"
               size="sm"
-              className="h-7 py-2"
+              className="h-8 py-2"
               onClick={() => {
                 setSuggestionResult(currentActiveSegment?.target_text ?? '')
                 setIsAiDialogOpen(true)
@@ -324,7 +324,7 @@ export function TranslationWorkspace({
             </Button>
           </div>
         </header>
-        <div className="mt-2 flex-1 space-y-2 overflow-y-auto pr-2">
+        <div className="scrollbar-thin mt-2 flex-1 space-y-2.5 overflow-y-auto pr-2">
           {displaySegments.map((segment, index) => {
             const isActive = activeSegmentId === segment.id
             const isTranslating = translatingSegments.has(segment.id)
