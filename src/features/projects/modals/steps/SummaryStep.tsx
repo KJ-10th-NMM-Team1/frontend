@@ -24,14 +24,8 @@ type SummaryStepProps = {
   onSubmit: () => void
 }
 
-export function SummaryStep({
-  draft,
-  uploadProgress,
-  onBack,
-  onSubmit,
-}: SummaryStepProps) {
-  const isProcessing =
-    uploadProgress.stage !== 'idle' && uploadProgress.stage !== 'error'
+export function SummaryStep({ draft, uploadProgress, onBack, onSubmit }: SummaryStepProps) {
+  const isProcessing = uploadProgress.stage !== 'idle' && uploadProgress.stage !== 'error'
   const progressLabel = uploadProgress.message ?? stageMessageMap[uploadProgress.stage]
 
   const sourceSummary =
@@ -65,12 +59,10 @@ export function SummaryStep({
   return (
     <div className="space-y-4">
       <DialogTitle>3단계 — 설정 확인</DialogTitle>
-      <DialogDescription>
-        입력한 정보를 확인하고 에피소드 생성을 완료하세요.
-      </DialogDescription>
+      <DialogDescription>입력한 정보를 확인하고 에피소드 생성을 완료하세요.</DialogDescription>
 
-      <div className="border-surface-4 bg-surface-2 rounded-3xl border p-5">
-        <p className="text-muted text-xs font-semibold uppercase tracking-[0.3em]">설정 요약</p>
+      <div className="rounded-3xl border border-surface-4 bg-surface-2 p-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted">설정 요약</p>
         <div className="mt-3 space-y-1 text-sm">
           <SummaryRow label="제목" value={draft.title || '제목 미입력'} />
           <SummaryRow label="소스" value={sourceSummary} />
@@ -79,30 +71,28 @@ export function SummaryStep({
             value={draft.sourceLanguage || (draft.detectAutomatically ? '자동 인식' : '미선택')}
           />
           <SummaryRow label="타겟 언어" value={targetLanguagesValue} />
-          <SummaryRow label="화자 수" value={`${draft.speakerCount === 0 ? '자동 탐색' : `${draft.speakerCount}명`}`} />
+          <SummaryRow
+            label="화자 수"
+            value={`${draft.speakerCount === 0 ? '자동 탐색' : `${draft.speakerCount}명`}`}
+          />
         </div>
 
-        <p className="text-muted mt-3 text-xs">
-          최종 산출물은 선택한 타겟 언어별 더빙 영상(+필요 시 자막)으로 생성됩니다.
+        <p className="mt-3 text-xs text-muted">
+          최종 산출물은 선택한 타겟 언어별 더빙 영상으로 생성됩니다.
         </p>
       </div>
 
       {uploadProgress.stage !== 'idle' ? (
-        <div className="border-surface-4 bg-surface-1/50 rounded-3xl border border-dashed p-4">
+        <div className="rounded-3xl border border-dashed border-surface-4 bg-surface-1/50 p-4">
           <Progress value={uploadProgress.progress} label={progressLabel} />
           {uploadProgress.stage === 'error' ? (
-            <p className="text-danger mt-2 text-xs">문제가 지속되면 잠시 후 다시 시도해주세요.</p>
+            <p className="mt-2 text-xs text-danger">문제가 지속되면 잠시 후 다시 시도해주세요.</p>
           ) : null}
         </div>
       ) : null}
 
       <div className="flex justify-between gap-3 pt-4">
-        <Button
-          variant="ghost"
-          type="button"
-          onClick={onBack}
-          disabled={isProcessing}
-        >
+        <Button variant="ghost" type="button" onClick={onBack} disabled={isProcessing}>
           이전
         </Button>
         <Button type="button" onClick={onSubmit} disabled={isProcessing}>
@@ -122,8 +112,8 @@ export function SummaryStep({
 
 const SummaryRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
   <div className="flex items-center justify-between gap-3 whitespace-nowrap">
-    <span className="text-muted text-xs uppercase tracking-[0.2em]">{label}</span>
-    <span className="text-foreground overflow-hidden text-ellipsis whitespace-nowrap text-right text-sm font-medium">
+    <span className="text-xs uppercase tracking-[0.2em] text-muted">{label}</span>
+    <span className="overflow-hidden text-ellipsis whitespace-nowrap text-right text-sm font-medium text-foreground">
       {value}
     </span>
   </div>
