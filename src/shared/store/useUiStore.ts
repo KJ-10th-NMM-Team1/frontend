@@ -15,7 +15,7 @@ type ToastPayload = {
 
 type ProjectCreationStep = 'source' | 'details' | 'summary'
 
-type UiState = {
+export type UiState = {
   showToast: (toast: ToastPayload) => void
   dismissToast: (id: string) => void
   projectCreation: {
@@ -27,6 +27,8 @@ type UiState = {
   setProjectCreationStep: (step: ProjectCreationStep) => void
   workspaceSearchTerm: string
   setWorkspaceSearchTerm: (value: string) => void
+  workspaceSelectedTags: string[]
+  setWorkspaceSelectedTags: (value: string[]) => void
 }
 
 export const useUiStore = create<UiState>()(
@@ -53,6 +55,7 @@ export const useUiStore = create<UiState>()(
       step: 'source',
     },
     workspaceSearchTerm: '',
+    workspaceSelectedTags: [],
     openProjectCreation: (step = 'source') =>
       set(
         {
@@ -94,6 +97,14 @@ export const useUiStore = create<UiState>()(
         },
         false,
         { type: 'ui/setWorkspaceSearchTerm', payload: value },
+      ),
+    setWorkspaceSelectedTags: (value) =>
+      set(
+        {
+          workspaceSelectedTags: value,
+        },
+        false,
+        { type: 'ui/setWorkspaceSelectedTags', payload: value },
       ),
   })),
 )

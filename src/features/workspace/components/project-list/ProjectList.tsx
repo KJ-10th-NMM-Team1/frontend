@@ -6,9 +6,10 @@ type ProjectListProps = {
   projects: ProjectSummary[]
   onEditProject?: (project: ProjectSummary) => void
   onDeleteProject?: (project: ProjectSummary) => void
+  onTagClick?: (tag: string) => void
 }
 
-export function ProjectList({ projects, onEditProject, onDeleteProject }: ProjectListProps) {
+export function ProjectList({ projects, onEditProject, onDeleteProject, onTagClick }: ProjectListProps) {
   if (projects.length === 0) {
     return (
       <div className="rounded-3xl border border-dashed border-surface-4 bg-surface-2 p-10 text-center">
@@ -25,6 +26,7 @@ export function ProjectList({ projects, onEditProject, onDeleteProject }: Projec
           project={project}
           onEdit={onEditProject}
           onDelete={onDeleteProject}
+          onTagClick={onTagClick}
         />
       ))}
     </div>

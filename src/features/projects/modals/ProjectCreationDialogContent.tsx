@@ -1,3 +1,4 @@
+import { stringifyTags } from '@/shared/lib/tags'
 import { DialogContent } from '@/shared/ui/Dialog'
 
 import {
@@ -46,29 +47,25 @@ export function ProjectCreationDialogContent({
       <div className="mb-6 flex items-center gap-2 text-sm font-medium">
         <div className={`flex items-center gap-2 ${isSourceStep ? 'text-primary' : 'text-muted'}`}>
           <span
-            className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${isSourceStep ? 'bg-primary text-white' : 'bg-surface-4 text-muted-foreground'}`}
+            className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${isSourceStep ? 'bg-primary text-white' : 'text-muted-foreground bg-surface-4'}`}
           >
             1
           </span>
           <span>소스 선택</span>
         </div>
         <div className="h-px w-8 bg-surface-4" />
-        <div
-          className={`flex items-center gap-2 ${isDetailsStep ? 'text-primary' : 'text-muted'}`}
-        >
+        <div className={`flex items-center gap-2 ${isDetailsStep ? 'text-primary' : 'text-muted'}`}>
           <span
-            className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${isDetailsStep ? 'bg-primary text-white' : 'bg-surface-4 text-muted-foreground'}`}
+            className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${isDetailsStep ? 'bg-primary text-white' : 'text-muted-foreground bg-surface-4'}`}
           >
             2
           </span>
           <span>자동 더빙 설정</span>
         </div>
         <div className="h-px w-8 bg-surface-4" />
-        <div
-          className={`flex items-center gap-2 ${isSummaryStep ? 'text-primary' : 'text-muted'}`}
-        >
+        <div className={`flex items-center gap-2 ${isSummaryStep ? 'text-primary' : 'text-muted'}`}>
           <span
-            className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${isSummaryStep ? 'bg-primary text-white' : 'bg-surface-4 text-muted-foreground'}`}
+            className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${isSummaryStep ? 'bg-primary text-white' : 'text-muted-foreground bg-surface-4'}`}
           >
             3
           </span>
@@ -93,8 +90,13 @@ export function ProjectCreationDialogContent({
             detectAutomatically: draft.detectAutomatically,
             replaceVoiceSamples: draft.replaceVoiceSamples,
             sourceLanguage: draft.sourceLanguage || '',
-            targetLanguages: draft.targetLanguages && draft.targetLanguages.length > 0 ? draft.targetLanguages : ['ko'],
+            targetLanguages:
+              draft.targetLanguages && draft.targetLanguages.length > 0
+                ? draft.targetLanguages
+                : ['ko'],
             speakerCount: draft.speakerCount,
+            tagsInput: stringifyTags(draft.tags ?? []),
+            tags: draft.tags ?? [],
           }}
           uploadProgress={uploadProgress}
           onBack={onBackToSource}

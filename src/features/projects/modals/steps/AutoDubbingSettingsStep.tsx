@@ -8,6 +8,7 @@ import { z } from 'zod'
 import type { Language } from '@/entities/language/types'
 import { useLanguage } from '@/features/languages/hooks/useLanguage'
 import { trackEvent } from '@/shared/lib/analytics'
+import { parseTagsInput, stringifyTags } from '@/shared/lib/tags'
 import { Button } from '@/shared/ui/Button'
 import { DialogDescription, DialogTitle } from '@/shared/ui/Dialog'
 import { Progress } from '@/shared/ui/Progress'
@@ -18,6 +19,7 @@ import type { UploadProgressState } from '../types'
 import { SourceLanguageField } from './components/auto-dubbing/SourceLanguageField'
 import { AudioSpeakerCountField } from './components/auto-dubbing/SpeakerCountField'
 import { TargetLanguagesField } from './components/auto-dubbing/TargetLanguagesField'
+import { TagsField } from './components/auto-dubbing/TagsField'
 import { TitleField } from './components/auto-dubbing/TitleField'
 
 export const autoDubbingSettingsSchema = z
@@ -29,13 +31,15 @@ export const autoDubbingSettingsSchema = z
     sourceLanguage: z.string().min(1, '언어를 선택해주세요').or(z.literal('')),
     targetLanguages: z.array(z.string()).min(1, '타겟 언어를 최소 1개 선택하세요.'),
     speakerCount: z.coerce.number().min(0).max(10),
+    tagsInput: z.string().optional(),
   })
   .refine((data) => (data.detectAutomatically ? true : data.sourceLanguage.length > 0), {
     path: ['sourceLanguage'],
     message: '원어를 선택하세요.',
   })
 
-export type AutoDubbingSettingsValues = z.infer<typeof autoDubbingSettingsSchema>
+export type AutoDubbingSettingsFormValues = z.infer<typeof autoDubbingSettingsSchema>
+export type AutoDubbingSettingsValues = AutoDubbingSettingsFormValues & { tags: string[] }
 
 type AutoDubbingSettingsStepProps = {
   initialValues: AutoDubbingSettingsValues
@@ -50,9 +54,12 @@ export function AutoDubbingSettingsStep({
   onBack,
   onSubmit,
 }: AutoDubbingSettingsStepProps) {
-  const form = useForm<AutoDubbingSettingsValues>({
+  const form = useForm<AutoDubbingSettingsFormValues>({
     resolver: zodResolver(autoDubbingSettingsSchema),
-    defaultValues: initialValues,
+    defaultValues: {
+      ...initialValues,
+      tagsInput: initialValues.tagsInput ?? stringifyTags(initialValues.tags ?? []),
+    },
   })
 
   const {
@@ -68,6 +75,8 @@ export function AutoDubbingSettingsStep({
   const sourceLanguage = watch('sourceLanguage')
   const speakerCount = watch('speakerCount')
   const watchedTargetLanguages = watch('targetLanguages')
+  const tagsInputValue = watch('tagsInput') ?? ''
+  const parsedTags = useMemo(() => parseTagsInput(tagsInputValue), [tagsInputValue])
   const selectedTargets = useMemo(() => watchedTargetLanguages ?? [], [watchedTargetLanguages])
   const [pendingTarget, setPendingTarget] = useState<string>('')
 
@@ -106,13 +115,18 @@ export function AutoDubbingSettingsStep({
   }, [availableTargetOptions, pendingTarget])
 
   const submit = handleSubmit((values) => {
+    const payload: AutoDubbingSettingsValues = {
+      ...values,
+      tags: parsedTags,
+    }
     trackEvent('proj_details_submit', {
-      title: values.title,
-      src: detectAutomatically ? 'auto' : values.sourceLanguage,
-      tgts: values.targetLanguages,
-      speakers: values.speakerCount,
+      title: payload.title,
+      src: detectAutomatically ? 'auto' : payload.sourceLanguage,
+      tgts: payload.targetLanguages,
+      speakers: payload.speakerCount,
+      tags: payload.tags,
     })
-    onSubmit(values)
+    onSubmit(payload)
   })
 
   const handleDetectChange = (checked: boolean) => {
@@ -164,6 +178,12 @@ export function AutoDubbingSettingsStep({
       </DialogDescription>
 
       <TitleField registration={register('title')} error={errors.title?.message} />
+
+      <TagsField
+        registration={register('tagsInput')}
+        previewTags={parsedTags}
+        error={errors.tagsInput?.message}
+      />
 
       <TargetLanguagesField
         selectedTargets={selectedTargets}

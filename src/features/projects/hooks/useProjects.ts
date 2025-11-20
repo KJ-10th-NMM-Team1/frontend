@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import type { ProjectDetail, ProjectPayload, ProjectsResponse } from '@/entities/project/types'
+import type {
+  ProjectDetail,
+  ProjectPayload,
+  ProjectsResponse,
+  ProjectSummary,
+} from '@/entities/project/types'
 import { apiGet } from '@/shared/api/client'
 import { queryKeys } from '@/shared/config/queryKeys'
 // import { useUiStore } from '@/shared/store/useUiStore'
@@ -8,17 +13,16 @@ import { queryKeys } from '@/shared/config/queryKeys'
 import { createProject, deleteProject, updateProject } from '../api/projectsApi'
 
 export function useProjects() {
-  return useQuery({
+  return useQuery<ProjectsResponse, Error, ProjectSummary[]>({
     queryKey: queryKeys.projects.all,
     queryFn: () => apiGet<ProjectsResponse>('api/projects'),
     select: (data) => data.items,
     placeholderData: (previous) => previous,
-    // enabled: false,
   })
 }
 
 export function useProject(projectId: string) {
-  return useQuery({
+  return useQuery<ProjectDetail>({
     queryKey: queryKeys.projects.detail(projectId),
     queryFn: () => apiGet<ProjectDetail>(`api/projects/${projectId}`),
     enabled: Boolean(projectId),

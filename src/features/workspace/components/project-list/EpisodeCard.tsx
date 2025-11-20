@@ -135,9 +135,10 @@ type EpisodeCardProps = {
   project: ProjectSummary
   onEdit?: (project: ProjectSummary) => void
   onDelete?: (project: ProjectSummary) => void
+  onTagClick?: (tag: string) => void
 }
 
-export function EpisodeCard({ project, onEdit, onDelete }: EpisodeCardProps) {
+export function EpisodeCard({ project, onEdit, onDelete, onTagClick }: EpisodeCardProps) {
   const showActions = Boolean(onEdit || onDelete)
   const gradient = gradients[Math.abs(project.id.charCodeAt(0)) % gradients.length]
   const statusLabel = getProjectStatusLabel(project.status)
@@ -190,6 +191,7 @@ export function EpisodeCard({ project, onEdit, onDelete }: EpisodeCardProps) {
       ? `https://${env.awsS3Bucket}.s3.${env.awsRegion}.amazonaws.com/${project.thumbnail.key}`
       : project.thumbnail?.url
   const primaryTargetLanguage = project.targets?.[0]?.language_code
+  const tags = project.tags ?? []
   const episodeLink = primaryTargetLanguage
     ? routes.editor(project.id, primaryTargetLanguage)
     : routes.projectDetail(project.id)
@@ -325,6 +327,25 @@ export function EpisodeCard({ project, onEdit, onDelete }: EpisodeCardProps) {
             )
           })}
         </div>
+        {tags.length > 0 ? (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {tags.map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                className="rounded-full bg-surface-2 px-3 py-1 text-[11px] font-medium text-foreground transition hover:bg-surface-3"
+                onClick={(event) => {
+                  if (!onTagClick) return
+                  event.preventDefault()
+                  event.stopPropagation()
+                  onTagClick(tag)
+                }}
+              >
+                #{tag}
+              </button>
+            ))}
+          </div>
+        ) : null}
       </div>
     </Link>
   )

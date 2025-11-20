@@ -40,6 +40,8 @@ export interface ProjectSummary {
   dueDate: string
   assignedEditor?: string
   createdAt?: string
+  description?: string
+  tags?: string[]
   video_source?: string
   // thumbnailUrl?: string
   targets?: ProjectTarget[]
@@ -85,11 +87,14 @@ export interface ProjectPayload {
   replaceVoiceSamples: boolean
   sourceLanguage?: string | null
   targetLanguages: string[]
+  tags?: string[]
 }
 
 export interface ProjectDetail extends ProjectSummary {
   speaker_count: number
   assets: ProjectAsset[]
+  description?: string
+  tags?: string[]
 }
 
 export interface ProjectResponse extends ProjectDetail {
@@ -137,18 +142,24 @@ export const sampleProjects: ProjectDetail[] = [
   {
     id: 'proj-1001',
     title: 'AI Voice-over Launch Trailer',
-    sourceLanguage: 'ko',
+    owner_id: 'demo-user',
+    source_type: 'youtube',
+    duration_seconds: 126,
     status: 'completed',
-    video_source: 'https://www.w3schools.com/html/mov_bbb.mp4',
+    source_language: 'ko',
     dueDate: '2025-02-06',
     assignedEditor: 'translator-amy',
     description:
       'Marketing trailer localisation for the upcoming AI voice-over suite. Includes three regional variants and a shared glossary.',
     createdAt: '2025-01-15T10:00:00Z',
-    speakerCount: 3,
-    thumbnailUrl:
-      'https://images.unsplash.com/photo-1487528278747-ba99ed528ebc?auto=format&fit=crop&w=1200&q=80',
-    durationSeconds: 126,
+    created_at: new Date('2025-01-15T10:00:00Z'),
+    video_source: 'https://www.w3schools.com/html/mov_bbb.mp4',
+    speaker_count: 3,
+    thumbnail: {
+      kind: 'external',
+      key: '',
+      url: 'https://images.unsplash.com/photo-1487528278747-ba99ed528ebc?auto=format&fit=crop&w=1200&q=80',
+    },
     assets: [
       {
         id: 'asset-en-video',
@@ -195,17 +206,18 @@ export const sampleProjects: ProjectDetail[] = [
       {
         id: 't-en',
         projectId: 'proj-1001',
-        languageCode: 'en',
+        language_code: 'en',
         status: 'completed',
         progress: 100,
       },
       {
         id: 't-ja',
         projectId: 'proj-1001',
-        languageCode: 'ja',
+        language_code: 'ja',
         status: 'completed',
         progress: 100,
       },
     ],
+    tags: ['게임', '튜토리얼'],
   },
 ]

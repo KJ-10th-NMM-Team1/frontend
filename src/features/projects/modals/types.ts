@@ -16,6 +16,7 @@ export type ProjectCreationDraft = {
   sourceLanguage: string
   targetLanguages: string[]
   speakerCount: number
+  tags: string[]
 }
 
 export type UploadStage =
