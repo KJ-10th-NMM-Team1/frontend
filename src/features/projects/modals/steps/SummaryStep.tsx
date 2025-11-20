@@ -1,11 +1,12 @@
 import { Loader2 } from 'lucide-react'
 import ReactCountryFlag from 'react-country-flag'
 
-import type { ProjectCreationDraft, UploadProgressState } from '../types'
-import { stageMessageMap } from '../hooks/useUploadProgressController'
 import { Button } from '@/shared/ui/Button'
 import { DialogDescription, DialogTitle } from '@/shared/ui/Dialog'
 import { Progress } from '@/shared/ui/Progress'
+
+import type { ProjectCreationDraft, UploadProgressState } from '../types'
+import { stageMessageMap } from '../hooks/useUploadProgressController'
 
 const languageCountryMap: Record<string, string> = {
   ko: 'KR',
