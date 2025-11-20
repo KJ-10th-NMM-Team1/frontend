@@ -11,7 +11,6 @@ import { EpisodeCardThumbnail } from './EpisodeCardThumbnail'
 import { GRADIENTS } from './episodeCardConstants'
 import { getGradientIndex } from './episodeCardUtils'
 import { getProgressMessage, getStatusFlags, normalizeProjectData } from './projectDataNormalizer'
-import { useSmoothProgress } from './useSmoothProgress'
 
 type EpisodeCardProps = {
   project: ProjectSummary
@@ -31,9 +30,8 @@ export function EpisodeCard({ project, onEdit, onDelete, onTagClick }: EpisodeCa
   // API와 SSE 데이터를 정규화하여 일관된 형태로 통합
   const normalizedData = normalizeProjectData(project, sseProgressData)
 
-  // 정규화된 데이터에서 필요한 값 추출
-  // 스무스한 진행도 표시 적용
-  const progress = useSmoothProgress(normalizedData.progress, normalizedData.rawStatus)
+  // SSE로 받은 진행도 사용
+  const progress = normalizedData.progress
   const progressMessage = getProgressMessage(normalizedData)
 
   // UI 표시용 플래그 계산

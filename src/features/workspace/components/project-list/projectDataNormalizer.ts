@@ -18,6 +18,7 @@ export interface NormalizedProjectData {
   progress: number
   message?: string
   rawStatus: string // 원본 상태값 (디버깅용)
+  targets: Record<string, { progress: number; stage: string }>
 }
 
 /**
@@ -119,6 +120,16 @@ export function normalizeProjectData(
       progress: sseProgress.overallProgress,
       message: sseProgress.message,
       rawStatus: specificStage,
+      targets: Object.entries(sseProgress.targets).reduce(
+        (acc, [lang, target]) => ({
+          ...acc,
+          [lang]: {
+            progress: target.progress,
+            stage: target.stage,
+          },
+        }),
+        {},
+      ),
     }
   }
 
@@ -131,11 +142,24 @@ export function normalizeProjectData(
   // failed 상태면 progress 그대로 유지 (실패 시점의 진행도)
   const adjustedProgress = normalizedStatus === 'completed' ? 100 : calculatedProgress
 
+  // API targets를 정규화된 targets 형태로 변환
+  const normalizedTargets = (apiProject.targets || []).reduce(
+    (acc, target) => ({
+      ...acc,
+      [target.language_code]: {
+        progress: target.progress || 0,
+        stage: apiProject.status, // API는 개별 타겟 stage가 없으므로 프로젝트 status 사용
+      },
+    }),
+    {},
+  )
+
   return {
     status: normalizedStatus,
     progress: adjustedProgress,
     message: undefined,
     rawStatus: apiProject.status,
+    targets: normalizedTargets,
   }
 }
 
