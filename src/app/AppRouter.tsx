@@ -25,6 +25,10 @@ const VoiceLibraryPage = lazy(() => import('../pages/voice-library/VoiceLibraryP
 const MyInfoPage = lazy(() => import('../pages/myinfo/MyInfoPage'))
 const ChangedPasswordPage = lazy(() => import('../pages/myinfo/ChangedPasswordPage'))
 const YoutubeCallbackPage = lazy(() => import('../pages/oauth/YoutubeCallbackPage'))
+const VoiceSampleEditPage = lazy(() => import('../pages/voice-samples/VoiceSampleEditPage'))
+const TermsOfServicePage = lazy(() => import('../pages/policies/TermsOfServicePage'))
+const ProhibitedPolicyPage = lazy(() => import('../pages/policies/ProhibitedPolicyPage'))
+const PrivacyPolicyPage = lazy(() => import('../pages/policies/PrivacyPolicyPage'))
 const ExampleCrudPage = lazy(() => import('../pages/example/ExampleCrudPage'))
 const ModalExamplePage = lazy(() => import('../pages/example/ModalExamplePage'))
 const NotFoundPage = lazy(() => import('../pages/NotFoundPage'))
@@ -46,6 +50,7 @@ const router = createBrowserRouter(
         <Route path="voice-samples" element={<VoiceSamplesPage />} />
         <Route path="voice-cloning" element={<VoiceCloningPage />} />
         <Route path="voice-library" element={<VoiceLibraryPage />} />
+        <Route path="voice-samples/:id/edit" element={<VoiceSampleEditPage />} />
         <Route path="myinfo">
           <Route index element={<MyInfoPage />} />
           <Route path="change-password" element={<ChangedPasswordPage />} />
@@ -53,6 +58,9 @@ const router = createBrowserRouter(
         <Route path="oauth2/callback/youtube" element={<YoutubeCallbackPage />} />
         <Route path="example" element={<ExampleCrudPage />} />
         <Route path="example/modal" element={<ModalExamplePage />} />
+        <Route path="policies/terms-of-service" element={<TermsOfServicePage />} />
+        <Route path="policies/prohibited-uses" element={<ProhibitedPolicyPage />} />
+        <Route path="policies/privacy-policy" element={<PrivacyPolicyPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
       <Route path="/editor" element={<EditorLayout />} errorElement={<RouteErrorBoundary />}>
@@ -64,6 +72,9 @@ const router = createBrowserRouter(
       <Route path="editor/:projectId/:languageCode" element={<EditorPage />} />
       <Route path="example" element={<ExampleCrudPage />} />
       <Route path="example/modal" element={<ModalExamplePage />} />
+      <Route path="policies/terms-of-service" element={<TermsOfServicePage />} />
+      <Route path="policies/prohibited-uses" element={<ProhibitedPolicyPage />} />
+      <Route path="policies/privacy-policy" element={<PrivacyPolicyPage />} />
       <Route path="*" element={<NotFoundPage />} />
     </>,
   ),

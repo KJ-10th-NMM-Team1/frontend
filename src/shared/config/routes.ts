@@ -10,6 +10,10 @@ export const routes = {
   voiceLibrary: '/voice-library',
   myinfo: '/myinfo',
   changePassword: '/myinfo/change-password',
+  termsOfService: '/policies/terms-of-service',
+  prohibitedPolicy: '/policies/prohibited-uses',
+  privacyPolicy: '/policies/privacy-policy',
+  voiceSampleEdit: (id: string) => `/voice-samples/${id}/edit`,
   youtubeCallback: '/oauth2/callback/youtube',
   editor: (projectId: string, languageCode: string) => `/editor/${projectId}/${languageCode}`,
 }

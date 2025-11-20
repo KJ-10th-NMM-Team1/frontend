@@ -13,12 +13,14 @@ export interface VoiceSampleApiResponse {
   created_at: string
   is_in_my_voices: boolean
   added_count: number
-  category?: string | null
-  is_default: boolean
+  category?: string[] | string | null
+  is_builtin: boolean
   country?: string | null
   gender?: string | null
   avatar_image_url?: string | null
   avatar_image_path?: string | null
+  age?: string | null
+  accent?: string | null
 }
 
 // 프론트엔드에서 사용하는 타입 (camelCase)
@@ -37,9 +39,11 @@ export interface VoiceSample {
   isPublic: boolean
   isInMyVoices: boolean
   addedCount: number
-  category?: string
-  isDefault: boolean
+  category?: string[]
+  isBuiltin: boolean
   country?: string
+  age?: string
+  accent?: string
   avatarImageUrl?: string
   avatarImagePath?: string
   provider?: string
@@ -79,7 +83,7 @@ export const sampleVoices: VoiceSample[] = [
     isPublic: true,
     isInMyVoices: false,
     addedCount: 0,
-    isDefault: false,
+    isBuiltin: false,
   },
   {
     id: 'voice-hiro',
@@ -90,7 +94,7 @@ export const sampleVoices: VoiceSample[] = [
     isPublic: true,
     isInMyVoices: false,
     addedCount: 0,
-    isDefault: false,
+    isBuiltin: false,
   },
   {
     id: 'voice-lee',
@@ -101,6 +105,6 @@ export const sampleVoices: VoiceSample[] = [
     isPublic: true,
     isInMyVoices: false,
     addedCount: 0,
-    isDefault: false,
+    isBuiltin: false,
   },
 ]

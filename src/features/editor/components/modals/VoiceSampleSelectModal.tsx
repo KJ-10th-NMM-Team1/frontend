@@ -40,7 +40,7 @@ export function VoiceSampleSelectModal({
     myVoicesOnly: true,
   })
   const { data: defaultVoicesData, isLoading: isLoadingDefault } = useVoiceSamples({
-    isDefault: true,
+    isBuiltin: true,
   })
 
   const isLoading = isLoadingMyVoices || isLoadingDefault
@@ -75,7 +75,7 @@ export function VoiceSampleSelectModal({
       isPublic: true,
       isInMyVoices: false,
       addedCount: 0,
-      isDefault: false,
+      isBuiltin: false,
     }
     return [cloneModel, ...samples]
   }, [myVoicesData, defaultVoicesData])

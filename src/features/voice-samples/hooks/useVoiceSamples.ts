@@ -17,7 +17,7 @@ export function useVoiceSamples(options?: {
   myVoicesOnly?: boolean
   mySamplesOnly?: boolean
   category?: string
-  isDefault?: boolean
+  isBuiltin?: boolean
   q?: string
 }) {
   return useQuery({
@@ -40,7 +40,22 @@ export function useCreateVoiceSample() {
 export function useUpdateVoiceSample() {
   const queryClient = useQueryClient()
 
-  return useMutation<VoiceSample, Error, { id: string; payload: Partial<VoiceSamplePayload> }>({
+  return useMutation<
+    VoiceSample,
+    Error,
+    {
+      id: string
+      payload: {
+        name?: string
+        description?: string
+        country?: string
+        gender?: string
+        age?: string
+        accent?: string
+        category?: string[]
+      }
+    }
+  >({
     mutationFn: ({ id, payload }) => updateVoiceSample(id, payload),
     // 성공 시 서버 응답으로 캐시 즉시 업데이트
     onSuccess: (data) => {

@@ -12,7 +12,6 @@ import {
   useDeleteVoiceSample,
   useRemoveFromMyVoices,
 } from '@/features/voice-samples/hooks/useVoiceSamples'
-import { VoiceSampleEditModal } from '@/features/voice-samples/modals/VoiceSampleEditModal'
 import { env } from '@/shared/config/env'
 import { routes } from '@/shared/config/routes'
 import { Button } from '@/shared/ui/Button'
@@ -60,8 +59,6 @@ export default function VoiceLibraryPage() {
   const [sort, setSort] = useState<
     'trending' | 'added-desc' | 'added-asc' | 'created-desc' | 'created-asc'
   >('added-desc')
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [editingSample, setEditingSample] = useState<VoiceSample | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [playingSampleId, setPlayingSampleId] = useState<string | null>(null)
@@ -93,8 +90,7 @@ export default function VoiceLibraryPage() {
         q: search.trim() || undefined,
         mySamplesOnly: tab === 'mine',
         // myVoicesOnly는 제거 - mySamplesOnly만 사용 (자신이 만든 보이스는 자동으로 user_voices에 추가됨)
-        isDefault:
-          tab === 'default' ? true : tab === 'library' || tab === 'mine' ? false : undefined,
+        isBuiltin: tab === 'default' ? true : undefined,
         gender: filters.gender && filters.gender !== 'any' ? filters.gender : undefined,
         languages:
           filters.languages && filters.languages.length > 0 ? filters.languages : undefined,
@@ -197,10 +193,13 @@ export default function VoiceLibraryPage() {
     [playingSampleId, resolveSampleAudioUrl, stopPlayback],
   )
 
-  const handleEditSample = useCallback((sample: VoiceSample) => {
-    setEditingSample(sample)
-    setIsEditModalOpen(true)
-  }, [])
+  const handleEditSample = useCallback(
+    (sample: VoiceSample) => {
+      if (!sample.id) return
+      navigate(routes.voiceSampleEdit(sample.id), { state: { sample } })
+    },
+    [navigate],
+  )
 
   const handleDeleteSample = useCallback(
     (sample: VoiceSample) => {
@@ -218,10 +217,6 @@ export default function VoiceLibraryPage() {
     },
     [deleteVoiceSample, queryClient],
   )
-
-  const handleEditSuccess = useCallback(() => {
-    void queryClient.invalidateQueries({ queryKey: ['voice-library'], exact: false })
-  }, [queryClient])
 
   const samples = voiceQuery.data?.samples ?? EMPTY_SAMPLES
   const sortedSamples = useMemo(() => {
@@ -548,18 +543,6 @@ export default function VoiceLibraryPage() {
           currentUserId={currentUser?._id}
         />
       )}
-
-      <VoiceSampleEditModal
-        open={isEditModalOpen}
-        onOpenChange={(open) => {
-          setIsEditModalOpen(open)
-          if (!open) {
-            setEditingSample(null)
-          }
-        }}
-        sample={editingSample}
-        onSuccess={handleEditSuccess}
-      />
 
       <VoiceFiltersModal
         open={isFiltersModalOpen}
