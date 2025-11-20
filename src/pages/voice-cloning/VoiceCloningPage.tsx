@@ -97,102 +97,88 @@ export default function VoiceCloningPage() {
   const getStepContent = () => {
     switch (step) {
       case 'choose':
-        return {
-          title: 'VOICE CLONING',
-          subtitle: '나만의 AI 목소리를 만들어보세요',
-          description:
-            '10~60초 길이의 음성 샘플을 업로드하거나 직접 녹음하여 목소리의 톤과 스타일을 학습시켜 보세요.',
-          content: (
-            <ChooseStep
-              isDragOver={isDragOver}
-              uploadError={uploadError}
-              fileInputRef={fileInputRef}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-               
-              onFileSelect={handleFileSelect}
-              onRecordClick={() => setStep('record-intro')}
-            />
-          ),
-        }
+        return (
+          <ChooseStep
+            isDragOver={isDragOver}
+            uploadError={uploadError}
+            fileInputRef={fileInputRef}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onFileSelect={handleFileSelect}
+            onRecordClick={() => setStep('record-intro')}
+          />
+        )
       case 'record-intro':
-        return {
-          title: 'VOICE CLONING',
-          subtitle: '음성 녹음 준비',
-          description: '마이크를 사용하여 10~60초 분량의 음성을 녹음해주세요.',
-          content: (
-            <RecordIntroStep
-              removeNoise={removeNoise}
-              recordingState={recordingState}
-              micError={micError}
-              onRemoveNoiseToggle={() => setRemoveNoise(!removeNoise)}
-              onStartRecording={handleStartRecordingFlow}
-              onBack={handleResetAll}
-            />
-          ),
-        }
+        return (
+          <RecordIntroStep
+            removeNoise={removeNoise}
+            recordingState={recordingState}
+            micError={micError}
+            onRemoveNoiseToggle={() => setRemoveNoise(!removeNoise)}
+            onStartRecording={handleStartRecordingFlow}
+            onBack={handleResetAll}
+          />
+        )
       case 'recording':
-        return {
-          title: 'VOICE CLONING',
-          subtitle: '녹음 진행 중',
-          description: '제공된 문장을 자연스럽게 읽어주세요.',
-          content: (
-            <RecordingStep
-              formattedTime={formattedTime}
-              onStopRecording={stopRecording}
-              onCancel={handleResetAll}
-            />
-          ),
-        }
+        return (
+          <RecordingStep
+            formattedTime={formattedTime}
+            onStopRecording={stopRecording}
+            onCancel={handleResetAll}
+          />
+        )
       case 'review':
-        return {
-          title: 'VOICE CLONING',
-          subtitle: '녹음 샘플 검토',
-          description: '녹음된 샘플을 확인하고 품질을 검토해주세요.',
-          content: (
-            <ReviewStep
-              recordingState={recordingState}
-              recordedDuration={recordedDuration}
-              previewUrl={previewUrl}
-              audioRef={reviewAudioRef}
-              onRetry={() => setStep('record-intro')}
-              onProceed={handleProceedWithSample}
-            />
-          ),
-        }
+        return (
+          <ReviewStep
+            recordingState={recordingState}
+            recordedDuration={recordedDuration}
+            previewUrl={previewUrl}
+            audioRef={reviewAudioRef}
+            onRetry={() => setStep('record-intro')}
+            onProceed={handleProceedWithSample}
+          />
+        )
       case 'details':
-        return {
-          title: 'VOICE CLONING',
-          subtitle: '음성 샘플 정보 입력',
-          description: '음성 샘플의 이름과 설명을 입력해주세요.',
-          content: (
-            <DetailsStep
-              selectedFile={selectedFile}
-              onBack={handleResetAll}
-              onSuccess={() => navigate(routes.voiceLibrary)}
-            />
-          ),
-        }
+        return (
+          <DetailsStep
+            selectedFile={selectedFile}
+            onBack={handleResetAll}
+            onSuccess={() => navigate(routes.voiceLibrary)}
+          />
+        )
       default:
-        return {
-          title: 'VOICE CLONING',
-          subtitle: '나만의 AI 목소리를 만들어보세요',
-          description: '음성 복제를 시작하세요.',
-          content: null,
-        }
+        return null
     }
   }
-
-  const stepContent = getStepContent()
-
   return (
     <VoiceCloningLayout
-      title={stepContent.title}
-      subtitle={stepContent.subtitle}
-      description={stepContent.description}
+      step={step}
+      title="VOICE CLONING"
+      subtitle={
+        step === 'choose'
+          ? '나만의 AI 목소리를 만들어보세요'
+          : step === 'record-intro'
+            ? '음성 녹음 준비'
+            : step === 'recording'
+              ? '녹음 진행 중'
+              : step === 'review'
+                ? '녹음 샘플 검토'
+                : '음성 샘플 정보 입력'
+      }
+      description={
+        step === 'choose'
+          ? '10~60초 길이의 음성 샘플을 업로드하거나 직접 녹음하여 목소리의 톤과 스타일을 학습시켜 보세요.'
+          : step === 'record-intro'
+            ? '마이크를 사용하여 10~60초 분량의 음성을 녹음해주세요.'
+            : step === 'recording'
+              ? '제공된 문장을 자연스럽게 읽어주세요.'
+              : step === 'review'
+                ? '녹음된 샘플을 확인하고 품질을 검토해주세요.'
+                : '음성 샘플의 이름과 설명을 입력해주세요.'
+      }
     >
-      {stepContent.content}
+      {getStepContent()}
     </VoiceCloningLayout>
   )
 }

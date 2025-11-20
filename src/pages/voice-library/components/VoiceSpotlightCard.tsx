@@ -188,7 +188,7 @@ export function VoiceSpotlightCard({
           {isOwner ? (
             <div
               className="flex items-center gap-1 rounded-full px-2 py-1 text-xs text-primary"
-              title="내가 만든 보이스"
+              title="내가 만든 목소리"
             >
               <Crown className="h-4 w-4" />
               <span className="text-[10px] font-medium">Owner</span>

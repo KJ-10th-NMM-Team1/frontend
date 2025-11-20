@@ -28,7 +28,7 @@ export function TrendingVoicesSection({
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Trending Voices</h2>
+        <h2 className="text-lg font-semibold">인기 목소리</h2>
         <button
           type="button"
           className="text-xs text-muted hover:text-foreground"

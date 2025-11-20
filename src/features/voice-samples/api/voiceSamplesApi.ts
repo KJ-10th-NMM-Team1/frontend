@@ -53,6 +53,8 @@ export async function fetchVoiceSamples(options?: {
   category?: string | string[]
   isBuiltin?: boolean
   gender?: string
+  age?: string
+  accent?: string
   languages?: string[]
   q?: string
 }): Promise<VoiceSamplesResponse> {
@@ -74,6 +76,12 @@ export async function fetchVoiceSamples(options?: {
   }
   if (options?.gender && options.gender !== 'any') {
     params.append('gender', options.gender)
+  }
+  if (options?.age && options.age !== 'any') {
+    params.append('age', options.age)
+  }
+  if (options?.accent && options.accent !== 'any') {
+    params.append('accent', options.accent)
   }
   if (options?.languages && options.languages.length > 0) {
     options.languages.forEach((lang) => {

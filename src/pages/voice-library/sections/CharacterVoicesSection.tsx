@@ -29,7 +29,7 @@ export function CharacterVoicesSection({
     <section className="space-y-3">
       {showTitle && (
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Character Voices</h2>
+          <h2 className="text-lg font-semibold">캐릭터 목소리</h2>
           {/* <button type="button" className="text-xs text-muted hover:text-foreground">
             View all
           </button> */}
