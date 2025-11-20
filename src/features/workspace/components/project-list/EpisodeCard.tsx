@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+
 import { Link } from 'react-router-dom'
 
 import type { ProjectSummary } from '@/entities/project/types'
@@ -20,6 +21,8 @@ import { EpisodeCardThumbnail } from './EpisodeCardThumbnail'
 import { GRADIENTS } from './episodeCardConstants'
 import { getGradientIndex } from './episodeCardUtils'
 import { getProgressMessage, getStatusFlags, normalizeProjectData } from './projectDataNormalizer'
+
+const EMPTY_TAGS: string[] = []
 
 type EpisodeCardProps = {
   project: ProjectSummary
@@ -47,18 +50,21 @@ export function EpisodeCard({ project, onEdit, onDelete, onTagClick }: EpisodeCa
   const { isProcessing, isFailed, isCompleted } = getStatusFlags(normalizedData)
 
   const primaryTargetLanguage = project.targets?.[0]?.language_code
-  const tags = project.tags ?? []
-  const workspaceSelectedTags = useUiStore((state) => state.workspaceSelectedTags) ?? []
+  const workspaceSelectedTags = useUiStore((state) => state.workspaceSelectedTags)
   const MAX_VISIBLE_TAGS = 3
 
   const orderedTags = useMemo(() => {
-    const selected = workspaceSelectedTags.filter((t) => tags.includes(t))
-    const others = tags.filter((t) => !selected.includes(t))
+    const normalizedTags = project.tags ?? EMPTY_TAGS
+    const normalizedWorkspaceSelectedTags = workspaceSelectedTags ?? EMPTY_TAGS
+
+    const selected = normalizedWorkspaceSelectedTags.filter((t) => normalizedTags.includes(t))
+    const others = normalizedTags.filter((t) => !selected.includes(t))
     return [...selected, ...others]
-  }, [workspaceSelectedTags, tags])
+  }, [project.tags, workspaceSelectedTags])
   const visibleTags = orderedTags.slice(0, MAX_VISIBLE_TAGS)
   const hiddenTags = orderedTags.slice(MAX_VISIBLE_TAGS)
   const hiddenCount = Math.max(orderedTags.length - visibleTags.length, 0)
+  const selectedWorkspaceTags = workspaceSelectedTags ?? EMPTY_TAGS
   const episodeLink = primaryTargetLanguage
     ? routes.editor(project.id, primaryTargetLanguage)
     : routes.projectDetail(project.id)
@@ -101,7 +107,7 @@ export function EpisodeCard({ project, onEdit, onDelete, onTagClick }: EpisodeCa
                   key={tag}
                   type="button"
                   className={`flex-shrink-0 rounded-full px-3 py-1 text-[11px] font-medium transition hover:bg-surface-3 ${
-                    workspaceSelectedTags.includes(tag)
+                    selectedWorkspaceTags.includes(tag)
                       ? 'border border-primary/60 bg-primary/10 text-primary'
                       : 'bg-surface-2 text-foreground'
                   }`}
