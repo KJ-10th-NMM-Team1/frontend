@@ -2,7 +2,7 @@ import { Waves } from 'lucide-react'
 
 import { cn } from '@/shared/lib/utils'
 
-type LibraryTab = 'library' | 'mine' | 'default'
+type LibraryTab = 'library' | 'mine'
 
 interface VoiceLibraryTabsProps {
   activeTab: LibraryTab
@@ -27,10 +27,10 @@ export function VoiceLibraryTabs({ activeTab, onChange }: VoiceLibraryTabsProps)
         )}
       >
         <Waves className="h-4 w-4" />
-        <span>Explore</span>
+        <span>탐색</span>
       </button>
 
-      {/* My Voices (내 보이스) */}
+      {/* My Voices (내 목소리) */}
       <button
         type="button"
         onClick={() => onChange('mine')}
@@ -41,22 +41,9 @@ export function VoiceLibraryTabs({ activeTab, onChange }: VoiceLibraryTabsProps)
             : 'text-muted hover:text-foreground',
         )}
       >
-        My Voices
+        내 목소리
       </button>
 
-      {/* Default Voices */}
-      <button
-        type="button"
-        onClick={() => onChange('default')}
-        className={cn(
-          baseBtn,
-          activeTab === 'default'
-            ? 'border border-surface-3 bg-surface-1 text-foreground shadow-sm'
-            : 'text-muted hover:text-foreground',
-        )}
-      >
-        Default Voices
-      </button>
     </div>
   )
 }

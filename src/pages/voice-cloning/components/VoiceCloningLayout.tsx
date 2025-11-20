@@ -6,6 +6,7 @@ interface VoiceCloningLayoutProps {
   title: string
   subtitle: string
   description?: string
+  step?: 'choose' | 'record-intro' | 'recording' | 'review' | 'details'
   children: ReactNode
 }
 
@@ -13,8 +14,13 @@ export function VoiceCloningLayout({
   title,
   subtitle,
   description,
+  step,
   children,
 }: VoiceCloningLayoutProps) {
+  const isSourceStep = step === 'choose'
+  const isRecordStep = step === 'record-intro' || step === 'recording' || step === 'review'
+  const isDetailsStep = step === 'details'
+
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-b from-gray-50 to-white">
       {/* Animated Background */}
@@ -47,6 +53,43 @@ export function VoiceCloningLayout({
           </h1>
           {description && <p className="mx-auto text-lg text-gray-600">{description}</p>}
         </div>
+
+        {step ? (
+          <div className="mb-6 flex items-center justify-center gap-2 text-sm font-medium">
+            <div className={`flex items-center gap-2 ${isSourceStep ? 'text-primary' : 'text-muted'}`}>
+              <span
+                className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${
+                  isSourceStep ? 'bg-primary text-white' : 'bg-surface-4 text-muted-foreground'
+                }`}
+              >
+                1
+              </span>
+              <span>소스 선택</span>
+            </div>
+            <div className="h-px w-8 bg-surface-4" />
+            <div className={`flex items-center gap-2 ${isRecordStep ? 'text-primary' : 'text-muted'}`}>
+              <span
+                className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${
+                  isRecordStep ? 'bg-primary text-white' : 'bg-surface-4 text-muted-foreground'
+                }`}
+              >
+                2
+              </span>
+              <span>녹음 / 업로드</span>
+            </div>
+            <div className="h-px w-8 bg-surface-4" />
+            <div className={`flex items-center gap-2 ${isDetailsStep ? 'text-primary' : 'text-muted'}`}>
+              <span
+                className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${
+                  isDetailsStep ? 'bg-primary text-white' : 'bg-surface-4 text-muted-foreground'
+                }`}
+              >
+                3
+              </span>
+              <span>정보 입력</span>
+            </div>
+          </div>
+        ) : null}
 
         {/* Main Card */}
         <div className="mx-auto max-w-4xl">
