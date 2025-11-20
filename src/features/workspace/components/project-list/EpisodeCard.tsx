@@ -313,7 +313,7 @@ export function EpisodeCard({ project, onEdit, onDelete }: EpisodeCardProps) {
             return (
               <span
                 key={t.id ?? `${t.projectId}-${languageCode}`}
-                className={`rounded-full px-1 text-[11px] font-semibold`}
+                className={`rounded-full px-1 text-[11px] font-semibold ${statusClass}`}
               >
                 <ReactCountryFlag
                   countryCode={countryCode}
