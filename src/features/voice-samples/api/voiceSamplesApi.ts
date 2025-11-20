@@ -15,6 +15,14 @@ function transformVoiceSample(apiSample: VoiceSampleApiResponse): VoiceSample {
   if (!sampleId || sampleId === 'undefined' || sampleId === 'null') {
     console.error('음성 샘플 ID가 없습니다:', apiSample)
   }
+  const categories = Array.isArray(apiSample.category)
+    ? apiSample.category.filter(Boolean)
+    : apiSample.category
+      ? [apiSample.category].filter(Boolean)
+      : undefined
+  const isBuiltin =
+    apiSample.is_builtin ?? (apiSample as unknown as { is_default?: boolean }).is_default ?? false
+
   return {
     id: sampleId,
     name: apiSample.name,
@@ -22,17 +30,19 @@ function transformVoiceSample(apiSample: VoiceSampleApiResponse): VoiceSample {
     isPublic: apiSample.is_public,
     isInMyVoices: apiSample.is_in_my_voices,
     addedCount: apiSample.added_count,
-    category: apiSample.category ?? undefined,
-    isDefault: apiSample.is_default,
+    category: categories,
+    isBuiltin,
     file_path_wav: apiSample.file_path_wav,
     audio_sample_url: apiSample.audio_sample_url || undefined,
     prompt_text: apiSample.prompt_text || undefined,
     createdAt: apiSample.created_at,
     owner_id: apiSample.owner_id ? String(apiSample.owner_id) : undefined,
     country: apiSample.country ?? undefined,
-    gender: apiSample.gender ?? undefined,
+    gender: (apiSample.gender as 'male' | 'female' | 'neutral') ?? undefined,
     avatarImageUrl: apiSample.avatar_image_url ?? undefined,
     avatarImagePath: apiSample.avatar_image_path ?? apiSample.avatar_image_url ?? undefined,
+    age: apiSample.age ?? undefined,
+    accent: apiSample.accent ?? undefined,
   }
 }
 
@@ -40,8 +50,8 @@ function transformVoiceSample(apiSample: VoiceSampleApiResponse): VoiceSample {
 export async function fetchVoiceSamples(options?: {
   myVoicesOnly?: boolean
   mySamplesOnly?: boolean
-  category?: string
-  isDefault?: boolean
+  category?: string | string[]
+  isBuiltin?: boolean
   gender?: string
   languages?: string[]
   q?: string
@@ -54,10 +64,13 @@ export async function fetchVoiceSamples(options?: {
     params.append('my_samples_only', 'true')
   }
   if (options?.category) {
-    params.append('category', options.category)
+    const categories = Array.isArray(options.category) ? options.category : [options.category]
+    categories.forEach((category) => {
+      params.append('category', category)
+    })
   }
-  if (options?.isDefault !== undefined) {
-    params.append('is_default', String(options.isDefault))
+  if (options?.isBuiltin !== undefined) {
+    params.append('is_builtin', String(options.isBuiltin))
   }
   if (options?.gender && options.gender !== 'any') {
     params.append('gender', options.gender)
@@ -78,6 +91,11 @@ export async function fetchVoiceSamples(options?: {
     samples: response.samples.map(transformVoiceSample),
     total: response.total,
   }
+}
+
+export async function fetchVoiceSample(id: string): Promise<VoiceSample> {
+  const response = await apiGet<VoiceSampleApiResponse>(`api/voice-samples/${id}`)
+  return transformVoiceSample(response)
 }
 
 // 업로드 준비 (presigned URL 받기)
@@ -109,8 +127,10 @@ export interface FinishUploadPayload {
   object_key: string
   country?: string
   gender?: string
-  category?: string
-  is_default?: boolean
+  age?: string
+  accent?: string
+  category?: string[]
+  is_builtin?: boolean
 }
 
 export async function finishVoiceSampleUpload(payload: FinishUploadPayload): Promise<VoiceSample> {
@@ -194,20 +214,32 @@ export function createVoiceSample(payload: VoiceSamplePayload): Promise<VoiceSam
     isPublic: payload.isPublic,
     isInMyVoices: false,
     addedCount: 0,
-    isDefault: false,
+    isBuiltin: false,
   } as VoiceSample)
 }
 
 export async function updateVoiceSample(
   id: string,
-  payload: Partial<VoiceSamplePayload>,
+  payload: {
+    name?: string
+    description?: string
+    country?: string
+    gender?: string
+    age?: string
+    accent?: string
+    category?: string[]
+  },
 ): Promise<VoiceSample> {
   const response = await apiClient
     .put(`api/voice-samples/${id}`, {
       json: {
         name: payload.name,
         description: payload.description,
-        is_public: payload.isPublic,
+        country: payload.country,
+        gender: payload.gender,
+        age: payload.age,
+        accent: payload.accent,
+        category: payload.category,
       },
     })
     .json<VoiceSampleApiResponse>()

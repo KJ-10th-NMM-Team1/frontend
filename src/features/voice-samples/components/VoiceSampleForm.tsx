@@ -3,11 +3,14 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { HTTPError } from 'ky'
 import ReactCountryFlag from 'react-country-flag'
+import { Link } from 'react-router-dom'
+import { Minus } from 'lucide-react'
 
 import { env } from '@/shared/config/env'
 import { queryKeys } from '@/shared/config/queryKeys'
 import { useLanguage } from '@/features/languages/hooks/useLanguage'
 import { routes } from '@/shared/config/routes'
+import { useAccents } from '@/features/accents/hooks/useAccents'
 import { useUiStore } from '@/shared/store/useUiStore'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
@@ -42,6 +45,16 @@ const getCountryCode = (code?: string) => {
   return languageCountryMap[normalized] ?? normalized.slice(0, 2).toUpperCase()
 }
 
+const CATEGORY_OPTIONS = [
+  'Narrative & Story',
+  'Conversational',
+  'Characters & Animation',
+  'Social Media',
+  'Entertainment & TV',
+  'Advertisement',
+  'Informative & Educational',
+]
+
 type VoiceSampleFormProps = {
   initialFile?: File | null
   hideFileUpload?: boolean
@@ -58,7 +71,10 @@ export function VoiceSampleForm({
   const [name, setName] = useState('')
   const [languageCode, setLanguageCode] = useState('ko')
   const [gender, setGender] = useState('any')
-  const [category, setCategory] = useState<string>('')
+  const [age, setAge] = useState('any')
+  const [accent, setAccent] = useState('any')
+  const [labelFields, setLabelFields] = useState<Array<'accent' | 'gender' | 'age'>>([])
+  const [categories, setCategories] = useState<string[]>([])
   const [audioFile, setAudioFile] = useState<File | null>(initialFile)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
@@ -75,6 +91,9 @@ export function VoiceSampleForm({
   const showToast = useUiStore((state) => state.showToast)
   const { data: languageResponse, isLoading: languagesLoading } = useLanguage()
   const languageOptions = useMemo(() => languageResponse ?? [], [languageResponse])
+
+  const { data: accentResponse, isLoading: accentsLoading } = useAccents(languageCode)
+  const accentOptions = useMemo(() => accentResponse ?? [], [accentResponse])
 
   // EventSource를 ref로 관리하여 cleanup 가능하도록 함
   const eventSourceRef = useRef<EventSource | null>(null)
@@ -134,6 +153,10 @@ export function VoiceSampleForm({
     event.preventDefault()
     if (!name.trim() || !audioFile) return
 
+    const includeAccent = labelFields.includes('accent')
+    const includeGender = labelFields.includes('gender')
+    const includeAge = labelFields.includes('age')
+
     try {
       setUploadStage('preparing')
       setUploadProgress(10)
@@ -162,9 +185,11 @@ export function VoiceSampleForm({
         is_public: true,
         object_key,
         country: languageCode,
-        gender,
-        category: category || undefined,
-        is_default: false,
+        gender: includeGender && gender !== 'any' ? gender : undefined,
+        age: includeAge && age !== 'any' ? age : undefined,
+        accent: includeAccent && accent !== 'any' ? accent : undefined,
+        category: categories.length > 0 ? categories : undefined,
+        is_builtin: false,
       })
 
       if (avatarFile && createdSample.id) {
@@ -186,7 +211,7 @@ export function VoiceSampleForm({
           })
 
           await finalizeVoiceSampleAvatarUpload(createdSample.id, { object_key: avatarKey })
-        } catch (error) {
+        } catch (error: unknown) {
           console.error('Failed to upload avatar image', error)
           showToast({
             id: 'voice-sample-avatar-error',
@@ -251,12 +276,12 @@ export function VoiceSampleForm({
                 autoDismiss: 3000,
               })
             }
-          } catch (error) {
+          } catch (error: unknown) {
             console.error('Failed to parse SSE data:', error)
           }
         })
 
-        source.onerror = (error) => {
+        source.onerror = (error: Event) => {
           console.error('SSE connection error:', error)
           source.close()
           eventSourceRef.current = null
@@ -265,7 +290,7 @@ export function VoiceSampleForm({
         // ref에 저장하여 cleanup 시 사용
         eventSourceRef.current = source
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to create voice sample:', error)
 
       if (error instanceof HTTPError && error.response.status === 401) {
@@ -316,7 +341,10 @@ export function VoiceSampleForm({
     setName('')
     setLanguageCode('ko')
     setGender('any')
-    setCategory('')
+    setAge('any')
+    setAccent('any')
+    setLabelFields([])
+    setCategories([])
     setAvatarFile(null)
     setAvatarPreview(null)
     setUploadStage('idle')
@@ -334,13 +362,15 @@ export function VoiceSampleForm({
       }}
       className="space-y-6"
     >
-      <div className="space-y-2">
-        <Label htmlFor="name">이름</Label>
+      <div className="space-y-2 rounded-xl border border-surface-3 bg-surface-1 p-4">
+        <Label htmlFor="name">
+          이름
+        </Label>
         <Input
           id="name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="성우 이름"
+          placeholder="이름"
           required
           disabled={isUploading}
         />
@@ -348,7 +378,7 @@ export function VoiceSampleForm({
 
       {!hideFileUpload ? (
         <div className="space-y-2">
-          <Label>음성 파일</Label>
+          <Label className="text-sm font-semibold text-foreground">음성 파일</Label>
           <div className="space-y-3">
             <Button
               type="button"
@@ -377,86 +407,202 @@ export function VoiceSampleForm({
         </div>
       ) : null}
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="voice-language">언어</Label>
-          <Select
-            value={languageCode}
-            onValueChange={(value) => setLanguageCode(value)}
-            disabled={isUploading || languageOptions.length === 0 || languagesLoading}
-          >
-            <SelectTrigger>
-              <div className="flex w-full items-center gap-2">
-                {selectedFlagIcon}
-                <SelectValue
-                  placeholder={languagesLoading ? '언어를 불러오는 중...' : '언어를 선택하세요'}
-                />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              {languageOptions.length === 0 ? (
-                <SelectItem value="__empty" disabled>
-                  {languagesLoading ? '언어를 불러오는 중...' : '등록된 언어가 없습니다.'}
-                </SelectItem>
-              ) : (
-                languageOptions.map((language) => {
-                  const code = language.language_code
-                  const flagCode = getCountryCode(code)
-                  return (
-                    <SelectItem key={code} value={code}>
-                      <span className="flex items-center gap-2">
-                        <ReactCountryFlag
-                          countryCode={flagCode}
-                          svg
-                          style={{ width: '1.25em', height: '1.25em' }}
-                          title={language.name_ko}
-                        />
-                        {language.name_ko}
-                      </span>
+        <div className="space-y-2 rounded-xl border border-surface-3 bg-white p-3 shadow-inner shadow-black/5">
+          <div className="grid grid-cols-[114px,1fr] items-center gap-2 rounded-lg bg-surface-2/60 px-3 py-2">
+            <Label>언어 (필수)</Label>
+            <Select
+              value={languageCode}
+              onValueChange={(value) => setLanguageCode(value)}
+              disabled={isUploading || languageOptions.length === 0 || languagesLoading}
+            >
+              <SelectTrigger className="h-11">
+                <div className="flex w-full items-center gap-2">
+                  {selectedFlagIcon}
+                  <SelectValue
+                    placeholder={languagesLoading ? '언어를 불러오는 중...' : '언어를 선택하세요'}
+                  />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {languageOptions.length === 0 ? (
+                  <SelectItem value="__empty" disabled>
+                    {languagesLoading ? '언어를 불러오는 중...' : '등록된 언어가 없습니다.'}
+                  </SelectItem>
+                ) : (
+                  languageOptions.map((language) => {
+                    const code = language.language_code
+                    const flagCode = getCountryCode(code)
+                    return (
+                      <SelectItem key={code} value={code}>
+                        <span className="flex items-center gap-2">
+                          <ReactCountryFlag
+                            countryCode={flagCode}
+                            svg
+                            style={{ width: '1.25em', height: '1.25em' }}
+                            title={language.name_ko}
+                          />
+                          {language.name_ko}
+                        </span>
+                      </SelectItem>
+                    )
+                  })
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {labelFields.includes('accent') ? (
+            <div className="grid grid-cols-[114px,1fr,auto] items-center gap-2 rounded-lg bg-surface-2/60 px-3 py-2">
+              <Label>억양 (선택)</Label>
+              <Select
+                value={accent}
+                onValueChange={(value) => setAccent(value)}
+                disabled={isUploading || accentsLoading}
+              >
+                <SelectTrigger className="h-11">
+                  <SelectValue placeholder="선택 안 함" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any">선택 안 함</SelectItem>
+                  {accentOptions.map((opt) => (
+                    <SelectItem key={opt.code} value={opt.code}>
+                      {opt.name}
                     </SelectItem>
-                  )
-                })
-              )}
-            </SelectContent>
-          </Select>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                type="button"
+                variant="secondary"
+                size="icon"
+                className="h-9 w-9 rounded-lg border border-surface-4 bg-white shadow-inner shadow-black/10 hover:bg-surface-2"
+                onClick={() => setLabelFields((prev) => prev.filter((f) => f !== 'accent'))}
+                disabled={isUploading}
+                aria-label="억양 라벨 삭제"
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : null}
+
+          {labelFields.includes('gender') ? (
+            <div className="grid grid-cols-[114px,1fr,auto] items-center gap-2 rounded-lg bg-surface-2/60 px-3 py-2">
+              <Label>성별 (선택)</Label>
+              <Select
+                value={gender}
+                onValueChange={(value) => setGender(value)}
+                disabled={isUploading}
+              >
+                <SelectTrigger className="h-11">
+                  <SelectValue placeholder="선택 안 함" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any">선택 안 함</SelectItem>
+                  <SelectItem value="female">여성</SelectItem>
+                  <SelectItem value="male">남성</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                type="button"
+                variant="secondary"
+                size="icon"
+                className="h-9 w-9 rounded-lg border border-surface-4 bg-white shadow-inner shadow-black/10 hover:bg-surface-2"
+                onClick={() => setLabelFields((prev) => prev.filter((f) => f !== 'gender'))}
+                disabled={isUploading}
+                aria-label="성별 라벨 삭제"
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : null}
+
+          {labelFields.includes('age') ? (
+            <div className="grid grid-cols-[114px,1fr,auto] items-center gap-2 rounded-lg bg-surface-2/60 px-3 py-2">
+              <Label>나이대 (선택)</Label>
+              <Select value={age} onValueChange={(value) => setAge(value)} disabled={isUploading}>
+                <SelectTrigger className="h-11">
+                  <SelectValue placeholder="선택 안 함" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any">선택 안 함</SelectItem>
+                  <SelectItem value="young">청년 (Young)</SelectItem>
+                  <SelectItem value="middle_aged">중년 (Middle-aged)</SelectItem>
+                  <SelectItem value="old">노년 (Old)</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                type="button"
+                variant="secondary"
+                size="icon"
+                className="h-9 w-9 rounded-lg border border-surface-4 bg-white shadow-inner shadow-black/10 hover:bg-surface-2"
+                onClick={() => setLabelFields((prev) => prev.filter((f) => f !== 'age'))}
+                disabled={isUploading}
+                aria-label="나이대 라벨 삭제"
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : null}
+
+          <div className="flex items-center justify-between px-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 rounded-md px-3 text-xs"
+              disabled={isUploading || labelFields.length >= 3}
+              onClick={() => {
+                const order: Array<'accent' | 'gender' | 'age'> = ['accent', 'gender', 'age']
+                const next = order.find((f) => !labelFields.includes(f))
+                if (next) {
+                  setLabelFields((prev) => [...prev, next])
+                }
+              }}
+            >
+              + 라벨 추가
+            </Button>
+            <p className="text-xs text-muted">
+              {labelFields.length >= 3
+                ? '모든 라벨이 추가되었습니다.'
+                : '필요한 라벨만 추가해 주세요.'}
+            </p>
+          </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="gender">성별</Label>
-          <select
-            id="gender"
-            value={gender}
-            onChange={(e) => setGender(e.target.value)}
-            className="focus-visible:outline-hidden w-full rounded-xl border border-surface-4 bg-surface-1 px-4 py-3 text-sm text-foreground focus-visible:ring-accent"
-            disabled={isUploading}
-          >
-            <option value="any">모든 성별</option>
-            <option value="female">여성</option>
-            <option value="male">남성</option>
-          </select>
+
+      <div className="space-y-2 rounded-xl border border-surface-3 bg-surface-1 p-4">
+        <Label>카테고리 (선택, 중복 가능)</Label>
+        <div className="flex flex-wrap gap-2">
+          {CATEGORY_OPTIONS.map((option) => {
+            const isSelected = categories.includes(option)
+            return (
+              <button
+                key={option}
+                type="button"
+                disabled={isUploading}
+                onClick={() => {
+                  const isAlreadySelected = categories.includes(option)
+                  const next = isAlreadySelected
+                    ? categories.filter((c) => c !== option)
+                    : [...categories, option]
+                  setCategories(next)
+                }}
+                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                  isSelected
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-surface-4 bg-surface-1 text-muted hover:border-primary'
+                } ${isUploading ? 'cursor-not-allowed opacity-60' : ''}`}
+              >
+                {option}
+              </button>
+            )
+          })}
         </div>
+        <p className="text-xs text-muted">
+          원하는 용도를 여러 개 선택하면 라이브러리 검색 시 더 잘 노출됩니다.
+        </p>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="category">카테고리 (선택)</Label>
-        <select
-          id="category"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="focus-visible:outline-hidden w-full rounded-xl border border-surface-4 bg-surface-1 px-4 py-3 text-sm text-foreground focus-visible:ring-accent"
-          disabled={isUploading}
-        >
-          <option value="">카테고리 선택 안 함</option>
-          <option value="Narrative & Story">Narrative & Story</option>
-          <option value="Conversational">Conversational</option>
-          <option value="Characters & Animation">Characters & Animation</option>
-          <option value="Social Media">Social Media</option>
-          <option value="Entertainment & TV">Entertainment & TV</option>
-          <option value="Advertisement">Advertisement</option>
-          <option value="Informative & Educational">Informative & Educational</option>
-        </select>
-      </div>
-
-      <div className="space-y-2">
+      <div className="space-y-2 rounded-xl border border-surface-3 bg-surface-1 p-4">
         <Label>아바타 이미지 (선택)</Label>
         <div className="flex items-center gap-4">
           <button
@@ -489,8 +635,10 @@ export function VoiceSampleForm({
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="notes">설명</Label>
+      <div className="space-y-2 rounded-xl border border-surface-3 bg-surface-1 p-4">
+        <Label htmlFor="notes">
+          설명
+        </Label>
         <textarea
           id="notes"
           value={notes}
@@ -501,7 +649,26 @@ export function VoiceSampleForm({
           disabled={isUploading}
         />
       </div>
-
+      <div className="flex items-start gap-3">
+        <input
+          type="checkbox"
+          className="mt-1 h-5 w-5 rounded border-surface-4 text-primary focus:ring-accent"
+          defaultChecked
+          readOnly
+        />
+        <div className="space-y-1 text-sm leading-relaxed text-muted">
+          <p>
+            음성 파일을 업로드함으로써 필요한 권리와 동의를 모두 확보했으며, 생성된 콘텐츠를 불법적이거나
+            부정한 목적으로 사용하지 않겠다는 점에 동의합니다. 실제 서비스와 동일한 수준의 정책을 참고용으로
+            제공합니다.
+          </p>
+          <div className="flex flex-wrap gap-3 text-primary underline underline-offset-4">
+            <Link to={routes.termsOfService}>이용약관</Link>
+            <Link to={routes.prohibitedPolicy}>금지 콘텐츠 및 사용 정책</Link>
+            <Link to={routes.privacyPolicy}>개인정보 처리방침</Link>
+          </div>
+        </div>
+      </div>
       <div className="flex justify-end gap-3 pt-4">
         {onCancel ? (
           <Button type="button" variant="outline" onClick={onCancel} disabled={isUploading}>

@@ -22,7 +22,7 @@ export const queryKeys = {
       myVoicesOnly?: boolean
       mySamplesOnly?: boolean
       category?: string
-      isDefault?: boolean
+      isBuiltin?: boolean
       q?: string
     }) => {
       if (!options) return ['voice-samples', 'list'] as const
