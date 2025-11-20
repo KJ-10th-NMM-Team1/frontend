@@ -10,11 +10,14 @@ export function ProjectCreationModal() {
     closeProjectCreation,
     isSourceStep,
     isDetailsStep,
+    isSummaryStep,
     draft,
     recentUploadSummary,
     handleSourceSubmit,
     handleDetailsSubmit,
+    handleSummarySubmit,
     handleBackToSource,
+    handleBackToDetails,
   } = useProjectCreationModal()
 
   return (
@@ -29,6 +32,7 @@ export function ProjectCreationModal() {
       <ProjectCreationDialogContent
         isSourceStep={isSourceStep}
         isDetailsStep={isDetailsStep}
+        isSummaryStep={isSummaryStep}
         draft={draft}
         recentUploadSummary={recentUploadSummary}
         uploadProgress={uploadProgress}
@@ -36,6 +40,8 @@ export function ProjectCreationModal() {
         onSourceCancel={closeProjectCreation}
         onDetailsSubmit={handleDetailsSubmit}
         onBackToSource={handleBackToSource}
+        onSummarySubmit={handleSummarySubmit}
+        onBackToDetails={handleBackToDetails}
       />
     </Dialog>
   )

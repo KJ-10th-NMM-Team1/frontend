@@ -13,7 +13,7 @@ type ToastPayload = {
   autoDismiss?: number
 }
 
-type ProjectCreationStep = 'source' | 'details'
+type ProjectCreationStep = 'source' | 'details' | 'summary'
 
 type UiState = {
   showToast: (toast: ToastPayload) => void

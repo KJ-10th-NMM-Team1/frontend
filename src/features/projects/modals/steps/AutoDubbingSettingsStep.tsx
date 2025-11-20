@@ -13,7 +13,7 @@ import { DialogDescription, DialogTitle } from '@/shared/ui/Dialog'
 import { Progress } from '@/shared/ui/Progress'
 
 import { stageMessageMap } from '../hooks/useUploadProgressController'
-import type { ProjectCreationDraft, UploadProgressState } from '../types'
+import type { UploadProgressState } from '../types'
 
 import { SourceLanguageField } from './components/auto-dubbing/SourceLanguageField'
 import { AudioSpeakerCountField } from './components/auto-dubbing/SpeakerCountField'
@@ -28,7 +28,7 @@ export const autoDubbingSettingsSchema = z
     // 빈 문자열도 통과시킴
     sourceLanguage: z.string().min(1, '언어를 선택해주세요').or(z.literal('')),
     targetLanguages: z.array(z.string()).min(1, '타겟 언어를 최소 1개 선택하세요.'),
-    speakerCount: z.coerce.number().min(1).max(10),
+    speakerCount: z.coerce.number().min(0).max(10),
   })
   .refine((data) => (data.detectAutomatically ? true : data.sourceLanguage.length > 0), {
     path: ['sourceLanguage'],
@@ -39,7 +39,6 @@ export type AutoDubbingSettingsValues = z.infer<typeof autoDubbingSettingsSchema
 
 type AutoDubbingSettingsStepProps = {
   initialValues: AutoDubbingSettingsValues
-  draft: ProjectCreationDraft
   uploadProgress: UploadProgressState
   onBack: () => void
   onSubmit: (values: AutoDubbingSettingsValues) => void
@@ -47,7 +46,6 @@ type AutoDubbingSettingsStepProps = {
 
 export function AutoDubbingSettingsStep({
   initialValues,
-  draft,
   uploadProgress,
   onBack,
   onSubmit,
@@ -87,6 +85,12 @@ export function AutoDubbingSettingsStep({
     () => languageItems.filter((language) => !selectedTargets.includes(language.language_code)),
     [languageItems, selectedTargets],
   )
+
+  useEffect(() => {
+    if (!sourceLanguage && languageItems.length > 0) {
+      setValue('sourceLanguage', languageItems[0].language_code, { shouldDirty: false })
+    }
+  }, [languageItems, setValue, sourceLanguage])
 
   useEffect(() => {
     if (!pendingTarget && availableTargetOptions.length > 0) {
@@ -160,16 +164,6 @@ export function AutoDubbingSettingsStep({
       </DialogDescription>
 
       <TitleField registration={register('title')} error={errors.title?.message} />
-      <SourceLanguageField
-        detectAutomatically={detectAutomatically}
-        replaceVoiceSamples={replaceVoiceSamples}
-        onDetectChange={handleDetectChange}
-        onReplaceVoiceSamplesChange={handleReplaceVoiceSamplesChange}
-        languages={languageItems}
-        sourceLanguage={sourceLanguage}
-        onSourceLanguageChange={handleSourceLanguageChange}
-        error={errors.sourceLanguage?.message}
-      />
 
       <TargetLanguagesField
         selectedTargets={selectedTargets}
@@ -184,17 +178,19 @@ export function AutoDubbingSettingsStep({
 
       <AudioSpeakerCountField
         registration={register('speakerCount', { valueAsNumber: true })}
+        value={speakerCount}
         error={errors.speakerCount?.message}
       />
 
-      <SettingsSummary
-        title={watch('title')}
-        draft={draft}
-        sourceLanguage={
-          detectAutomatically ? '자동 인식' : (languageLabelMap[sourceLanguage] ?? sourceLanguage)
-        }
-        targetLanguages={selectedTargets.map((code) => languageLabelMap[code] ?? code)}
-        speakerCount={speakerCount}
+      <SourceLanguageField
+        detectAutomatically={detectAutomatically}
+        replaceVoiceSamples={replaceVoiceSamples}
+        onDetectChange={handleDetectChange}
+        onReplaceVoiceSamplesChange={handleReplaceVoiceSamplesChange}
+        languages={languageItems}
+        sourceLanguage={sourceLanguage}
+        onSourceLanguageChange={handleSourceLanguageChange}
+        error={errors.sourceLanguage?.message}
       />
 
       {uploadProgress.stage !== 'idle' ? (
@@ -222,59 +218,10 @@ export function AutoDubbingSettingsStep({
               처리 중...
             </>
           ) : (
-            '에피소드 생성'
+            '다음'
           )}
         </Button>
       </div>
     </form>
   )
 }
-
-type SettingsSummaryProps = {
-  title: string
-  draft: ProjectCreationDraft
-  sourceLanguage: string
-  targetLanguages: string[]
-  speakerCount: number
-}
-
-function SettingsSummary({
-  title,
-  draft,
-  sourceLanguage,
-  targetLanguages,
-  speakerCount,
-}: SettingsSummaryProps) {
-  const sourceSummary =
-    draft.sourceType === 'youtube'
-      ? (draft.youtubeUrl ?? 'YouTube 링크 미입력')
-      : draft.fileName
-        ? `${draft.fileName} (${draft.fileSize ? `${(draft.fileSize / (1024 * 1024)).toFixed(1)}MB` : '크기 미상'})`
-        : '파일 미선택'
-
-  return (
-    <div className="border-surface-4 bg-surface-2 rounded-3xl border p-5">
-      <p className="text-muted text-xs font-semibold uppercase tracking-[0.3em]">설정 요약</p>
-      <div className="mt-3 space-y-1 text-sm">
-        <SummaryRow label="제목" value={title || '제목 미입력'} />
-        <SummaryRow label="소스" value={sourceSummary} />
-        <SummaryRow label="원어" value={sourceLanguage} />
-        <SummaryRow label="타겟 언어" value={targetLanguages.join(', ') || '미선택'} />
-        <SummaryRow label="화자 수" value={`${speakerCount}명`} />
-      </div>
-
-      <p className="text-muted mt-3 text-xs">
-        최종 산출물은 선택한 타겟 언어별 더빙 영상(+필요 시 자막)으로 생성됩니다.
-      </p>
-    </div>
-  )
-}
-
-const SummaryRow = ({ label, value }: { label: string; value: string }) => (
-  <div className="flex items-center justify-between gap-3 whitespace-nowrap">
-    <span className="text-muted text-xs uppercase tracking-[0.2em]">{label}</span>
-    <span className="text-foreground overflow-hidden text-ellipsis whitespace-nowrap text-right text-sm font-medium">
-      {value}
-    </span>
-  </div>
-)

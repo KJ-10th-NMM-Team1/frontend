@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
 
 import { uploadFile } from '@/features/projects/api/storageApi'
 import { useCreateProjectMutation } from '@/features/projects/hooks/useProjects'
@@ -25,7 +24,7 @@ const createInitialDraft = (): ProjectCreationDraft => ({
   replaceVoiceSamples: true,
   sourceLanguage: '',
   targetLanguages: [],
-  speakerCount: 2,
+  speakerCount: 0,
 })
 
 export function useProjectCreationModal() {
@@ -152,28 +151,31 @@ export function useProjectCreationModal() {
   }
 
   const handleDetailsSubmit = (values: AutoDubbingSettingsValues) => {
-    const nextDraft: ProjectCreationDraft = {
-      ...draft,
+    setDraft((prev) => ({
+      ...prev,
       title: values.title,
       detectAutomatically: values.detectAutomatically,
       replaceVoiceSamples: values.replaceVoiceSamples,
       sourceLanguage: values.sourceLanguage,
       targetLanguages: values.targetLanguages,
       speakerCount: values.speakerCount,
-    }
-    setDraft(nextDraft)
+    }))
+    setProjectCreationStep('summary')
+  }
+
+  const handleSummarySubmit = () => {
     updateProgress('processing', 0)
 
     createProjectMutation.mutate(
-      { ...nextDraft, owner_id: 'temp' },
+      { ...draft, owner_id: 'temp' },
       {
         onSuccess(project) {
           const projectId = project.project_id
-          if (nextDraft.sourceType === 'file') {
-            if (!nextDraft.file) return
-            void handleFileUpload(projectId, nextDraft.file)
-          } else if (nextDraft.sourceType === 'youtube') {
-            void handleRegisterYoutube(projectId, nextDraft)
+          if (draft.sourceType === 'file') {
+            if (!draft.file) return
+            void handleFileUpload(projectId, draft.file)
+          } else if (draft.sourceType === 'youtube') {
+            void handleRegisterYoutube(projectId, draft)
             startTrackingProject(projectId)
           }
         },
@@ -181,12 +183,13 @@ export function useProjectCreationModal() {
     )
 
     trackEvent('proj_creation_complete', {
-      title: values.title,
-      targets: values.targetLanguages,
+      title: draft.title,
+      targets: draft.targetLanguages,
     })
   }
 
   const handleBackToSource = () => setProjectCreationStep('source')
+  const handleBackToDetails = () => setProjectCreationStep('details')
 
   return {
     uploadProgress,
@@ -194,10 +197,13 @@ export function useProjectCreationModal() {
     closeProjectCreation,
     isSourceStep,
     isDetailsStep,
+    isSummaryStep: projectCreation.step === 'summary',
     draft,
     recentUploadSummary,
     handleSourceSubmit,
     handleDetailsSubmit,
+    handleSummarySubmit,
     handleBackToSource,
+    handleBackToDetails,
   }
 }
