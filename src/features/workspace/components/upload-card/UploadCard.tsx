@@ -1,4 +1,4 @@
-import { AudioLines } from 'lucide-react'
+import { Plus } from 'lucide-react'
 
 import { Button } from '@/shared/ui/Button'
 import { trackEvent } from '@/shared/lib/analytics'
@@ -14,24 +14,26 @@ type CreateEpisodeButtonProps = {
   label?: string
 }
 
-export function CreateEpisodeButton({ className, label = '더빙·자막 만들기' }: CreateEpisodeButtonProps) {
+export function CreateEpisodeButton({
+  className,
+  label = '더빙·자막 만들기',
+}: CreateEpisodeButtonProps) {
   const openProjectCreation = useUiStore((state) => state.openProjectCreation)
 
   return (
     <Button
       type="button"
-      size="md"
       className={cn(
-        'rounded-full bg-gradient-to-r from-primary to-primary/80 px-6 py-3 text-base font-semibold shadow-soft hover:from-primary-hover hover:to-primary/80',
+        'fixed bottom-20 right-20 z-40 flex h-20 w-20 items-center justify-center rounded-full bg-primary text-white shadow-xl transition hover:bg-primary-hover focus-visible:ring-2 focus-visible:ring-offset-2',
         className,
       )}
+      aria-label={label}
       onClick={() => {
         trackEvent('open_create_modal')
         openProjectCreation('source')
       }}
     >
-      <AudioLines className="h-5 w-5" aria-hidden />
-      {label}
+      <Plus className="h-6 w-6" aria-hidden />
     </Button>
   )
 }
