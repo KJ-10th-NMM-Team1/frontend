@@ -1,12 +1,10 @@
-import { BookOpenCheck, LogOut, Mic, Search, User, Waves } from 'lucide-react'
+import { BookOpenCheck, LogOut, Mic, User, Waves } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import { useLogoutMutation } from '@/features/auth/hooks/useAuthMutations'
 import { routes } from '@/shared/config/routes'
 import { useAuthStore } from '@/shared/store/useAuthStore'
-import { useUiStore } from '@/shared/store/useUiStore'
 import { Button } from '@/shared/ui/Button'
-import { Input } from '@/shared/ui/Input'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,13 +24,10 @@ const routeTitles: Array<{ pattern: RegExp; label: string }> = [
 export function AppHeader() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const userName = useAuthStore((state) => state.userName)
-  const workspaceSearchTerm = useUiStore((state) => state.workspaceSearchTerm)
-  const setWorkspaceSearchTerm = useUiStore((state) => state.setWorkspaceSearchTerm)
   const location = useLocation()
   const navigate = useNavigate()
   const logoutMutation = useLogoutMutation()
   const containerWidthClass = 'w-full'
-  const showWorkspaceSearch = location.pathname.startsWith(routes.workspace)
   const currentTitle =
     routeTitles.find((entry) => entry.pattern.test(location.pathname))?.label ?? null
   const initials =
@@ -97,21 +92,6 @@ export function AppHeader() {
         </div>
 
         <div className="ml-auto flex items-center gap-3">
-          {showWorkspaceSearch ? (
-            <div className="relative flex items-center">
-              <Search
-                className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
-                aria-hidden="true"
-              />
-              <Input
-                value={workspaceSearchTerm}
-                onChange={(event) => setWorkspaceSearchTerm(event.target.value)}
-                placeholder="워크스페이스 검색"
-                className="pl-9"
-              />
-            </div>
-          ) : null}
-
           {isAuthenticated ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

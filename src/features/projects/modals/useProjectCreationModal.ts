@@ -25,6 +25,7 @@ const createInitialDraft = (): ProjectCreationDraft => ({
   sourceLanguage: '',
   targetLanguages: [],
   speakerCount: 0,
+  tags: [],
 })
 
 export function useProjectCreationModal() {
@@ -159,6 +160,7 @@ export function useProjectCreationModal() {
       sourceLanguage: values.sourceLanguage,
       targetLanguages: values.targetLanguages,
       speakerCount: values.speakerCount,
+      tags: values.tags,
     }))
     setProjectCreationStep('summary')
   }
