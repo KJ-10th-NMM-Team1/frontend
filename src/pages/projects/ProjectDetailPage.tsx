@@ -57,7 +57,7 @@ export default function ProjectDetailPage() {
   const completedTargetLanguageCodes = projectTargets
     .filter((target) => target.status === 'completed')
     .map((target) => target.language_code)
-  const sourceLanguageLabel = languageNameMap[project.source_language] ?? project.source_language
+  // const sourceLanguageLabel = languageNameMap[project.source_language] ?? project.source_language
   const targetLanguageLabels = allTargetLanguageCodes.map((code) => languageNameMap[code] ?? code)
 
   const isSelectableLanguage =
@@ -83,10 +83,10 @@ export default function ProjectDetailPage() {
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-muted">프로젝트 상세</p>
           <h1 className="mt-1 text-3xl font-semibold text-foreground">{project.title}</h1>
-          <p className="mt-2 text-sm text-muted">
+          {/* <p className="mt-2 text-sm text-muted">
             {sourceLanguageLabel} → {targetLanguageLabels.join(', ')} | 화자 {project.speaker_count}
             명
-          </p>
+          </p> */}
           <p className="text-xs text-muted">
             생성일 {new Date(project.created_at).toLocaleString()}
           </p>
@@ -94,16 +94,16 @@ export default function ProjectDetailPage() {
         {canEdit ? (
           <div className="flex flex-wrap gap-3">
             <Button asChild onClick={() => trackEvent('enter_editor_click', { projectId })}>
-              <Link to={routes.editor(projectId, activeLanguage)}>편집하기</Link>
+              {/* <Link to={routes.editor(projectId, activeLanguage)}>편집하기</Link> */}
             </Button>
           </div>
         ) : null}
       </header>
 
       <section className="grid gap-6 lg:grid-cols-[1.75fr,1fr]">
-        <ProjectLanguagePanel
+        {/* <ProjectLanguagePanel
           project={project}
-          activeLanguage={activeLanguage}
+          // activeLanguage={activeLanguage}
           onLanguageChange={setLanguage}
           version={version}
           onVersionChange={setVersion}
@@ -111,9 +111,9 @@ export default function ProjectDetailPage() {
         />
         <ProjectStudioPanel
           projectId={projectId}
-          selectedLanguageCode={activeLanguage}
+          // selectedLanguageCode={activeLanguage}
           isSourceLanguage={isSourceLanguage}
-        />
+        /> */}
       </section>
     </div>
   )

@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 import { useAuthRestore } from '@/features/auth/hooks/useAuthRestore'
-// import { PipelineStatusManager } from '@/features/projects/components/PipelineStatusManager'
+import { ProjectProgressManager } from '@/features/projects/components/ProjectProgressManager'
 
 import { env } from '../../shared/config/env'
 import { Spinner } from '../../shared/ui/Spinner'
@@ -46,7 +46,7 @@ export function AppProviders({ children }: PropsWithChildren) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthRestorer>
-        {/* <PipelineStatusManager /> */}
+        <ProjectProgressManager />
         {children}
       </AuthRestorer>
       <ReactQueryDevtools initialIsOpen={false} position="left" />

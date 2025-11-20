@@ -1,19 +1,27 @@
-export type ProjectStatus =
-  | 'uploading'
-  | 'processing'
-  | 'uploaded'
-  | 'editing'
-  | 'done'
-  | 'completed'
-  | 'failed'
+/**
+ * 프로젝트 전체 상태 (워커에서 보내는 stage 값)
+ * - 서버에서 string으로 전달되며, 워커의 현재 처리 단계를 나타냄
+ * - 예: "starting", "asr_started", "translation_completed", "done", "failed"
+ */
+export type ProjectStatus = string
 
+/**
+ * 파이프라인 처리 단계
+ */
 export type PipelineStage =
+  | 'starting'
   | 'upload'
   | 'vad'
+  | 'asr_started'
+  | 'asr_completed'
   | 'stt'
+  | 'translation_started'
+  | 'translation_completed'
   | 'mt'
   | 'rag'
   | 'voice_mapping'
+  | 'tts_started'
+  | 'tts_completed'
   | 'tts'
   | 'packaging'
   | 'outputs'
@@ -22,6 +30,7 @@ export type PipelineStage =
   | 'mux_started'
   | 'mux_completed'
   | 'done'
+  | 'failed'
 
 interface ProjectThumbnail {
   kind: 's3' | 'external'
@@ -29,37 +38,38 @@ interface ProjectThumbnail {
   url: string
 }
 
+/**
+ * 프로젝트 리스트 API 응답 (ProjectOut)
+ */
 export interface ProjectSummary {
   id: string
   title: string
-  owner_id: string
-  source_type: 'file' | 'youtube'
-  duration_seconds: number
   status: ProjectStatus
-  source_language: string
   dueDate: string
   assignedEditor?: string
   createdAt?: string
   description?: string
   tags?: string[]
-  video_source?: string
-  // thumbnailUrl?: string
-  targets?: ProjectTarget[]
   thumbnail?: ProjectThumbnail
   glosary_id?: string
+  video_source?: string | null
+  duration_seconds?: number | null
+  issue_count: number
+  targets: ProjectTarget[]
+  source_language?: string | null
   created_at: Date
-  overall_progress?: number
-  current_stage?: PipelineStage
-  overallProgress?: number
+  speaker_count?: number | null
 }
 
 export type ProjectTargetStatus = 'pending' | 'processing' | 'completed' | 'failed'
 
+/**
+ * 타겟 언어 정보 (ProjectTarget)
+ */
 export interface ProjectTarget {
-  id: string
-  projectId: string
+  target_id: string
+  project_id: string
   language_code: string
-  name?: string
   status: ProjectTargetStatus
   progress: number
 }
@@ -142,8 +152,6 @@ export const sampleProjects: ProjectDetail[] = [
   {
     id: 'proj-1001',
     title: 'AI Voice-over Launch Trailer',
-    owner_id: 'demo-user',
-    source_type: 'youtube',
     duration_seconds: 126,
     status: 'completed',
     source_language: 'ko',
@@ -160,6 +168,7 @@ export const sampleProjects: ProjectDetail[] = [
       key: '',
       url: 'https://images.unsplash.com/photo-1487528278747-ba99ed528ebc?auto=format&fit=crop&w=1200&q=80',
     },
+    issue_count: 0,
     assets: [
       {
         id: 'asset-en-video',
@@ -204,15 +213,15 @@ export const sampleProjects: ProjectDetail[] = [
     ],
     targets: [
       {
-        id: 't-en',
-        projectId: 'proj-1001',
+        target_id: 't-en',
+        project_id: 'proj-1001',
         language_code: 'en',
         status: 'completed',
         progress: 100,
       },
       {
-        id: 't-ja',
-        projectId: 'proj-1001',
+        target_id: 't-ja',
+        project_id: 'proj-1001',
         language_code: 'ja',
         status: 'completed',
         progress: 100,

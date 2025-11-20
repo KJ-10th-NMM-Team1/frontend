@@ -7,7 +7,7 @@ type AppToasterProps = {
 export function AppToaster({ appName }: AppToasterProps) {
   return (
     <SonnerToaster
-      position="bottom-right"
+      position="top-right"
       richColors
       toastOptions={{
         duration: 3500,

@@ -2,7 +2,6 @@
 
 import type { ExampleItem, ExampleItemPayload } from '../../../entities/example/types'
 import { sampleGlossaries } from '../../../entities/glossary/types'
-import { sampleLanguages } from '../../../entities/language/types'
 import { sampleProjects } from '../../../entities/project/types'
 import { sampleSegments } from '../../../entities/segment/types'
 import { sampleVoices } from '../../../entities/voice-sample/types'
@@ -42,9 +41,6 @@ export const handlers = [
       title: project.title,
       source_language: project.source_language,
       status: project.status,
-      dueDate: project.dueDate,
-      assignedEditor: project.assignedEditor,
-      createdAt: project.createdAt,
       thumbnail: project.thumbnail,
       duration_seconds: project.duration_seconds,
       targets: project.targets,
