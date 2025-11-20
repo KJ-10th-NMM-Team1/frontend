@@ -63,7 +63,9 @@ export function VoiceAvatarUploader({
             <button
               key={preset.id}
               type="button"
-              onClick={() => handlePresetSelect(preset.id, preset.src)}
+              onClick={() => {
+                void handlePresetSelect(preset.id, preset.src)
+              }}
               disabled={disabled || isPresetLoading}
               className={`rounded-full border p-1 transition ${
                 selectedPreset === preset.id ? 'border-primary ring-2 ring-primary/60' : 'border-surface-4 hover:border-primary'
