@@ -1,4 +1,4 @@
-import { BookOpenCheck, LogOut, Mic, User, Waves } from 'lucide-react'
+import { LogOut, User } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import { useLogoutMutation } from '@/features/auth/hooks/useAuthMutations'
@@ -13,6 +13,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/ui/Dropdown'
+
+import { NotificationDropdown } from './NotificationDropdown'
 
 const routeTitles: Array<{ pattern: RegExp; label: string }> = [
   { pattern: /^\/workspace/, label: '워크스페이스' },
@@ -37,18 +39,6 @@ export function AppHeader() {
       .join('')
       .slice(0, 2)
       .toUpperCase() ?? 'DP'
-
-  const handleVoiceSamples = () => {
-    navigate(routes.voiceSamples)
-  }
-
-  const handleVoiceCloning = () => {
-    navigate(routes.voiceCloning)
-  }
-
-  const handleVoiceLibrary = () => {
-    navigate(routes.voiceLibrary)
-  }
 
   const handleMyInfo = () => {
     navigate(routes.myinfo)
@@ -92,6 +82,8 @@ export function AppHeader() {
         </div>
 
         <div className="ml-auto flex items-center gap-3">
+          {isAuthenticated && <NotificationDropdown />}
+
           {isAuthenticated ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

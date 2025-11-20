@@ -51,7 +51,7 @@ export function ProjectSummarySection({
                 <div className="flex flex-wrap gap-2">
                   {project.targets.map((target) => (
                     <div
-                      key={target.id}
+                      key={target.target_id}
                       className="flex items-center gap-2 rounded bg-surface-2 px-3 py-1.5"
                     >
                       <span className="text-lg leading-none">

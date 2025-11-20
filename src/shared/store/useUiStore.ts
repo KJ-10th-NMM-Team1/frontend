@@ -11,6 +11,7 @@ type ToastPayload = {
   actionLabel?: string
   onAction?: () => void
   autoDismiss?: number
+  variant?: 'default' | 'success' | 'error' | 'warning' | 'info'
 }
 
 type ProjectCreationStep = 'source' | 'details' | 'summary'
@@ -33,8 +34,8 @@ export type UiState = {
 
 export const useUiStore = create<UiState>()(
   devtools((set) => ({
-    showToast: ({ id, title, description, actionLabel, onAction, autoDismiss }) => {
-      toast(title ?? '알림', {
+    showToast: ({ id, title, description, actionLabel, onAction, autoDismiss, variant = 'default' }) => {
+      const toastOptions = {
         id,
         description,
         duration: autoDismiss ?? 3500,
@@ -45,7 +46,25 @@ export const useUiStore = create<UiState>()(
                 onClick: onAction,
               }
             : undefined,
-      })
+      }
+
+      // Use appropriate toast function based on variant
+      switch (variant) {
+        case 'success':
+          toast.success(title ?? '성공', toastOptions)
+          break
+        case 'error':
+          toast.error(title ?? '오류', toastOptions)
+          break
+        case 'warning':
+          toast.warning(title ?? '경고', toastOptions)
+          break
+        case 'info':
+          toast.info(title ?? '알림', toastOptions)
+          break
+        default:
+          toast(title ?? '알림', toastOptions)
+      }
     },
     dismissToast: (id) => {
       toast.dismiss(id)
