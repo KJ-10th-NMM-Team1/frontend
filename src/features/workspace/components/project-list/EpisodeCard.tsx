@@ -315,13 +315,13 @@ export function EpisodeCard({ project, onEdit, onDelete, onTagClick }: EpisodeCa
             return (
               <span
                 key={t.id ?? `${t.projectId}-${languageCode}`}
-                className={`rounded-full px-3 py-1 text-[11px] font-semibold ${statusClass}`}
+                className={`rounded-full px-1 text-[11px] font-semibold ${statusClass}`}
               >
                 <ReactCountryFlag
                   countryCode={countryCode}
                   svg
                   title={`${label} ${statusLabel}`}
-                  style={{ width: '1.25em', height: '1.25em' }}
+                  style={{ width: '2.5em', height: '2.5em' }}
                 />
               </span>
             )
