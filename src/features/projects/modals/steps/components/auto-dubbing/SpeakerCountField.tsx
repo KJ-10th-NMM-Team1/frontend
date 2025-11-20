@@ -20,9 +20,7 @@ export function AudioSpeakerCountField({ registration, value, error }: SpeakerCo
         <Select
           name={name}
           value={String(value)}
-          onValueChange={(val) => {
-            onChange({ target: { name, value: Number(val) } })
-          }}
+          onValueChange={(val) => void onChange({ target: { name, value: Number(val) } })}
         >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="화자 수 선택" />
@@ -44,7 +42,7 @@ export function AudioSpeakerCountField({ registration, value, error }: SpeakerCo
       </div>
 
       <div>
-        <p className="text-muted text-xs">권장: 1~5명, 최대 10명까지 설정할 수 있습니다.</p>
+        <p className="text-xs text-muted">권장: 1~5명, 최대 10명까지 설정할 수 있습니다.</p>
         <ValidationMessage message={error} />
       </div>
     </div>
