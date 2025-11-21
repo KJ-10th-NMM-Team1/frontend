@@ -3,28 +3,28 @@ import { useMemo } from 'react'
 import ReactCountryFlag from 'react-country-flag'
 
 import type { Language } from '@/entities/language/types'
-import type { ProjectSummary } from '@/entities/project/types'
-import type { ProjectProgress } from '@/features/projects/types/progress'
 import { useLanguage } from '@/features/languages/hooks/useLanguage'
 
-import {
-  EMPTY_LANGUAGES,
-  TARGET_STATUS_BADGE_COLORS,
-  TARGET_STATUS_LABELS,
-} from './episodeCardConstants'
-import { getCountryCode } from './episodeCardUtils'
+import { EMPTY_LANGUAGES, TARGET_STATUS_LABELS } from './episodeCardConstants'
+import type { NormalizedTarget } from './projectDataNormalizer'
 
 interface EpisodeCardTargetsProps {
-  project: ProjectSummary
-  sseProgressData?: ProjectProgress
+  targets: NormalizedTarget[]
+}
+
+const FLAG_STYLE = {
+  width: '100%',
+  height: '100%',
+  objectFit: 'cover' as const,
+  display: 'block',
 }
 
 /**
  * 에피소드 카드 타겟 언어 국기 표시
- * - grayscale에서 컬러로 진행도 표시
- * - 국기만 표시 (텍스트 없음)
+ * - grayscale에서 컬러로 진행도 표시 (왼쪽에서 오른쪽으로 걷힘)
+ * - 실패 상태면 전체 grayscale
  */
-export function EpisodeCardTargets({ project, sseProgressData }: EpisodeCardTargetsProps) {
+export function EpisodeCardTargets({ targets }: EpisodeCardTargetsProps) {
   const { data } = useLanguage()
   const languageItems = data ?? EMPTY_LANGUAGES
 
@@ -36,45 +36,42 @@ export function EpisodeCardTargets({ project, sseProgressData }: EpisodeCardTarg
     return map
   }, [languageItems])
 
-  if (!project.targets || project.targets.length === 0) {
+  if (targets.length === 0) {
     return null
   }
 
   return (
     <div className="flex flex-wrap gap-1.5">
-      {project.targets.map((target) => {
-        const languageCode = target.language_code.toLowerCase()
-        const label = languageMap[languageCode] ?? target.language_code
-        const countryCode = getCountryCode(languageCode)
+      {targets.map((target) => {
+        const label = languageMap[target.languageCode] ?? target.languageCode
+        const statusLabel = TARGET_STATUS_LABELS[target.status] ?? '대기'
 
-        // SSE 데이터가 있으면 사용, 없으면 API 데이터 사용
-        const sseTarget = sseProgressData?.targets[target.language_code]
-        const progress = sseTarget?.progress ?? target.progress ?? 0
-        const targetStatus = sseTarget?.status ?? target.status ?? 'pending'
-        const statusLabel = TARGET_STATUS_LABELS[targetStatus] ?? '대기'
-        const badgeClass = TARGET_STATUS_BADGE_COLORS[targetStatus] ?? TARGET_STATUS_BADGE_COLORS.pending
+        // 실패 상태면 진행도를 0으로 표시
+        const displayProgress = target.status === 'failed' ? 0 : target.progress
 
         return (
           <div
-            key={target.target_id ?? `${target.project_id}-${languageCode}`}
-            className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-surface-3"
-            title={`${label} ${statusLabel} ${progress}%`}
+            key={target.languageCode}
+            className="relative h-5 w-7 overflow-hidden rounded-sm shadow-sm ring-1 ring-black/10"
+            title={`${label} ${statusLabel} ${target.progress}%`}
           >
-            <ReactCountryFlag
-              countryCode={countryCode}
-              svg
-              style={{
-                width: '105%',
-                height: '105%',
-                display: 'block',
-                borderRadius: '9999px',
-              }}
-            />
-            <span
-              className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border border-white ${badgeClass}`}
-              aria-hidden="true"
-            />
-            <span className="sr-only">{`${label} ${statusLabel}`}</span>
+            {/* Grayscale 배경 (진한 grayscale) */}
+            <div
+              className="absolute inset-0"
+              style={{ filter: 'grayscale(100%) brightness(0.7) contrast(1.1)' }}
+            >
+              <ReactCountryFlag countryCode={target.countryCode} svg style={FLAG_STYLE} />
+            </div>
+
+            {/* 컬러 오버레이 (진행도에 따라 왼쪽에서 오른쪽으로 표시) */}
+            <div
+              className="absolute inset-0 overflow-hidden"
+              style={{ width: `${displayProgress}%` }}
+            >
+              <div className="h-5 w-7">
+                <ReactCountryFlag countryCode={target.countryCode} svg style={FLAG_STYLE} />
+              </div>
+            </div>
           </div>
         )
       })}

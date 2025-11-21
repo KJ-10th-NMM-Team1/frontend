@@ -1,13 +1,23 @@
 import type { ProjectSummary } from '@/entities/project/types'
 import type { ProjectProgress } from '@/features/projects/types/progress'
 
-import { calculateProgressFromTargets } from './episodeCardUtils'
+import { calculateProgressFromTargets, getCountryCode } from './episodeCardUtils'
 
 /**
  * 통합 프로젝트 상태 타입
  * SSE와 API 모두에서 사용하는 정규화된 상태
  */
 export type NormalizedStatus = 'pending' | 'processing' | 'completed' | 'failed'
+
+/**
+ * 정규화된 타겟 데이터
+ */
+export interface NormalizedTarget {
+  languageCode: string
+  countryCode: string
+  progress: number
+  status: NormalizedStatus
+}
 
 /**
  * 정규화된 프로젝트 데이터
@@ -18,6 +28,7 @@ export interface NormalizedProjectData {
   progress: number
   message?: string
   rawStatus: string // 원본 상태값 (디버깅용)
+  targets: NormalizedTarget[]
 }
 
 /**
@@ -85,6 +96,33 @@ function normalizeSseStatus(sseStatus: string): NormalizedStatus {
 }
 
 /**
+ * 타겟별 진행도를 정규화
+ */
+function normalizeTargets(
+  apiProject: ProjectSummary,
+  sseProgress?: ProjectProgress,
+): NormalizedTarget[] {
+  if (!apiProject.targets) return []
+
+  return apiProject.targets.map((target) => {
+    const languageCode = target.language_code.toLowerCase()
+    const sseTarget = sseProgress?.targets[target.language_code]
+
+    // SSE 데이터가 있으면 우선 사용
+    const progress = sseTarget?.progress ?? target.progress ?? 0
+    const rawStatus = sseTarget?.status ?? target.status ?? 'pending'
+    const status = sseTarget ? normalizeSseStatus(rawStatus) : normalizeApiStatus(rawStatus)
+
+    return {
+      languageCode,
+      countryCode: getCountryCode(languageCode),
+      progress,
+      status,
+    }
+  })
+}
+
+/**
  * 프로젝트 데이터를 정규화
  * SSE 데이터가 있으면 우선 사용, 없으면 API 데이터 사용
  *
@@ -96,6 +134,9 @@ export function normalizeProjectData(
   apiProject: ProjectSummary,
   sseProgress?: ProjectProgress,
 ): NormalizedProjectData {
+  // 타겟별 진행도 정규화
+  const targets = normalizeTargets(apiProject, sseProgress)
+
   // SSE 데이터가 있는 경우
   if (sseProgress) {
     // SSE status는 'processing' 등으로 정규화되어 있을 수 있으므로
@@ -119,6 +160,7 @@ export function normalizeProjectData(
       progress: sseProgress.overallProgress,
       message: sseProgress.message,
       rawStatus: specificStage,
+      targets,
     }
   }
 
@@ -136,6 +178,7 @@ export function normalizeProjectData(
     progress: adjustedProgress,
     message: undefined,
     rawStatus: apiProject.status,
+    targets,
   }
 }
 

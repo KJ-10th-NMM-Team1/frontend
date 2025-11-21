@@ -1,28 +1,17 @@
-import { useMemo } from 'react'
-
 import { Link } from 'react-router-dom'
 
 import type { ProjectSummary } from '@/entities/project/types'
 import { useProjectProgressStore } from '@/features/projects/stores/useProjectProgressStore'
 import { routes } from '@/shared/config/routes'
-import { useUiStore } from '@/shared/store/useUiStore'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from '@/shared/ui/Dropdown'
 
 import { EpisodeCardActions } from './EpisodeCardActions'
 import { EpisodeCardInfo } from './EpisodeCardInfo'
+import { EpisodeCardTags } from './EpisodeCardTags'
 import { EpisodeCardTargets } from './EpisodeCardTargets'
 import { EpisodeCardThumbnail } from './EpisodeCardThumbnail'
 import { GRADIENTS } from './episodeCardConstants'
-import { getGradientIndex } from './episodeCardUtils'
+import { formatRegisteredAt, getGradientIndex } from './episodeCardUtils'
 import { getProgressMessage, getStatusFlags, normalizeProjectData } from './projectDataNormalizer'
-
-const EMPTY_TAGS: string[] = []
 
 type EpisodeCardProps = {
   project: ProjectSummary
@@ -41,44 +30,26 @@ export function EpisodeCard({ project, onExport, onDelete, onTagClick }: Episode
 
   // API와 SSE 데이터를 정규화하여 일관된 형태로 통합
   const normalizedData = normalizeProjectData(project, sseProgressData)
-
-  const progress = normalizedData.progress
   const progressMessage = getProgressMessage(normalizedData)
 
   // UI 표시용 플래그 계산
   const { isProcessing, isFailed, isCompleted } = getStatusFlags(normalizedData)
 
-  const workspaceSelectedTags = useUiStore((state) => state.workspaceSelectedTags)
-  const MAX_VISIBLE_TAGS = 3
-
-  const orderedTags = useMemo(() => {
-    const normalizedTags = project.tags ?? EMPTY_TAGS
-    const normalizedWorkspaceSelectedTags = workspaceSelectedTags ?? EMPTY_TAGS
-
-    const selected = normalizedWorkspaceSelectedTags.filter((t) => normalizedTags.includes(t))
-    const others = normalizedTags.filter((t) => !selected.includes(t))
-    return [...selected, ...others]
-  }, [project.tags, workspaceSelectedTags])
-  const visibleTags = orderedTags.slice(0, MAX_VISIBLE_TAGS)
-  const hiddenTags = orderedTags.slice(MAX_VISIBLE_TAGS)
-  const hiddenCount = Math.max(orderedTags.length - visibleTags.length, 0)
-  const selectedWorkspaceTags = workspaceSelectedTags ?? EMPTY_TAGS
   const episodeLink = routes.editor(project.id)
-
   return (
     <Link
       to={episodeLink}
-      className="focus-visible:outline-hidden group block overflow-hidden rounded-3xl border shadow-soft transition hover:-translate-y-0.5 hover:shadow-xl"
+      className="focus-visible:outline-hidden group flex h-full flex-col overflow-hidden rounded-3xl border shadow-soft transition hover:-translate-y-0.5 hover:shadow-xl"
     >
       {/* Thumbnail section */}
-      <div className="relative">
+      <div className="relative shrink-0">
         {showActions && isCompleted && (
           <EpisodeCardActions project={project} onExport={onExport} onDelete={onDelete} />
         )}
         <EpisodeCardThumbnail
           project={project}
           gradient={gradient}
-          progress={progress}
+          progress={normalizedData.progress}
           progressMessage={progressMessage}
           isProcessing={isProcessing}
           isFailed={isFailed}
@@ -87,79 +58,13 @@ export function EpisodeCard({ project, onExport, onDelete, onTagClick }: Episode
       </div>
 
       {/* Info section */}
-      <div className="space-y-2.5 p-4">
-        <EpisodeCardInfo
-          project={project}
-          isCompleted={isCompleted}
-          isFailed={isFailed}
-          isProcessing={isProcessing}
-        />
-        <EpisodeCardTargets project={project} sseProgressData={sseProgressData} />
-        <div className="relative mt-2 flex items-center gap-2">
-          <div className="relative flex min-w-0 flex-1">
-            <div className="flex flex-nowrap items-center gap-1 overflow-hidden whitespace-nowrap pr-10">
-              {visibleTags.map((tag) => (
-                <button
-                  key={tag}
-                  type="button"
-                  className={`flex-shrink-0 rounded-full px-3 py-1 text-[11px] font-medium transition hover:bg-surface-3 ${
-                    selectedWorkspaceTags.includes(tag)
-                      ? 'border border-primary/60 bg-primary/10 text-primary'
-                      : 'bg-surface-2 text-foreground'
-                  }`}
-                  onClick={(event) => {
-                    if (!onTagClick) return
-                    event.preventDefault()
-                    event.stopPropagation()
-                    onTagClick(tag)
-                  }}
-                >
-                  #{tag}
-                </button>
-              ))}
-            </div>
-            {hiddenCount > 0 ? (
-              <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-white via-white/70 to-transparent" />
-            ) : null}
-          </div>
-
-          {hiddenCount > 0 ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className="text-muted-foreground focus-visible:outline-hidden flex h-8 shrink-0 items-center gap-2 rounded-full bg-surface-2 px-3 text-[11px] font-semibold shadow-sm transition hover:bg-surface-3 focus-visible:ring-2 focus-visible:ring-primary/30"
-                  aria-label={`태그 ${hiddenCount}개 더 보기`}
-                  onClick={(event) => {
-                    event.preventDefault()
-                    event.stopPropagation()
-                  }}
-                >
-                  +{hiddenCount}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 rounded-2xl">
-                <DropdownMenuLabel className="text-[11px] uppercase tracking-[0.2em] text-muted">
-                  추가 태그
-                </DropdownMenuLabel>
-                {hiddenTags.map((tag) => (
-                  <DropdownMenuItem
-                    key={tag}
-                    className="text-[12px]"
-                    onClick={(event) => {
-                      if (!onTagClick) return
-                      event.preventDefault()
-                      event.stopPropagation()
-                      onTagClick(tag)
-                    }}
-                  >
-                    #{tag}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : null}
-        </div>
+      <div className="flex flex-1 flex-col gap-2.5 p-4">
+        <EpisodeCardInfo project={project} />
+        <EpisodeCardTargets targets={normalizedData.targets} />
+        <EpisodeCardTags tags={project.tags} onTagClick={onTagClick} />
+        <span className="mt-auto flex justify-end text-right text-xs leading-3 text-muted">
+          {formatRegisteredAt(project.created_at)}
+        </span>
       </div>
     </Link>
   )
