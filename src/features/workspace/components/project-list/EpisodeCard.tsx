@@ -26,13 +26,13 @@ const EMPTY_TAGS: string[] = []
 
 type EpisodeCardProps = {
   project: ProjectSummary
-  onEdit?: (project: ProjectSummary) => void
+  onExport?: (project: ProjectSummary) => void
   onDelete?: (project: ProjectSummary) => void
   onTagClick?: (tag: string) => void
 }
 
-export function EpisodeCard({ project, onEdit, onDelete, onTagClick }: EpisodeCardProps) {
-  const showActions = Boolean(onEdit || onDelete)
+export function EpisodeCard({ project, onExport, onDelete, onTagClick }: EpisodeCardProps) {
+  const showActions = Boolean(onExport || onDelete)
   const gradientIndex = getGradientIndex(project.id, GRADIENTS.length)
   const gradient = GRADIENTS[gradientIndex]
 
@@ -77,7 +77,7 @@ export function EpisodeCard({ project, onEdit, onDelete, onTagClick }: EpisodeCa
       {/* Thumbnail section */}
       <div className="relative">
         {showActions && isCompleted && (
-          <EpisodeCardActions project={project} onEdit={onEdit} onDelete={onDelete} />
+          <EpisodeCardActions project={project} onExport={onExport} onDelete={onDelete} />
         )}
         <EpisodeCardThumbnail
           project={project}

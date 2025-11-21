@@ -12,18 +12,18 @@ import {
 
 interface EpisodeCardActionsProps {
   project: ProjectSummary
-  onEdit?: (project: ProjectSummary) => void
+  onExport?: (project: ProjectSummary) => void
   onDelete?: (project: ProjectSummary) => void
 }
 
 /**
  * 에피소드 카드 액션 메뉴 (수정/삭제)
  */
-export function EpisodeCardActions({ project, onEdit, onDelete }: EpisodeCardActionsProps) {
-  const handleEditClick = (event: MouseEvent) => {
+export function EpisodeCardActions({ project, onExport, onDelete }: EpisodeCardActionsProps) {
+  const handleExportClick = (event: MouseEvent) => {
     event.preventDefault()
     event.stopPropagation()
-    onEdit?.(project)
+    onExport?.(project)
   }
 
   const handleDeleteClick = (event: MouseEvent) => {
@@ -49,7 +49,7 @@ export function EpisodeCardActions({ project, onEdit, onDelete }: EpisodeCardAct
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          {onEdit && <DropdownMenuItem onClick={handleEditClick}>수정</DropdownMenuItem>}
+          {onExport && <DropdownMenuItem onClick={handleExportClick}>내보내기</DropdownMenuItem>}
           {onDelete && (
             <DropdownMenuItem className="text-danger" onClick={handleDeleteClick}>
               삭제

@@ -169,7 +169,7 @@ export function AutoDubbingSettingsStep({
       onSubmit={(event) => {
         void submit(event)
       }}
-      className="space-y-3"
+      className="space-y-1"
       aria-busy={isProcessing}
     >
       <DialogTitle>2단계 — 자동 더빙 설정</DialogTitle>
@@ -178,12 +178,6 @@ export function AutoDubbingSettingsStep({
       </DialogDescription>
 
       <TitleField registration={register('title')} error={errors.title?.message} />
-
-      <TagsField
-        registration={register('tagsInput')}
-        previewTags={parsedTags}
-        error={errors.tagsInput?.message}
-      />
 
       <TargetLanguagesField
         selectedTargets={selectedTargets}
@@ -194,6 +188,12 @@ export function AutoDubbingSettingsStep({
         onAddTarget={handleAddTarget}
         onRemoveTarget={handleRemoveTarget}
         error={errors.targetLanguages?.message}
+      />
+
+      <TagsField
+        registration={register('tagsInput')}
+        previewTags={parsedTags}
+        error={errors.tagsInput?.message}
       />
 
       <AudioSpeakerCountField
@@ -222,7 +222,7 @@ export function AutoDubbingSettingsStep({
         </div>
       ) : null}
 
-      <div className="flex justify-between gap-3 pt-4">
+      <div className="flex justify-between gap-3 pt-2">
         <Button
           variant="ghost"
           type="button"

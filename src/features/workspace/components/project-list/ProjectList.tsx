@@ -4,12 +4,12 @@ import { EpisodeCard } from './EpisodeCard'
 
 type ProjectListProps = {
   projects: ProjectSummary[]
-  onEditProject?: (project: ProjectSummary) => void
-  onDeleteProject?: (project: ProjectSummary) => void
+  onExport?: (project: ProjectSummary) => void
+  onDelete?: (project: ProjectSummary) => void
   onTagClick?: (tag: string) => void
 }
 
-export function ProjectList({ projects, onEditProject, onDeleteProject, onTagClick }: ProjectListProps) {
+export function ProjectList({ projects, onExport, onDelete, onTagClick }: ProjectListProps) {
   if (projects.length === 0) {
     return (
       <div className="rounded-3xl border border-dashed border-surface-4 bg-surface-2 p-10 text-center">
@@ -24,8 +24,8 @@ export function ProjectList({ projects, onEditProject, onDeleteProject, onTagCli
         <EpisodeCard
           key={project.id}
           project={project}
-          onEdit={onEditProject}
-          onDelete={onDeleteProject}
+          onExport={onExport}
+          onDelete={onDelete}
           onTagClick={onTagClick}
         />
       ))}

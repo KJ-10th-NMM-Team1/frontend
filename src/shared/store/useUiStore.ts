@@ -30,6 +30,10 @@ export type UiState = {
   setWorkspaceSearchTerm: (value: string) => void
   workspaceSelectedTags: string[]
   setWorkspaceSelectedTags: (value: string[]) => void
+  workspaceSourceLanguageFilter: string | null
+  setWorkspaceSourceLanguageFilter: (value: string | null) => void
+  workspaceTargetLanguageFilter: string | null
+  setWorkspaceTargetLanguageFilter: (value: string | null) => void
 }
 
 export const useUiStore = create<UiState>()(
@@ -124,6 +128,24 @@ export const useUiStore = create<UiState>()(
         },
         false,
         { type: 'ui/setWorkspaceSelectedTags', payload: value },
+      ),
+    workspaceSourceLanguageFilter: null,
+    setWorkspaceSourceLanguageFilter: (value) =>
+      set(
+        {
+          workspaceSourceLanguageFilter: value,
+        },
+        false,
+        { type: 'ui/setWorkspaceSourceLanguageFilter', payload: value },
+      ),
+    workspaceTargetLanguageFilter: null,
+    setWorkspaceTargetLanguageFilter: (value) =>
+      set(
+        {
+          workspaceTargetLanguageFilter: value,
+        },
+        false,
+        { type: 'ui/setWorkspaceTargetLanguageFilter', payload: value },
       ),
   })),
 )
