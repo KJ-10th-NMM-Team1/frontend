@@ -248,14 +248,69 @@ export default function WorkspacePage() {
         <div className="space-y-6 pt-1">
           <div className="flex items-center gap-4">
             {/* Search Bar */}
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+            <div className="relative flex min-h-[2.5rem] flex-1 flex-wrap items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1 shadow-sm focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20">
+              <Search className="h-4 w-4 shrink-0 text-muted" />
+
               <Input
                 placeholder="프로젝트 검색..."
-                className="h-10 w-full rounded-full border border-gray-200 bg-white pl-9 pr-3 text-sm shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                className="h-8 min-w-[80px] flex-1 border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0"
                 value={workspaceSearchTerm}
                 onChange={(e) => setWorkspaceSearchTerm(e.target.value)}
               />
+
+              {/* Active Filters inside Search Bar */}
+              {workspaceSourceLanguageFilter && (
+                <span className="bg-gray-200 text-gray-700 inline-flex h-6 items-center gap-1 rounded-full px-2 text-xs font-medium whitespace-nowrap">
+                  원본: {languages.find((l) => l.language_code === workspaceSourceLanguageFilter)?.name_ko}
+                  <button
+                    type="button"
+                    onClick={() => setWorkspaceSourceLanguageFilter(null)}
+                    className="hover:text-gray-900 ml-0.5"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              {workspaceTargetLanguageFilter && (
+                <span className="bg-gray-200 text-gray-700 inline-flex h-6 items-center gap-1 rounded-full px-2 text-xs font-medium whitespace-nowrap">
+                  타겟: {languages.find((l) => l.language_code === workspaceTargetLanguageFilter)?.name_ko}
+                  <button
+                    type="button"
+                    onClick={() => setWorkspaceTargetLanguageFilter(null)}
+                    className="hover:text-gray-900 ml-0.5"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              {workspaceSelectedTags.map((tag) => (
+                <span
+                  key={tag}
+                  className="bg-primary/10 text-primary inline-flex h-6 items-center gap-1 rounded-full px-2 text-xs font-medium whitespace-nowrap"
+                >
+                  #{tag}
+                  <button
+                    type="button"
+                    onClick={() => toggleTagFilter(tag)}
+                    className="hover:text-primary/80 ml-0.5"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+
+              {(workspaceSelectedTags.length > 0 ||
+                workspaceSourceLanguageFilter ||
+                workspaceTargetLanguageFilter) && (
+                <button
+                  type="button"
+                  onClick={clearAllFilters}
+                  className="text-muted-foreground hover:text-foreground ml-1 rounded-full p-0.5 transition-colors"
+                  aria-label="필터 초기화"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
 
             {/* Filter Dropdown */}
@@ -421,60 +476,7 @@ export default function WorkspacePage() {
                 </DropdownMenu>
               </div>
 
-            {/* Active Filters */}
-            {(workspaceSelectedTags.length > 0 ||
-              workspaceSourceLanguageFilter ||
-              workspaceTargetLanguageFilter) && (
-              <div className="flex flex-wrap items-center gap-2">
-                {workspaceSourceLanguageFilter && (
-                  <span className="bg-primary/10 text-primary inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium">
-                    원본: {languages.find((l) => l.language_code === workspaceSourceLanguageFilter)?.name_ko}
-                    <button
-                      type="button"
-                      onClick={() => setWorkspaceSourceLanguageFilter(null)}
-                      className="hover:text-primary/80 ml-1"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </span>
-                )}
-                {workspaceTargetLanguageFilter && (
-                  <span className="bg-primary/10 text-primary inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium">
-                    타겟: {languages.find((l) => l.language_code === workspaceTargetLanguageFilter)?.name_ko}
-                    <button
-                      type="button"
-                      onClick={() => setWorkspaceTargetLanguageFilter(null)}
-                      className="hover:text-primary/80 ml-1"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </span>
-                )}
-                {workspaceSelectedTags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="bg-primary/10 text-primary inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
-                  >
-                    #{tag}
-                    <button
-                      type="button"
-                      onClick={() => toggleTagFilter(tag)}
-                      className="hover:text-primary/80 ml-1"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </span>
-                ))}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearAllFilters}
-                  className="h-6 px-2 text-xs text-gray-500 hover:text-gray-900"
-                >
-                  모두 지우기
-                </Button>
-              </div>
-            )}
+
             {isLoading ? (
               <div className="flex h-64 items-center justify-center">
                 <Spinner size="lg" />
