@@ -1,5 +1,7 @@
 import { apiClient } from '@/shared/api/client'
 
+import type { BatchSegmentTTSRegenerateRequest, BatchSegmentTTSRegenerateResponse } from './types'
+
 /**
  * TTS 재생성 요청 페이로드
  * - Fixed/Dynamic 모두 동일한 엔드포인트 사용
@@ -57,4 +59,53 @@ export async function regenerateSegmentTTS(
       json: requestBody,
     })
     .json<AudioGenerationResponse>()
+}
+
+/**
+ * 배치 TTS 재생성 요청 페이로드 (프론트엔드 친화적 camelCase)
+ */
+export type BatchRegenerateTTSPayload = {
+  projectId: string
+  segments: {
+    segmentId: string
+    translatedText: string
+    start: number
+    end: number
+  }[]
+  targetLang: string
+  mod: 'fixed' | 'dynamic'
+  voiceSampleId?: string
+}
+
+/**
+ * 여러 세그먼트 TTS 일괄 재생성 API 호출
+ * - 백엔드 워커 큐에 작업 추가 후 SSE로 완료 알림
+ *
+ * @param payload - 배치 TTS 재생성 요청 정보
+ * @returns API 응답 (워커 큐잉 확인)
+ */
+export async function batchRegenerateSegmentTTS(
+  payload: BatchRegenerateTTSPayload,
+): Promise<BatchSegmentTTSRegenerateResponse> {
+  const requestBody: BatchSegmentTTSRegenerateRequest = {
+    segments: payload.segments.map((seg) => ({
+      segment_id: seg.segmentId,
+      translated_text: seg.translatedText,
+      start: seg.start,
+      end: seg.end,
+    })),
+    target_lang: payload.targetLang,
+    mod: payload.mod,
+  }
+
+  // voiceSampleId가 있을 때만 포함
+  if (payload.voiceSampleId) {
+    requestBody.voice_sample_id = payload.voiceSampleId
+  }
+
+  return apiClient
+    .post(`api/projects/${payload.projectId}/segments/batch-regenerate-tts`, {
+      json: requestBody,
+    })
+    .json<BatchSegmentTTSRegenerateResponse>()
 }

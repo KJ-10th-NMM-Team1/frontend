@@ -1,13 +1,14 @@
 import { useState } from 'react'
 
-import { MoreVertical, Settings, Trash2 } from 'lucide-react'
+import { Loader2, MoreVertical, RefreshCw, Settings, Trash2 } from 'lucide-react'
 
+import { useTrackBatchRegenerate } from '@/features/editor/hooks/useTrackBatchRegenerate'
 import { useTracksStore } from '@/shared/store/useTracksStore'
-import { Button } from '@/shared/ui/Button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/ui/Dropdown'
 
@@ -23,6 +24,11 @@ export function TrackActionsMenu({ trackId, trackLabel, voiceSampleId }: TrackAc
   const [showVoiceSampleModal, setShowVoiceSampleModal] = useState(false)
   const updateTrack = useTracksStore((state) => state.updateTrack)
   const removeTrack = useTracksStore((state) => state.removeTrack)
+
+  const { handleBatchRegenerate, isPending } = useTrackBatchRegenerate({
+    trackId,
+    voiceSampleId,
+  })
 
   const handleVoiceSampleSelect = (selectedVoiceSampleId: string) => {
     updateTrack(trackId, { voiceSampleId: selectedVoiceSampleId })
@@ -45,7 +51,7 @@ export function TrackActionsMenu({ trackId, trackLabel, voiceSampleId }: TrackAc
         <button
           type="button"
           onClick={handleSettingsClick}
-          className="hover:bg-surface-3 text-muted hover:text-foreground flex h-7 w-7 items-center justify-center rounded-md transition-colors"
+          className="flex h-7 w-7 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface-3 hover:text-foreground"
           title="Voice Sample Settings"
         >
           <Settings className="h-3.5 w-3.5" />
@@ -56,13 +62,22 @@ export function TrackActionsMenu({ trackId, trackLabel, voiceSampleId }: TrackAc
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="hover:bg-surface-3 text-muted hover:text-foreground flex h-7 w-7 items-center justify-center rounded-md transition-colors"
+              className="flex h-7 w-7 items-center justify-center rounded-md text-muted transition-colors hover:bg-surface-3 hover:text-foreground"
               title="More options"
             >
               <MoreVertical className="h-3.5 w-3.5" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="min-w-[160px]">
+          <DropdownMenuContent align="end" className="min-w-[180px]">
+            <DropdownMenuItem onClick={handleBatchRegenerate} disabled={isPending}>
+              {isPending ? (
+                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-2 h-3.5 w-3.5" />
+              )}
+              <span className="text-xs">목소리 적용</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleDeleteTrack} className="text-danger">
               <Trash2 className="mr-2 h-3.5 w-3.5" />
               <span className="text-xs">Delete Speaker</span>

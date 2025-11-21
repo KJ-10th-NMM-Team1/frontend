@@ -66,3 +66,28 @@ export interface UpdateSegmentsResponse {
   message?: string
   updated_count: number
 }
+
+/**
+ * Batch TTS regeneration types
+ */
+
+export interface SegmentTTSItem {
+  segment_id: string
+  translated_text: string
+  start: number
+  end: number
+}
+
+export interface BatchSegmentTTSRegenerateRequest {
+  segments: SegmentTTSItem[]
+  target_lang: string
+  mod: 'fixed' | 'dynamic'
+  voice_sample_id?: string
+}
+
+export interface BatchSegmentTTSRegenerateResponse {
+  success: boolean
+  message: string
+  queued_count: number
+  segment_ids: string[]
+}
