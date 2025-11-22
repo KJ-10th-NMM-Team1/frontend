@@ -2,12 +2,14 @@ import type { ProjectSummary } from '@/entities/project/types'
 import { env } from '@/shared/config/env'
 
 import { formatDuration } from './episodeCardUtils'
+import type { NormalizedTarget } from './projectDataNormalizer'
 import { ProgressOverlay } from './ProgressOverlay'
 
 interface EpisodeCardThumbnailProps {
   project: ProjectSummary
   gradient: string
   progress: number
+  targets: NormalizedTarget[]
   progressMessage?: string
   isProcessing: boolean
   isFailed: boolean
@@ -21,6 +23,7 @@ export function EpisodeCardThumbnail({
   project,
   gradient,
   progress,
+  targets,
   progressMessage,
   // isProcessing,
   isFailed,
@@ -43,8 +46,8 @@ export function EpisodeCardThumbnail({
       {/* Progress overlay (완료되지 않은 경우에만 표시) */}
       {!isCompleted && (
         <ProgressOverlay
-          project={project}
           progress={progress}
+          targets={targets}
           message={progressMessage}
           isFailed={isFailed}
           isCompleted={isCompleted}

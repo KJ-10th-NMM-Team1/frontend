@@ -3,15 +3,13 @@ import { useState } from 'react'
 import { ChevronDown, X } from 'lucide-react'
 import ReactCountryFlag from 'react-country-flag'
 
-import type { ProjectSummary } from '@/entities/project/types'
 import { PROGRESS_STATUS_MESSAGES } from '@/features/projects/constants/notificationMessages'
-import { useProjectProgressStore } from '@/features/projects/stores/useProjectProgressStore'
 
-import { getCountryCode } from './episodeCardUtils'
+import type { NormalizedTarget } from './projectDataNormalizer'
 
 interface ProgressOverlayProps {
-  project: ProjectSummary
   progress: number
+  targets: NormalizedTarget[]
   message?: string
   isFailed?: boolean
   isCompleted?: boolean
@@ -26,16 +24,13 @@ interface ProgressOverlayProps {
  * - 완료시 오버레이 제거
  */
 export function ProgressOverlay({
-  project,
   progress,
+  targets,
   message,
   isFailed,
   isCompleted,
 }: ProgressOverlayProps) {
   const [showDetails, setShowDetails] = useState(false)
-
-  // SSE Store에서 타겟별 진행도 가져오기
-  const sseProgressData = useProjectProgressStore((state) => state.getProjectProgress(project.id))
 
   // 완료되면 오버레이 없음
   if (isCompleted) {
@@ -48,16 +43,6 @@ export function ProgressOverlay({
     : progress === 0
       ? PROGRESS_STATUS_MESSAGES.pending
       : PROGRESS_STATUS_MESSAGES.processing
-
-  // 타겟별 진행도 데이터 준비
-  const targetProgresses = project.targets.map((target) => {
-    const sseTarget = sseProgressData?.targets[target.language_code]
-    return {
-      language: target.language_code.toLowerCase(),
-      progress: sseTarget?.progress ?? target.progress,
-      countryCode: getCountryCode(target.language_code.toLowerCase()),
-    }
-  })
 
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-black/60">
@@ -96,12 +81,12 @@ export function ProgressOverlay({
             </div>
 
             {/* 타겟별 진행도 섹션 */}
-            {targetProgresses.length > 0 && (
+            {targets.length > 0 && (
               <div className="px-3 pt-3">
                 <div className="mb-2 text-[10px] font-medium text-white/50">언어별 진행도</div>
                 <div className="max-h-[120px] space-y-2 overflow-y-auto pb-3">
-                  {targetProgresses.map((target) => (
-                    <div key={target.language} className="flex items-center gap-2">
+                  {targets.map((target) => (
+                    <div key={target.languageCode} className="flex items-center gap-2">
                       <div className="h-5 w-5 flex-shrink-0 overflow-hidden rounded border border-white/20 bg-white/5">
                         <ReactCountryFlag
                           countryCode={target.countryCode}

@@ -1,3 +1,5 @@
+import { useMemo } from 'react'
+
 import { Link } from 'react-router-dom'
 
 import type { ProjectSummary } from '@/entities/project/types'
@@ -12,6 +14,7 @@ import { EpisodeCardThumbnail } from './EpisodeCardThumbnail'
 import { GRADIENTS } from './episodeCardConstants'
 import { formatRegisteredAt, getGradientIndex } from './episodeCardUtils'
 import { getProgressMessage, getStatusFlags, normalizeProjectData } from './projectDataNormalizer'
+import { useEpisodeCardData } from './useEpisodeCardData'
 
 type EpisodeCardProps = {
   project: ProjectSummary
@@ -29,11 +32,18 @@ export function EpisodeCard({ project, onExport, onDelete, onTagClick }: Episode
   const sseProgressData = useProjectProgressStore((state) => state.getProjectProgress(project.id))
 
   // API와 SSE 데이터를 정규화하여 일관된 형태로 통합
-  const normalizedData = normalizeProjectData(project, sseProgressData)
-  const progressMessage = getProgressMessage(normalizedData)
+  // useMemo로 불필요한 재생성 방지
+  const normalizedProgress = useMemo(
+    () => normalizeProjectData(project, sseProgressData),
+    [project, sseProgressData],
+  )
+
+  // 화면에 표시할 데이터 관리
+  const displayProgress = useEpisodeCardData(project.id, normalizedProgress)
+  const progressMessage = getProgressMessage(displayProgress)
 
   // UI 표시용 플래그 계산
-  const { isProcessing, isFailed, isCompleted } = getStatusFlags(normalizedData)
+  const { isProcessing, isFailed, isCompleted } = getStatusFlags(displayProgress)
 
   const episodeLink = routes.editor(project.id)
   return (
@@ -49,7 +59,8 @@ export function EpisodeCard({ project, onExport, onDelete, onTagClick }: Episode
         <EpisodeCardThumbnail
           project={project}
           gradient={gradient}
-          progress={normalizedData.progress}
+          progress={displayProgress.progress}
+          targets={displayProgress.targets}
           progressMessage={progressMessage}
           isProcessing={isProcessing}
           isFailed={isFailed}
@@ -60,7 +71,7 @@ export function EpisodeCard({ project, onExport, onDelete, onTagClick }: Episode
       {/* Info section */}
       <div className="flex flex-1 flex-col gap-2.5 p-4">
         <EpisodeCardInfo project={project} />
-        <EpisodeCardTargets targets={normalizedData.targets} />
+        <EpisodeCardTargets targets={displayProgress.targets} />
         <EpisodeCardTags tags={project.tags} onTagClick={onTagClick} />
         <span className="mt-auto flex justify-end text-right text-xs leading-3 text-muted">
           {formatRegisteredAt(project.created_at)}
