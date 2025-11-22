@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { cn } from '@/shared/lib/utils'
 
@@ -88,6 +88,11 @@ export function HomeAudioComparisonSection({
       })
   }
 
+  const waveColors = useMemo(
+    () => ['#8583fdff', '#60a5fa', '#74b0f5ff', '#a4f6fcff'],
+    [],
+  )
+
   return (
     // ★ 수정된 부분: <section> 대신 <WavyBackground>가 감싸줍니다.
     <WavyBackground
@@ -96,12 +101,7 @@ export function HomeAudioComparisonSection({
       // 2. 내부 컨텐츠의 최대 너비 설정 (기존 div className 역할)
       className="mx-auto max-w-7xl px-6"
       // 3. 파형 디자인 커스텀
-      colors={[
-        "#8583fdff", // 진한 파랑
-        "#60a5fa", // 중간 파랑
-        "#74b0f5ff", // 연한 파랑
-        "#a4f6fcff"  // 흰색
-      ]}
+      colors={waveColors}
       
       // 배경색 (파도 뒤에 깔리는 색)
       backgroundFill="white"
