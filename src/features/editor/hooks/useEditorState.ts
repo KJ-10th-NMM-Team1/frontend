@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 
 import type { Glossary } from '../../../entities/glossary/types'
 import type { Segment } from '../../../entities/segment/types'
@@ -60,5 +60,6 @@ export function useEditorState(projectId: string, languageCode: string) {
       }
     },
     enabled: Boolean(projectId && languageCode),
+    placeholderData: keepPreviousData,
   })
 }
