@@ -1,6 +1,5 @@
 import { useRef } from 'react'
-import { motion, useScroll, useTransform, MotionValue } from 'framer-motion'
-import { cn } from '@/shared/lib/utils'
+import { motion, useScroll, useTransform, type MotionValue } from 'framer-motion'
 import { EditorFeaturesBackground } from './EditorFeaturesBackground'
 
 // -----------------------------------------------------------------------------

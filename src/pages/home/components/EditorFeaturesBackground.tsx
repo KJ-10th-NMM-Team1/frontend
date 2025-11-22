@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { MotionValue } from 'framer-motion'
+import type { MotionValue } from 'framer-motion'
 
 interface EditorFeaturesBackgroundProps {
   scrollYProgress: MotionValue<number>

@@ -1,10 +1,8 @@
-import { useState, useRef, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
+
 import { cn } from '@/shared/lib/utils'
-
-import './audio-toggle.css'
-
-// ★ 중요: import 이름을 WavyBackground로 변경하세요
 import { WavyBackground } from './AudioWaveBackground'
+import './audio-toggle.css'
 
 export interface Speaker {
   id: string
@@ -59,8 +57,16 @@ export function HomeAudioComparisonSection({
         audioRef.current?.pause()
         setIsPlaying(false)
       } else {
-        audioRef.current?.play()
-        setIsPlaying(true)
+        const currentAudio = audioRef.current
+        if (currentAudio) {
+          void currentAudio
+            .play()
+            .then(() => setIsPlaying(true))
+            .catch((error) => {
+              console.error('Audio playback failed', error)
+              setIsPlaying(false)
+            })
+        }
       }
       return
     }
@@ -72,11 +78,13 @@ export function HomeAudioComparisonSection({
     audioRef.current = audio
     
     setActiveSpeakerId(speaker.id)
-    setIsPlaying(true)
-    audio.play().catch(err => {
-      console.error("Audio playback failed", err)
-      setIsPlaying(false)
-    })
+    void audio
+      .play()
+      .then(() => setIsPlaying(true))
+      .catch((error) => {
+        console.error('Audio playback failed', error)
+        setIsPlaying(false)
+      })
   }
 
   return (

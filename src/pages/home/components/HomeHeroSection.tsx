@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { Play, Pause } from 'lucide-react'
+import { Pause, Play } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { Button } from '@/shared/ui/Button'
+
 import { routes } from '@/shared/config/routes'
 import { trackEvent } from '@/shared/lib/analytics'
+import { Button } from '@/shared/ui/Button'
 
 type SampleLanguage = 'ko' | 'en'
 
