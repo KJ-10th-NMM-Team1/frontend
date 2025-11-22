@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+
 import { cn } from '@/shared/lib/utils'
+
 // 기존 WavyBackground 컴포넌트 경로는 유지합니다.
 import { WavyBackground } from './AudioWaveBackground'
 
