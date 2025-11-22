@@ -1,5 +1,7 @@
 import { useRef } from 'react'
+
 import { motion, useScroll, useTransform, type MotionValue } from 'framer-motion'
+
 import { EditorFeaturesBackground } from './EditorFeaturesBackground'
 
 // -----------------------------------------------------------------------------
