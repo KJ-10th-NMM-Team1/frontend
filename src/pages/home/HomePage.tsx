@@ -1,44 +1,146 @@
-import { useEffect, useState, useRef } from 'react'
-
-import { Play, Pause } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import { routes } from '../../shared/config/routes'
-import { trackEvent } from '../../shared/lib/analytics'
 import { useAuthStore } from '../../shared/store/useAuthStore'
-import { Button } from '../../shared/ui/Button'
-import { Card, CardDescription, CardHeader, CardTitle } from '../../shared/ui/Card'
 import WorkspacePage from '../workspace/WorkspacePage'
 
-type SampleLanguage = 'ko' | 'en'
+import { HomeHeroSection } from './components/HomeHeroSection'
+import { HomeAudioComparisonSection, type AudioScript } from './components/HomeAudioComparisonSection'
+import { HomeEditorFeaturesSection, type FeatureItem } from './components/HomeEditorFeaturesSection'
 
-const previewVideo = '/media/welcom/preview.mp4'
-const previewPoster = ''
-const samples = {
-  ko: { label: '한국어', audioSrc: '/media/welcom/korean_audio.mp3' },
-  en: { label: 'English', audioSrc: '/media/welcom/english_audio.mp3' },
+// ============================================================================
+// [콘텐츠 설정 영역]
+// 이 곳의 데이터를 수정하여 메인 페이지의 텍스트, 이미지, 오디오를 변경하세요.
+// ============================================================================
+
+const LANDING_CONTENT = {
+  // 1. 히어로 섹션 (영상 비교)
+  hero: {
+    title: (
+      <>
+        AI 기반 자동 더빙으로 <br className="hidden md:inline" />
+        글로벌 콘텐츠를 만드세요
+      </>
+    ),
+    description:
+      '원본 영상을 선택한 언어로 자동 더빙하여 전 세계 시청자에게 전달하세요. 자연스러운 음성과 정확한 타이밍의 영상을 만들어 드립니다.',
+    videoSrc: '/media/welcom/preview.mp4',
+    videoPoster: '', // 썸네일 이미지 경로 (옵션)
+    samples: {
+      ko: { label: '한국어', audioSrc: '/media/welcom/korean_audio.mp3' },
+      en: { label: 'English', audioSrc: '/media/welcom/english_audio.mp3' },
+    },
+  },
+
+  // 2. 오디오 비교 섹션
+  audioComparison: {
+    title: '다양한 AI 보이스를 경험해보세요',
+    description: '텍스트만 입력하면, 감정이 담긴 자연스러운 목소리로 변환해드립니다.',
+    scripts: [
+      {
+        language: 'ko',
+        label: '한국어',
+        text: '안녕하세요! 저희 AI 더빙 서비스를 이용해주셔서 감사합니다. 정말 자연스럽지 않나요?',
+        speakers: [
+          {
+            id: 'ko-1',
+            name: '민지',
+            language: 'ko',
+            avatarColor: '#FF6B6B',
+            audioSrc: '/media/welcom/korean_audio.mp3', // 실제 화자별 오디오 파일로 교체 필요
+          },
+          {
+            id: 'ko-2',
+            name: '준호',
+            language: 'ko',
+            avatarColor: '#4ECDC4',
+            audioSrc: '/media/welcom/korean_audio.mp3',
+          },
+          {
+            id: 'ko-3',
+            name: '서연',
+            language: 'ko',
+            avatarColor: '#FFE66D',
+            audioSrc: '/media/welcom/korean_audio.mp3',
+          },
+        ],
+      },
+      {
+        language: 'en',
+        label: 'English',
+        text: 'Hello! Thank you for using our AI dubbing service. Doesnt it sound incredibly natural?',
+        speakers: [
+          {
+            id: 'en-1',
+            name: 'Sarah',
+            language: 'en',
+            avatarColor: '#1A535C',
+            audioSrc: '/media/welcom/english_audio.mp3',
+          },
+          {
+            id: 'en-2',
+            name: 'James',
+            language: 'en',
+            avatarColor: '#FF6B6B',
+            audioSrc: '/media/welcom/english_audio.mp3',
+          },
+        ],
+      },
+      {
+        language: 'ja',
+        label: '日本語',
+        text: 'こんにちは！AI吹き替えサービスをご利用いただきありがとうございます。とても自然に聞こえませんか？',
+        speakers: [
+          {
+            id: 'ja-1',
+            name: 'Sakura',
+            language: 'ja',
+            avatarColor: '#FF9F1C',
+            audioSrc: '/media/welcom/korean_audio.mp3', // 임시 경로
+          },
+        ],
+      },
+    ] as AudioScript[],
+  },
+
+  // 3. 에디터 기능 소개 섹션
+  features: {
+    title: '강력한 웹 에디터',
+    description: '복잡한 설치 없이 웹에서 바로 수정하고 완성하세요',
+    items: [
+      {
+        title: '보컬 트랙 변경',
+        description:
+          '마음에 들지 않는 목소리가 있나요?\n클릭 한 번으로 다른 성우의 목소리로 변경할 수 있습니다',
+        mediaType: 'image', // 영상이 준비되면 'video'로 변경
+        mediaSrc: 'https://placehold.co/600x400/e2e8f0/475569?text=Vocal+Track+Change', // 데모 이미지/영상 경로
+      },
+      {
+        title: '재번역 및 재TTS',
+        description:
+          '번역이 어색하다면 텍스트를 직접 수정하세요\n수정된 텍스트에 맞춰 AI가 즉시 새로운 음성을 생성합니다',
+        mediaType: 'image',
+        mediaSrc: 'https://placehold.co/600x400/e2e8f0/475569?text=Re-translation',
+      },
+      {
+        title: '보이스 라이브러리',
+        description:
+          '수백 가지의 다양한 AI 보이스 중\n내 콘텐츠에 딱 맞는 목소리를 찾아보세요\n즐겨찾기에 추가하여 언제든 사용할 수 있습니다',
+        mediaType: 'image',
+        mediaSrc: 'https://placehold.co/600x400/e2e8f0/475569?text=Voice+Library',
+      },
+    ] as FeatureItem[],
+  },
 }
 
+// ============================================================================
 
 export default function HomePage() {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)  
-  const [language, setLanguage] = useState<SampleLanguage>('ko')
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const navigate = useNavigate()
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const audioRefs = useRef<Record<SampleLanguage, HTMLAudioElement> | null>(null)
-  if (!audioRefs.current) {
-    audioRefs.current = {
-      ko: Object.assign(new Audio(samples.ko.audioSrc), { loop: true, preload: 'auto' }),
-      en: Object.assign(new Audio(samples.en.audioSrc), { loop: true, preload: 'auto' }),
-    }
-  }
-  const currentAudioLangRef = useRef<SampleLanguage>('ko')
-  const [currentAudioLang, setCurrentAudioLang] = useState<SampleLanguage>('ko')
 
-  const getActiveAudio = () => audioRefs.current?.[currentAudioLangRef.current]
-  const [isPlaying, setIsPlaying] = useState(false)  
-
-  // 인증 시
+  // 인증 시 워크스페이스로 리다이렉트
   useEffect(() => {
     if (isAuthenticated) {
       navigate(routes.workspace, { replace: true })
@@ -49,161 +151,32 @@ export default function HomePage() {
     return <WorkspacePage />
   }
 
-  // 재생/일시정지 버튼에서 비디오/오디오 함께 제어
-  const playBoth = async (audioOverride?: HTMLAudioElement) => {
-    const video = videoRef.current
-    const audio = audioOverride ?? getActiveAudio()
-    if (!video || !audio) return
-    audio.currentTime = video.currentTime
-    await Promise.all([video.play(), audio.play()])
-    setIsPlaying(true)
-  }
-
-  const pauseBoth = () => {
-    videoRef.current?.pause()
-    getActiveAudio()?.pause()
-    setIsPlaying(false)
-  }
-  const togglePlay = () => {
-    if (isPlaying) {
-      pauseBoth()
-      return
-    }
-    void playBoth()
-  }
-
-  const updateAudioLanguage = (lang: SampleLanguage) => {
-    currentAudioLangRef.current = lang
-    setCurrentAudioLang(lang)
-  }
-
-  // 언어 전환 버튼
-  const switchLanguage = (lang: SampleLanguage) => {
-    if (!audioRefs.current || !videoRef.current || lang === currentAudioLang) return
-
-    const video = videoRef.current
-    const nextAudio = audioRefs.current[lang]
-    const prevAudio = getActiveAudio()   
-
-    prevAudio?.pause()
-    video.currentTime = 0
-    nextAudio.currentTime = 0
-
-    updateAudioLanguage(lang)
-    setLanguage(lang)
-
-    if (isPlaying) {
-    void playBoth(nextAudio)
-    }
-  }
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-16 px-6 py-16">
-      <section className="space-y-10 lg:space-y-14">
-        <div className="space-y-6 text-center">
-          <h1 className="text-foreground text-balance text-4xl font-semibold leading-tight md:text-5xl">
-            AI 기반 자동 더빙으로 <br className="hidden md:inline" />
-            글로벌 콘텐츠를 만드세요
-          </h1>
-          <p className="text-muted text-lg leading-relaxed">
-            원본 영상을 선택한 언어로 자동 더빙하여 전 세계 시청자에게 전달하세요. 자연스러운 음성과
-            정확한 타이밍의 영상을 만들어 드립니다.
-          </p>
-          <div className="flex flex-wrap justify-center gap-3">
-            <Button
-              size="lg"
-              onClick={() => trackEvent('sample_play', { lang: language })}
-              className="group px-6"
-            >
-              <Play className="h-4 w-4 transition-transform group-hover:scale-110" />
-              <Link to={routes.login}>Get started</Link>
-            </Button>
-          </div>
-        </div>
+    <div className="flex flex-col gap-16 pb-16 pt-8">
+      {/* 1. Hero Section (Video Comparison) */}
+      <div className="mx-auto w-full max-w-7xl px-6">
+        <HomeHeroSection
+          title={LANDING_CONTENT.hero.title}
+          description={LANDING_CONTENT.hero.description}
+          videoSrc={LANDING_CONTENT.hero.videoSrc}
+          videoPoster={LANDING_CONTENT.hero.videoPoster}
+          samples={LANDING_CONTENT.hero.samples}
+        />
+      </div>
 
-        <div className="relative mx-auto w-full max-w-4xl">
-          <div className="border-surface-3 bg-surface-1 relative w-full overflow-hidden rounded-3xl border shadow-soft">
-            <div
-              className={`absolute inset-0 bg-gradient-to-br opacity-80`}
-            />
-            <div className="relative">
-              <div className="pb-[56.25%]" />
-              <div className="absolute inset-0 flex flex-col justify-between p-6 text-white">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                </div>
-                <div className="relative mt-6 w-full overflow-hidden rounded-2xl bg-black/40">
-                <video
-                  ref={videoRef}
-                  muted
-                  playsInline
-                  className="h-full w-full object-cover"
-                  src={previewVideo}
-                  poster={previewPoster}
-                />
-                  <div className="absolute inset-x-0 bottom-6 z-20 flex justify-center gap-4">
-                  {(['ko', 'en'] as SampleLanguage[]).map((code) => (
-                    <button
-                      key={code}
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        void switchLanguage(code)
-                      }}
-                      className={`pointer-events-auto flex h-8 w-20 items-center justify-center rounded-full text-sm font-semibold transition
-                        ${code === language ? 'bg-white text-black shadow-lg' : 'bg-black/60 text-white/80'}`}
-                      aria-label={`${samples[code].label} 선택`}
-                    >
-                      {samples[code].label}
-                    </button>
-                  ))}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={togglePlay}
-                    className="absolute inset-0 z-10 flex items-center justify-center">
-                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-black/60 text-white shadow-lg transition hover:scale-105">
-                      {isPlaying ? <Pause size={36} /> : <Play size={36} />}
-                    </div>
-                  </button>    
-                </div>
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.35em] text-white/70">
-                      Preview Language
-                    </p>
-                  </div>                
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* 2. Audio Comparison Section */}
+      <HomeAudioComparisonSection
+        title={LANDING_CONTENT.audioComparison.title}
+        description={LANDING_CONTENT.audioComparison.description}
+        scripts={LANDING_CONTENT.audioComparison.scripts}
+      />
 
-      <section className="grid gap-6 md:grid-cols-3">
-        {[
-          {
-            title: 'AI 자동 더빙 (Upload & Dub)',
-            description:
-              '당신의 유튜브 링크를 붙여넣으세요. AI가 당신의 콘텐츠를 즉시 분석하여, 여러 타겟 언어(영어, 일본어 등)의 더빙 초안을 단 몇 분 만에 생성합니다.',
-          },
-          {
-            title: '간편한 더빙 에디터 (Edit & Apply)',
-            description:
-              '클릭 한 번으로 수정하세요. 웹 에디터에서 텍스트를 수정하고, 오디오트랙을 드래그하여 타이밍을 조절하세요.',
-          },
-          {
-            title: '즉시 글로벌 배포 (Publish & Grow)',
-            description:
-              '새로운 1억 명의 시청자를 만나보세요. 완성된 다국어 더빙 오디오 트랙을 다운로드하여, 당신의 유튜브 채널 다국어 오디오 기능에 바로 업로드하세요.',
-          },
-        ].map((item) => (
-          <Card key={item.title} className="border-surface-4 bg-surface-1/80 border p-6">
-            <CardHeader className="mb-3">
-              <CardTitle>{item.title}</CardTitle>
-            </CardHeader>
-            <CardDescription className="text-muted text-base leading-relaxed">
-              {item.description}
-            </CardDescription>
-          </Card>
-        ))}
-      </section>
+      {/* 3. Editor Features Section */}
+      <HomeEditorFeaturesSection
+        title={LANDING_CONTENT.features.title}
+        description={LANDING_CONTENT.features.description}
+        features={LANDING_CONTENT.features.items}
+      />
     </div>
   )
 }
