@@ -28,12 +28,12 @@ export function EditorFeaturesBackground({ scrollYProgress }: EditorFeaturesBack
     let scale = 1
     let width = window.innerWidth
     let height = window.innerHeight
-    
+
     const stars: { x: number; y: number; z: number }[] = []
-    
+
     // Velocity state
     const velocity = { x: 0, y: 0, tx: 0, ty: 0, z: 0.0005 }
-    
+
     // Initialize
     const generate = () => {
       for (let i = 0; i < STAR_COUNT; i++) {
@@ -113,18 +113,18 @@ export function EditorFeaturesBackground({ scrollYProgress }: EditorFeaturesBack
       const currentScroll = scrollYProgress.get()
       const scrollDelta = currentScroll - prevScrollRef.current
       prevScrollRef.current = currentScroll
-      
+
       // Dynamic Sensitivity
       // 초반(0.2 미만)에는 잔잔하게(100), 그 이후 영상 전환 시점부터는 폭발적으로(500)
-      const sensitivity = currentScroll < 0.2 ? 100 : 500
-      
+      const sensitivity = currentScroll < 0.2 ? 100 : 300
+
       // 스크롤 속도에 따라 Y축(위아래)으로 가속
       // scrollDelta가 양수(내림)면 위로 올라가는 효과(별들이 위로 지나감)를 위해 -Y 방향 가속
       const scrollSpeed = scrollDelta * sensitivity
-      
+
       // Apply scroll speed to velocity.ty (Target Velocity) for inertia
       // velocity.y가 아니라 velocity.ty에 더해줌으로써 0.96 감쇠 효과를 적용받아 더 부드럽고 길게 유지됨
-      velocity.ty -= scrollSpeed 
+      velocity.ty -= scrollSpeed
 
       stars.forEach((star) => {
         star.x += velocity.x * star.z
@@ -205,7 +205,7 @@ export function EditorFeaturesBackground({ scrollYProgress }: EditorFeaturesBack
       touchInput = false
       movePointer(event.clientX, event.clientY)
     }
-    
+
     const onTouchMove = (event: TouchEvent) => {
       touchInput = true
       movePointer(event.touches[0].clientX, event.touches[0].clientY)
@@ -233,15 +233,15 @@ export function EditorFeaturesBackground({ scrollYProgress }: EditorFeaturesBack
   }, [scrollYProgress])
 
   return (
-    <div 
-        className="absolute inset-0 pointer-events-none"
-        style={{
-            // backgroundColor: '#000', // Removed to allow parent background to show
-            backgroundImage: `
+    <div
+      className="pointer-events-none absolute inset-0"
+      style={{
+        // backgroundColor: '#000', // Removed to allow parent background to show
+        backgroundImage: `
                 radial-gradient(circle at top right, rgba(121, 68, 154, 0.13), transparent),
                 radial-gradient(circle at 20% 80%, rgba(41, 196, 255, 0.13), transparent)
-            `
-        }}
+            `,
+      }}
     >
       <canvas
         ref={canvasRef}
