@@ -26,12 +26,12 @@ export function ProgressOverlay({
 
   if (isCompleted) return null
 
-  const defaultStatusMessage = isFailed
-    ? PROGRESS_STATUS_MESSAGES.failed
-    : progress === 0
-      ? PROGRESS_STATUS_MESSAGES.pending
-      : PROGRESS_STATUS_MESSAGES.processing
-  const displayStatusMessage = message ?? defaultStatusMessage
+  // const defaultStatusMessage = isFailed
+  //   ? PROGRESS_STATUS_MESSAGES.failed
+  //   : progress === 0
+  //     ? PROGRESS_STATUS_MESSAGES.pending
+  //     : PROGRESS_STATUS_MESSAGES.processing
+  // const displayStatusMessage = message ?? defaultStatusMessage
 
   return (
     <>
@@ -90,7 +90,7 @@ export function ProgressOverlay({
                 <div
                   className={`whitespace-nowrap rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white/80 transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'hidden opacity-0'} `}
                 >
-                  {displayStatusMessage}
+                  {message}
                 </div>
               </div>
 
