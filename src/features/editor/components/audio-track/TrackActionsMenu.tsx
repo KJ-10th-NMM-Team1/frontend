@@ -75,7 +75,7 @@ export function TrackActionsMenu({ trackId, trackLabel, voiceSampleId }: TrackAc
               ) : (
                 <RefreshCw className="mr-2 h-3.5 w-3.5" />
               )}
-              <span className="text-xs">목소리 적용</span>
+              <span className="text-xs">보이스 적용</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleDeleteTrack} className="text-danger">

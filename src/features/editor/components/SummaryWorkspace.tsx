@@ -1,15 +1,11 @@
 import type { Segment } from '@/entities/segment/types'
 
-import { ProjectSummarySection } from './ProjectSummarySection'
+import { DubbingIssuesSection } from './DubbingIssuesSection'
 
 type SummaryWorkspaceProps = {
-  projectId: string
   segments: Segment[]
-  duration: number
 }
 
-export function SummaryWorkspace({ projectId, segments, duration }: SummaryWorkspaceProps) {
-  return (
-    <ProjectSummarySection projectId={projectId} segments={segments} duration={duration} />
-  )
+export function SummaryWorkspace({ segments }: SummaryWorkspaceProps) {
+  return <DubbingIssuesSection segments={segments} />
 }

@@ -197,9 +197,9 @@ export function DubbingIssuesSection({ segments }: DubbingIssuesSectionProps) {
   }
 
   return (
-    <section className="rounded border border-surface-3 bg-white p-4">
+    <section className="flex h-full flex-col rounded border border-surface-3 bg-white p-3">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground">더빙 이슈</h3>
+        <h3 className="text-sm font-semibold text-foreground">이슈 목록</h3>
         {issues.length > 0 && (
           <span className="text-sm text-muted">
             {issues.filter((i) => !i.resolved).length}/{issues.length}
@@ -212,7 +212,7 @@ export function DubbingIssuesSection({ segments }: DubbingIssuesSectionProps) {
           <p>현재 이슈가 없습니다.</p>
         </div>
       ) : (
-        <div className="scrollbar-thin max-h-64 space-y-2.5 overflow-y-auto pr-1">
+        <div className="scrollbar-thin flex-1 space-y-2.5 overflow-y-auto pr-1">
           {issues.map((issue) => (
             <div
               key={`${issue.segmentId}-${issue.id}`}

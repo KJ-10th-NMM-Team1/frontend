@@ -37,7 +37,7 @@ export function LanguageSelector({
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="inline-flex h-9 items-center gap-0.5 rounded-full p-1">
       {languageOptions.map((option) => {
         const isSelected = currentLanguageCode === option.code
 

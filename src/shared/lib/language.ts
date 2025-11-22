@@ -39,6 +39,7 @@ export const getLanguageName = (languageCode: string): string => {
     en: '영어',
     ko: '한국어',
     ja: '일본어',
+    jp: '일본어',
     zh: '중국어',
     es: '스페인어',
     fr: '프랑스어',

@@ -38,21 +38,40 @@ export function EditorHeader({
   onMuxClick,
 }: EditorHeaderProps) {
   return (
-    <div className="flex items-center justify-between border-b-[3px] border-neutral-200 px-2 py-2">
-      <div className="text-xs">
-        <Breadcrumbs
-          items={[
-            { label: '홈', href: '/' },
-            { label: `에피소드`, href: `/projects/${projectId}` },
-            { label: '에디터' },
-          ]}
-          className="opacity-50"
+    <div className="relative flex items-center justify-between border-b-[3px] px-4 py-2">
+      {/* Left: Breadcrumbs */}
+      <div className="flex items-center">
+        <div className="text-xs">
+          <Breadcrumbs
+            items={[
+              { label: '홈', href: '/' },
+              { label: `프로젝트`, href: `/projects/${projectId}` },
+              { label: '에디터' },
+            ]}
+            className="opacity-50"
+          />
+        </div>
+      </div>
+
+      {/* Center: Language Selector */}
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+        <LanguageSelector
+          projectId={projectId}
+          currentLanguageCode={selectedLanguage}
+          onLanguageChange={onLanguageChange}
         />
       </div>
+
+      {/* Right: Actions */}
       <div className="flex items-center gap-4">
         <SaveIndicator status={saveStatus} hasChanges={hasChanges} />
-        <div className="flex items-center gap-3">
-          <Button type="button" onClick={onExportClick} className="h-9">
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            size="sm"
+            onClick={onExportClick}
+            className="h-9 w-[100px] rounded-2xl px-4"
+          >
             <Upload className="mr-2 h-4 w-4" />
             내보내기
           </Button>
@@ -61,15 +80,11 @@ export function EditorHeader({
             size="sm"
             onClick={onMuxClick}
             disabled={isMuxing || isLoading}
+            className="h-9 w-[100px] rounded-2xl px-4"
           >
-            <Video className="h-4 w-4" />
+            <Video className="mr-2 h-4 w-4" />
             {isMuxing ? 'Mux 중...' : 'Mux'}
           </Button>
-          <LanguageSelector
-            projectId={projectId}
-            currentLanguageCode={selectedLanguage}
-            onLanguageChange={onLanguageChange}
-          />
         </div>
       </div>
     </div>

@@ -1,7 +1,6 @@
 import { Globe } from 'lucide-react'
 import ReactCountryFlag from 'react-country-flag'
 
-import { Button } from '@/shared/ui/Button'
 import { cn } from '@/shared/lib/utils'
 import { getCountryCode } from '@/features/workspace/components/project-list/episodeCardUtils'
 
@@ -23,54 +22,44 @@ export function LanguageButton({ option, isSelected, onClick }: LanguageButtonPr
   const countryCode = option.isOriginal ? '' : getCountryCode(option.code)
 
   return (
-    <Button
-      variant={isSelected ? 'primary' : 'ghost'}
-      size="sm"
+    <button
+      type="button"
       onClick={onClick}
       disabled={!option.isAvailable}
       className={cn(
-        'gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all',
-        option.isOriginal
-          ? // 원어 버튼 스타일
-            isSelected
-            ? 'shadow-sm'
-            : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
-          : // 번역 언어 버튼 스타일
-            cn(
-              'relative h-8 w-12 overflow-hidden border',
-              isSelected
-                ? 'border-blue-500 shadow-sm'
-                : 'border-gray-300 bg-white hover:border-gray-400',
-              !option.isAvailable && 'cursor-not-allowed opacity-50',
-            ),
+        'relative flex items-center justify-center gap-1.5 rounded-full px-3 text-xs font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50',
+        isSelected ? 'bg-primary text-white shadow-sm' : 'opacity-80 hover:bg-primary/20',
+        // 원어/타겟 구분 없이 통일된 크기감
+        'h-full min-w-[70px]',
       )}
       title={`${option.label}${option.isAvailable ? '' : ' (처리 중)'} ${option.progress}%`}
     >
       {option.isOriginal ? (
-        // 원어는 Globe 아이콘 + "원어" 텍스트로 표시
         <>
           <Globe className="h-3.5 w-3.5" />
           <span>원어</span>
         </>
       ) : (
-        // 번역 언어는 국기로 표시
-        <div
-          className={cn(
-            'flex h-full w-full items-center justify-center',
-            !option.isAvailable && 'grayscale',
-          )}
-        >
-          <ReactCountryFlag
-            countryCode={countryCode}
-            svg
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-            }}
-          />
-        </div>
+        <>
+          <div
+            className={cn(
+              'flex h-3.5 w-3.5 items-center justify-center overflow-hidden rounded-full',
+              !option.isAvailable && 'grayscale',
+            )}
+          >
+            <ReactCountryFlag
+              countryCode={countryCode}
+              svg
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+              }}
+            />
+          </div>
+          <span>{option.label}</span>
+        </>
       )}
-    </Button>
+    </button>
   )
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import { ChevronDown, X } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 import ReactCountryFlag from 'react-country-flag'
 
 import { PROGRESS_STATUS_MESSAGES } from '@/features/projects/constants/notificationMessages'
@@ -15,14 +15,6 @@ interface ProgressOverlayProps {
   isCompleted?: boolean
 }
 
-/**
- * 썸네일 진행도 오버레이 컴포넌트
- * - 가로 프로그레스바 (5px, 카드 40% 폭)
- * - 진행 메시지 표시
- * - 왼쪽 하단 상세보기 아이콘
- * - 실패시 X 마크
- * - 완료시 오버레이 제거
- */
 export function ProgressOverlay({
   progress,
   targets,
@@ -30,134 +22,135 @@ export function ProgressOverlay({
   isFailed,
   isCompleted,
 }: ProgressOverlayProps) {
-  const [showDetails, setShowDetails] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
 
-  // 완료되면 오버레이 없음
-  if (isCompleted) {
-    return null
-  }
+  if (isCompleted) return null
 
-  // 상태 기반 메시지 결정
-  const statusMessage = isFailed
+  const defaultStatusMessage = isFailed
     ? PROGRESS_STATUS_MESSAGES.failed
     : progress === 0
       ? PROGRESS_STATUS_MESSAGES.pending
       : PROGRESS_STATUS_MESSAGES.processing
+  const displayStatusMessage = message ?? defaultStatusMessage
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-      {/* 실패 상태 X 마크 */}
-      {isFailed && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <X className="h-16 w-16 text-white/20" strokeWidth={1.5} />
-        </div>
-      )}
+    <>
+      {/* 커스텀 스크롤바 스타일 (이 컴포넌트에만 적용) */}
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px; /* 스크롤바 너비 */
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent; /* 트랙 배경 투명 */
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.2); /* 핸들 색상 (반투명 흰색) */
+          border-radius: 10px; /* 둥근 핸들 */
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.3); /* 호버 시 약간 더 밝게 */
+        }
+      `}</style>
 
-      {/* 상세보기 패널 (hover시 전체 오버레이) */}
-      {showDetails ? (
+      <div
+        className={`absolute inset-0 z-10 flex flex-col transition-all duration-300 ${isHovered ? 'justify-start bg-black/90 pt-4 backdrop-blur-sm' : 'items-center justify-center bg-black/60'} `}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* 1. 헤더 섹션 (전체 진행도) */}
         <div
-          className="absolute inset-0 flex items-center justify-center bg-black/75 backdrop-blur-sm"
-          onMouseEnter={() => setShowDetails(true)}
-          onMouseLeave={() => setShowDetails(false)}
+          className={`flex w-full shrink-0 flex-col px-4 transition-all duration-300 ${isHovered ? 'mb-2 items-start' : 'scale-110 items-center'} `}
         >
-          <div className="w-[70%] max-w-[260px] rounded-lg bg-black/60 shadow-2xl backdrop-blur-md">
-            {/* 전체 진행도 섹션 */}
-            <div className="border-b border-white/10 p-3 pb-3">
-              <div className="text-center">
-                <div className="mb-2 text-[10px] font-medium text-white/50">전체 진행도</div>
-                <div className="mt-1 flex items-baseline justify-center gap-2">
-                  <div className="text-2xl font-bold text-white">{progress}%</div>
-                  <div className="text-[10px] text-white/60">{statusMessage}</div>
-                </div>
-              </div>
-              <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/20">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${
-                    isFailed ? 'bg-red-500/80' : 'bg-white/90'
-                  }`}
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
+          {isFailed ? (
+            <div className="flex flex-col items-center text-rose-500">
+              <AlertCircle className="mb-2 h-8 w-8" strokeWidth={1.5} />
+              <span className="text-sm font-bold">변환 실패</span>
             </div>
-
-            {/* 타겟별 진행도 섹션 */}
-            {targets.length > 0 && (
-              <div className="px-3 pt-3">
-                <div className="mb-2 text-[10px] font-medium text-white/50">언어별 진행도</div>
-                <div className="max-h-[120px] space-y-2 overflow-y-auto pb-3">
-                  {targets.map((target) => (
-                    <div key={target.languageCode} className="flex items-center gap-2">
-                      <div className="h-5 w-5 flex-shrink-0 overflow-hidden rounded border border-white/20 bg-white/5">
-                        <ReactCountryFlag
-                          countryCode={target.countryCode}
-                          svg
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            display: 'block',
-                          }}
-                        />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="h-1 w-full overflow-hidden rounded-full bg-white/15">
-                          <div
-                            className="h-full rounded-full bg-white/70 transition-all duration-300"
-                            style={{ width: `${target.progress}%` }}
-                          />
-                        </div>
-                      </div>
-                      <div className="w-8 flex-shrink-0 text-right text-[10px] font-medium text-white/70">
-                        {target.progress}%
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* 상세보기 버튼 (패널 위에 표시) */}
-          <button
-            className="absolute bottom-2 left-2 rounded bg-white/10 p-1 backdrop-blur transition-all hover:bg-white/20"
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-            }}
-          >
-            <ChevronDown className="h-5 w-5 rotate-180 text-white/80 transition-transform" />
-          </button>
-        </div>
-      ) : (
-        /* 기본 진행도 표시 (hover 안했을 때) */
-        <>
-          <div className="flex flex-col items-center">
-            <div className="mb-1 flex items-baseline gap-2 text-center">
-              <div className="text-lg font-bold text-white">{progress}%</div>
-              <div className="mt-1 text-[10px] text-white/70">{statusMessage}</div>
-            </div>
-            <div className="flex h-1 w-32 overflow-hidden rounded-full bg-white/30">
+          ) : (
+            <>
+              {/* 호버 시 레이아웃 변경 */}
               <div
-                className={`h-full rounded-full transition-all duration-300 ${
-                  isFailed ? 'bg-red-500' : 'bg-white'
-                }`}
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          </div>
+                className={`flex w-full items-center gap-3 transition-all duration-300 ${isHovered ? 'justify-between border-b border-white/10 pb-2' : 'flex-col justify-center'}`}
+              >
+                {/* 왼쪽: 퍼센트 및 라벨 */}
+                <div className="flex flex-col">
+                  {isHovered && (
+                    <span className="mb-0.5 text-[10px] font-medium text-gray-400">
+                      전체 진행도
+                    </span>
+                  )}
+                  <span
+                    className={`font-bold leading-none text-white ${isHovered ? 'text-2xl' : 'text-3xl drop-shadow-md'}`}
+                  >
+                    {progress}%
+                  </span>
+                </div>
 
-          {/* 상세보기 버튼 */}
-          <button
-            className="absolute bottom-2 left-2 rounded bg-white/10 p-1 backdrop-blur transition-all hover:bg-white/20"
-            onMouseEnter={() => setShowDetails(true)}
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-            }}
-          >
-            <ChevronDown className="h-5 w-5 text-white/80 transition-transform" />
-          </button>
-        </>
-      )}
-    </div>
+                {/* 오른쪽: 상태 뱃지 (호버 시에만 표시) */}
+                <div
+                  className={`whitespace-nowrap rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white/80 transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'hidden opacity-0'} `}
+                >
+                  {displayStatusMessage}
+                </div>
+              </div>
+
+              {/* 기본 프로그레스 바 (호버 아닐 때만 표시) */}
+              {!isHovered && (
+                <div className="mt-3 h-1 w-16 overflow-hidden rounded-full bg-white/30">
+                  <div
+                    className="h-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* 2. 상세 리스트 섹션 (커스텀 스크롤바 적용) */}
+        <div
+          className={`custom-scrollbar w-full overflow-y-auto px-4 transition-all duration-300 ease-out ${isHovered ? 'flex-1 translate-y-0 py-2 opacity-100' : 'h-0 translate-y-4 overflow-hidden opacity-0'} `}
+        >
+          {targets.length > 0 && (
+            <div className="flex flex-col gap-4">
+              {targets.map((target) => (
+                <div key={target.languageCode} className="group flex items-center gap-3">
+                  {/* 국기 아이콘: 원형 컨테이너 안에 온전한 국기 배치 */}
+                  <div className="relative flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/5">
+                    {/* ReactCountryFlag는 사각형이므로, 약간 작게 스타일링해서 중앙에 오게 함 */}
+                    <ReactCountryFlag
+                      countryCode={target.countryCode}
+                      svg
+                      style={{
+                        width: '1.2em', // 컨테이너보다 약간 작게
+                        height: '1.2em',
+                        borderRadius: '2px', // 국기 자체도 살짝 둥글게
+                        objectFit: 'contain',
+                      }}
+                    />
+                  </div>
+
+                  {/* 언어 코드 및 진행바 */}
+                  <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                    <div className="flex items-baseline justify-between text-[11px]">
+                      <span className="font-medium text-gray-300">
+                        {target.languageCode.toUpperCase()}
+                      </span>
+                      <span className="font-bold text-white/90">{target.progress}%</span>
+                    </div>
+                    <div className="h-1 w-full overflow-hidden rounded-full bg-white/10">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-white/70 to-white transition-all duration-300 group-hover:from-white/90 group-hover:to-white"
+                        style={{ width: `${target.progress}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </>
   )
 }
