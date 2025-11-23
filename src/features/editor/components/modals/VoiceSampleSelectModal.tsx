@@ -9,15 +9,15 @@ import {
   getPresetAvatarUrl,
   DEFAULT_AVATAR,
 } from '@/features/voice-samples/components/voiceSampleFieldUtils'
-import { Button } from '@/shared/ui/Button'
-import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/Dialog'
-import { Spinner } from '@/shared/ui/Spinner'
-import { Input } from '@/shared/ui/Input'
+import { useLanguage } from '@/features/languages/hooks/useLanguage'
 import { env } from '@/shared/config/env'
 import { routes } from '@/shared/config/routes'
 import { VOICE_CATEGORIES, VOICE_CATEGORY_MAP } from '@/shared/constants/voiceCategories'
-import { useLanguage } from '@/features/languages/hooks/useLanguage'
 import { cn } from '@/shared/lib/utils'
+import { Button } from '@/shared/ui/Button'
+import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/Dialog'
+import { Input } from '@/shared/ui/Input'
+import { Spinner } from '@/shared/ui/Spinner'
 
 import { VoiceSampleRowItem } from './VoiceSampleRowItem'
 
@@ -108,60 +108,60 @@ export function VoiceSampleSelectModal({
     }
   }, [myVoicesData, defaultVoicesData])
 
-  const filterSamples = (samples: VoiceSample[]) => {
-    let filtered = samples
+  const filterSamples = useCallback(
+    (samples: VoiceSample[]) => {
+      let filtered = samples
 
-    if (selectedLanguage) {
-      filtered = filtered.filter(
-        (sample) => sample.country?.toLowerCase() === selectedLanguage.toLowerCase(),
-      )
-    }
+      if (selectedLanguage) {
+        filtered = filtered.filter(
+          (sample) => sample.country?.toLowerCase() === selectedLanguage.toLowerCase(),
+        )
+      }
 
-    if (selectedCategory) {
-      filtered = filtered.filter((sample) => {
-        if (Array.isArray(sample.category)) {
-          return sample.category.includes(selectedCategory)
-        }
-        return sample.category === selectedCategory
-      })
-    }
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase()
-      filtered = filtered.filter((sample) => {
-        if (sample.name.toLowerCase().includes(query)) return true
-
-        if (sample.tags?.some((tag) => tag.toLowerCase().includes(query))) return true
-
-        if (sample.country?.toLowerCase().includes(query)) return true
-
-        if (sample.gender?.toLowerCase().includes(query)) return true
-
-        if (sample.category) {
-          const categories = Array.isArray(sample.category) ? sample.category : [sample.category]
-          for (const cat of categories) {
-            if (cat.toLowerCase().includes(query)) return true
-            const categoryLabel = VOICE_CATEGORY_MAP[cat as keyof typeof VOICE_CATEGORY_MAP]
-            if (categoryLabel && categoryLabel.toLowerCase().includes(query)) return true
+      if (selectedCategory) {
+        filtered = filtered.filter((sample) => {
+          if (Array.isArray(sample.category)) {
+            return sample.category.includes(selectedCategory)
           }
-        }
-        return false
-      })
-    }
-    return filtered
-  }
+          return sample.category === selectedCategory
+        })
+      }
 
-  const filteredMySamples = useMemo(
-    () => filterSamples(mySamples),
-    [mySamples, searchQuery, selectedLanguage, selectedCategory],
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase()
+        filtered = filtered.filter((sample) => {
+          if (sample.name.toLowerCase().includes(query)) return true
+
+          if (sample.tags?.some((tag) => tag.toLowerCase().includes(query))) return true
+
+          if (sample.country?.toLowerCase().includes(query)) return true
+
+          if (sample.gender?.toLowerCase().includes(query)) return true
+
+          if (sample.category) {
+            const categories = Array.isArray(sample.category) ? sample.category : [sample.category]
+            for (const cat of categories) {
+              if (cat.toLowerCase().includes(query)) return true
+              const categoryLabel = VOICE_CATEGORY_MAP[cat as keyof typeof VOICE_CATEGORY_MAP]
+              if (categoryLabel && categoryLabel.toLowerCase().includes(query)) return true
+            }
+          }
+          return false
+        })
+      }
+      return filtered
+    },
+    [searchQuery, selectedLanguage, selectedCategory],
   )
+
+  const filteredMySamples = useMemo(() => filterSamples(mySamples), [mySamples, filterSamples])
   const filteredLibrarySamples = useMemo(
     () => filterSamples(librarySamples),
-    [librarySamples, searchQuery, selectedLanguage, selectedCategory],
+    [librarySamples, filterSamples],
   )
   const filteredBuiltinSamples = useMemo(
     () => filterSamples(builtinSamples),
-    [builtinSamples, searchQuery, selectedLanguage, selectedCategory],
+    [builtinSamples, filterSamples],
   )
 
   const hasActiveFilters = Boolean(selectedLanguage || selectedCategory)
@@ -249,7 +249,8 @@ export function VoiceSampleSelectModal({
     if (!isLoading && (mySamples.length > 0 || librarySamples.length > 0)) {
       void loadAvatars()
     }
-  }, [mySamples.length, librarySamples.length, isLoading, resolveAvatarUrl, avatarUrls])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mySamples.length, librarySamples.length, isLoading, resolveAvatarUrl])
 
   const handlePlayPreview = async (e: React.MouseEvent, sample: VoiceSample) => {
     e.stopPropagation()
@@ -305,7 +306,9 @@ export function VoiceSampleSelectModal({
         isPlaying={isPlaying}
         canPlay={canPlay}
         onSelect={handleSelect}
-        onPlay={handlePlayPreview}
+        onPlay={(e, sample) => {
+          void handlePlayPreview(e, sample)
+        }}
       />
     )
   }

@@ -1,7 +1,9 @@
 import { Check } from 'lucide-react'
+
 import type { VoiceSample } from '@/entities/voice-sample/types'
-import { cn } from '@/shared/lib/utils'
 import { VOICE_CATEGORY_MAP } from '@/shared/constants/voiceCategories'
+import { cn } from '@/shared/lib/utils'
+
 import { VoiceSampleAvatar } from './VoiceSampleAvatar'
 import { VoiceSampleTags } from './VoiceSampleTags'
 
