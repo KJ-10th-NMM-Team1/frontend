@@ -84,7 +84,7 @@ export function UseCaseCarouselSection({ onCategoryClick }: UseCaseCarouselSecti
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 rounded-full text-foreground hover:border-outline hover:bg-surface-2"
+            className="hover:border-outline h-9 w-9 rounded-full text-foreground hover:bg-surface-2"
             onClick={handlePrev}
             disabled={VOICE_CATEGORIES.length <= cardsPerView}
           >
@@ -93,7 +93,7 @@ export function UseCaseCarouselSection({ onCategoryClick }: UseCaseCarouselSecti
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 rounded-full text-foreground hover:border-outline hover:bg-surface-2"
+            className="hover:border-outline h-9 w-9 rounded-full text-foreground hover:bg-surface-2"
             onClick={handleNext}
             disabled={VOICE_CATEGORIES.length <= cardsPerView}
           >
