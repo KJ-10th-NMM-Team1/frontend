@@ -193,7 +193,7 @@ export function StudioVideoPreview({
             <track kind="captions" />
           </video>
         ) : (
-          <div className="flex h-full items-center justify-center text-sm text-muted">
+          <div className="flex h-full items-center justify-center text-sm text-gray-400">
             비디오를 불러올 수 없습니다
           </div>
         )}
@@ -201,7 +201,7 @@ export function StudioVideoPreview({
 
       {/* 재생 진행도 프로그레스 바 */}
       <div
-        className="relative h-1 w-full cursor-pointer bg-surface-3"
+        className="relative h-[6px] w-full cursor-pointer bg-surface-3"
         onClick={handleProgressClick}
         role="progressbar"
         aria-valuenow={playhead}
@@ -209,7 +209,7 @@ export function StudioVideoPreview({
         aria-valuemax={duration}
       >
         <div
-          className="absolute left-0 top-0 h-full bg-primary transition-all duration-100"
+          className="absolute left-0 top-0 h-full bg-primary/80 transition-all duration-100"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -217,10 +217,9 @@ export function StudioVideoPreview({
       {/* 재생 컨트롤 바 */}
       <div className="flex items-center justify-between border-t border-surface-3 px-4 py-1">
         <Button
-          variant="ghost"
           size="sm"
           onClick={togglePlayPause}
-          className="hover:bg-surface-3"
+          className="border-0 bg-opacity-0 text-gray-500 hover:bg-surface-3"
           aria-label={isPlaying ? '일시정지' : '재생'}
         >
           {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
