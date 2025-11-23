@@ -81,9 +81,15 @@ export const WavyBackground = ({
 
     const renderFrame = () => {
       const { width, height } = dimensionsRef.current
-      ctx.fillStyle = backgroundFill ?? 'black'
       ctx.globalAlpha = waveOpacity ?? 0.5
-      ctx.fillRect(0, 0, width, height)
+
+      if (backgroundFill === 'transparent') {
+        ctx.clearRect(0, 0, width, height)
+      } else {
+        ctx.fillStyle = backgroundFill ?? 'black'
+        ctx.fillRect(0, 0, width, height)
+      }
+
       drawWave(5)
       animationIdRef.current = requestAnimationFrame(renderFrame)
     }

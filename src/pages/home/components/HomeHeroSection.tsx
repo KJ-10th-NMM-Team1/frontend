@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
-
 import { Pause, Play } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import { routes } from '@/shared/config/routes'
 import { trackEvent } from '@/shared/lib/analytics'
 import { Button } from '@/shared/ui/Button'
+import { TextReveal } from '@/shared/ui/TextReveal'
 
 type SampleLanguage = 'ko' | 'en'
 
 interface HomeHeroSectionProps {
-  title: React.ReactNode
+  title: string
   description: string
   videoSrc: string
   videoPoster?: string
@@ -105,15 +105,15 @@ export function HomeHeroSection({
   }
 
   return (
-    <section className="space-y-10 lg:space-y-14">
+    <section className="relative flex min-h-[90vh] flex-col justify-center space-y-10 pb-20 lg:space-y-14">
       <div className="space-y-6 text-center">
         <h1 className="text-foreground text-balance text-4xl font-semibold leading-tight md:text-5xl">
-          {title}
+          <TextReveal text={title} repeat={true} rootMargin="-10% 0px 0px 0px" />
         </h1>
-        <p className="text-muted-foreground text-lg leading-relaxed">
-          {description}
-        </p>
-        <div className="flex flex-wrap justify-center gap-3">
+        <div className="text-muted mx-auto max-w-2xl-foreground text-lg leading-relaxed">
+          <TextReveal text={description} delay={500} className="block" mode="line" repeat={true} rootMargin="-10% 0px 0px 0px" />
+        </div>
+        <div className="flex flex-wrap justify-center gap-3 pt-4">
           <Button
             size="lg"
             onClick={() => trackEvent('sample_play', { lang: language })}
@@ -125,7 +125,7 @@ export function HomeHeroSection({
         </div>
       </div>
 
-      <div className="relative mx-auto w-full max-w-4xl">
+      <div className="relative mx-auto w-full max-w-4xl px-4">
         <div className="border-surface-3 bg-surface-1 relative w-full overflow-hidden rounded-3xl border shadow-soft">
           <div className={`absolute inset-0 bg-gradient-to-br opacity-80`} />
           <div className="relative">
@@ -179,6 +179,9 @@ export function HomeHeroSection({
           </div>
         </div>
       </div>
+
+
     </section>
   )
 }
+

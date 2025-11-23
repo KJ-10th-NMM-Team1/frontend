@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { cn } from '@/shared/lib/utils'
+import { TextReveal } from '@/shared/ui/TextReveal'
 
 // 기존 WavyBackground 컴포넌트 경로는 유지합니다.
 import { WavyBackground } from './AudioWaveBackground'
@@ -120,9 +121,28 @@ export function HomeAudioComparisonSection({
   const [selectedLangIndex, setSelectedLangIndex] = useState(0)
   const [activeSpeakerId, setActiveSpeakerId] = useState<string | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [isInView, setIsInView] = useState(false)
 
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const sectionRef = useRef<HTMLDivElement>(null)
   const currentScript = scripts[selectedLangIndex]
+
+  // IntersectionObserver를 사용해 섹션이 뷰포트에 들어오고 나가는 것을 감지
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // 화면에 들어올 때 true, 나갈 때 false
+        setIsInView(entry.isIntersecting)
+      },
+      { threshold: 0.2 } // 20% 보이면 트리거
+    )
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current)
+    }
+
+    return () => observer.disconnect()
+  }, [])
 
   // 언어가 바뀌면 화자 선택 초기화 및 오디오 정지
   useEffect(() => {
@@ -178,10 +198,10 @@ export function HomeAudioComparisonSection({
 
   return (
     <WavyBackground
-      containerClassName="relative overflow-hidden py-16 lg:py-24 bg-white"
+      containerClassName="relative overflow-hidden py-20 lg:py-32 bg-background min-h-[80vh]"
       className="mx-auto max-w-7xl px-6"
       colors={waveColors}
-      backgroundFill="white"
+      backgroundFill="transparent"
       waveOpacity={0.3}
       blur={10}
       speed="fast"
@@ -192,9 +212,13 @@ export function HomeAudioComparisonSection({
       */}
       <style>{TOGGLE_STYLES}</style>
 
-      <div className="mb-12 text-center">
-        <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{title}</h2>
-        <p className="mt-4 text-lg text-gray-500">{description}</p>
+      <div ref={sectionRef} className="mb-12 text-center">
+        <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+          <TextReveal text={title} delay={0} mode="char" repeat={true} trigger={isInView} />
+        </h2>
+        <p className="mt-4 text-lg text-gray-500">
+          <TextReveal text={description} delay={200} mode="word" repeat={true} trigger={isInView} />
+        </p>
       </div>
 
       <div className="grid gap-12 lg:grid-cols-2 lg:gap-16">

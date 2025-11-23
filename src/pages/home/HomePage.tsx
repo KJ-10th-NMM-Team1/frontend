@@ -9,6 +9,7 @@ import WorkspacePage from '../workspace/WorkspacePage'
 import { HomeHeroSection } from './components/HomeHeroSection'
 import { HomeAudioComparisonSection, type AudioScript } from './components/HomeAudioComparisonSection'
 import { HomeEditorFeaturesSection, type FeatureItem } from './components/HomeEditorFeaturesSection'
+import { HomeCommunitySection } from './components/HomeCommunitySection'
 
 // ============================================================================
 // [콘텐츠 설정 영역]
@@ -18,14 +19,9 @@ import { HomeEditorFeaturesSection, type FeatureItem } from './components/HomeEd
 const LANDING_CONTENT = {
   // 1. 히어로 섹션 (영상 비교)
   hero: {
-    title: (
-      <>
-        AI 기반 자동 더빙으로 <br className="hidden md:inline" />
-        글로벌 콘텐츠를 만드세요
-      </>
-    ),
+    title: 'AI 기반 자동 더빙으로 글로벌 콘텐츠를 만드세요',
     description:
-      '원본 영상을 선택한 언어로 자동 더빙하여 전 세계 시청자에게 전달하세요. 자연스러운 음성과 정확한 타이밍의 영상을 만들어 드립니다.',
+      '원본 영상을 선택한 언어로 자동 더빙하여 전 세계 시청자에게 전달하세요.\n자연스러운 음성과 정확한 타이밍의 영상을 만들어 드립니다.',
     videoSrc: '/media/welcom/preview.mp4',
     videoPoster: '', // 썸네일 이미지 경로 (옵션)
     samples: {
@@ -133,6 +129,13 @@ const LANDING_CONTENT = {
       },
     ] as FeatureItem[],
   },
+
+  // 4. 커뮤니티 섹션
+  community: {
+    title: 'GITHUB REPOSITORY',
+    description: '나만무 AI 더빙 서비스의 오픈소스 코드를 확인하실 수 있습니다.',
+    githubUrl: 'https://github.com/KJ-10th-NMM-Team1',
+  },
 }
 
 // ============================================================================
@@ -177,6 +180,13 @@ export default function HomePage() {
         title={LANDING_CONTENT.features.title}
         description={LANDING_CONTENT.features.description}
         features={LANDING_CONTENT.features.items}
+      />
+
+      {/* 4. Community Section */}
+      <HomeCommunitySection
+        title={LANDING_CONTENT.community.title}
+        description={LANDING_CONTENT.community.description}
+        githubUrl={LANDING_CONTENT.community.githubUrl}
       />
     </div>
   )
