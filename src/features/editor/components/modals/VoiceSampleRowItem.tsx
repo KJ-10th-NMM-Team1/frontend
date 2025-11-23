@@ -55,7 +55,7 @@ export function VoiceSampleRowItem({
         'group/row relative mx-2 mb-1 flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 transition-all duration-200',
         isSelected
           ? 'border-primary/40 bg-primary/10 shadow-soft'
-          : 'border-transparent bg-surface-1 hover:border-outline/30 hover:bg-surface-2',
+          : 'hover:border-outline/30 border-transparent bg-surface-1 hover:bg-surface-2',
       )}
     >
       <VoiceSampleAvatar
@@ -79,11 +79,11 @@ export function VoiceSampleRowItem({
         </div>
 
         {sample.id === 'clone' ? (
-          <span className="text-xs text-muted-foreground">
+          <span className="text-muted-foreground text-xs">
             오디오 특성을 자동으로 감지하여 복제합니다.
           </span>
         ) : (
-          <p className="truncate text-xs text-muted-foreground group-hover/row:text-foreground">
+          <p className="text-muted-foreground truncate text-xs group-hover/row:text-foreground">
             {sample.description || '설명이 없는 음성입니다.'}
           </p>
         )}
