@@ -41,7 +41,7 @@ export function SegmentContextMenu({
 
       {/* Context Menu */}
       <div
-        className="fixed z-[101] min-w-[14rem] rounded-2xl border border-outline/30 bg-surface-1 p-2 shadow-soft"
+        className="fixed z-[101] min-w-[14rem] rounded-2xl bg-surface-1 p-2 shadow-soft"
         style={{
           left: `${position.x}px`,
           top: `${position.y}px`,
@@ -49,33 +49,37 @@ export function SegmentContextMenu({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+        <div className="text-muted-foreground px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em]">
           Generate Audio
         </div>
 
         <button
           onClick={onGenerateFixed}
           className={cn(
-            'flex w-full cursor-pointer select-none items-center gap-3 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2.5 text-left text-sm font-semibold text-foreground outline-none transition-colors hover:bg-primary/15',
+            'flex w-full cursor-pointer select-none items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-foreground outline-none transition-colors hover:bg-gray-100',
           )}
         >
           <Box className="h-4 w-4 text-primary" />
           <div className="flex flex-col gap-0.5">
             <span>Fixed Duration</span>
-            <span className="text-xs font-normal text-muted-foreground">지정 구간 발화 길이 유지</span>
+            <span className="text-muted-foreground text-xs font-normal">
+              지정 구간 발화 길이 유지
+            </span>
           </div>
         </button>
 
         <button
           onClick={onGenerateDynamic}
           className={cn(
-            'mt-1 flex w-full cursor-pointer select-none items-center gap-3 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2.5 text-left text-sm font-semibold text-foreground outline-none transition-colors hover:bg-primary/15',
+            'mt-1 flex w-full cursor-pointer select-none items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-foreground outline-none transition-colors hover:bg-gray-100',
           )}
         >
           <Wand2 className="h-4 w-4 text-primary" />
           <div className="flex flex-col gap-0.5">
             <span>Dynamic Duration</span>
-            <span className="text-xs font-normal text-muted-foreground">텍스트에 맞게 길이를 자동 조절</span>
+            <span className="text-muted-foreground text-xs font-normal">
+              텍스트에 맞게 길이를 자동 조절
+            </span>
           </div>
         </button>
       </div>
