@@ -32,7 +32,6 @@ import { VoiceSearchBar } from './components/VoiceSearchBar'
 import type { VoiceFilters } from './hooks/useVoiceLibraryFilters'
 import { VoiceFiltersModal } from './components/VoiceFiltersModal'
 import { useVoiceLibraryFilters } from './hooks/useVoiceLibraryFilters'
-import { CharacterVoicesSection } from './sections/CharacterVoicesSection'
 import { TrendingVoicesSection } from './sections/TrendingVoicesSection'
 import { UseCaseCarouselSection } from './sections/UseCaseCarouselSection'
 import { VoiceListSection } from './sections/VoiceListSection'
@@ -463,14 +462,6 @@ export default function VoiceLibraryPage() {
       .slice(0, 6)
   }, [sortedSamples])
 
-  // Character voices (캐릭터 보이스) - 캐릭터 카테고리로 명확히 필터링
-  const characterVoices = useMemo(() => {
-    return sortedSamples
-      .filter((sample) => sample.category?.includes('character'))
-      .sort((a, b) => (b.addedCount ?? 0) - (a.addedCount ?? 0))
-      .slice(0, 6)
-  }, [sortedSamples])
-
   // Add to my voices 핸들러 (크레딧 차감 모달)
   const handleRequestAddToMyVoices = useCallback(
     (sample: VoiceSample) => {
@@ -781,22 +772,26 @@ export default function VoiceLibraryPage() {
           </div>
         )}
 
-        {/* Character voices 섹션 */}
+        {/* 모든 목소리 섹션 */}
         {tab === 'library' &&
-          characterVoices.length > 0 &&
+          sortedSamples.length > 0 &&
           !selectedCategory &&
           !normalizedSearch &&
           !hasFilters && (
-            <CharacterVoicesSection
-              voices={characterVoices}
+            <VoiceListSection
+              title="모든 목소리"
+              samples={sortedSamples}
+              isLoading={voiceQuery.isLoading}
               onPlay={handlePlaySample}
               playingSampleId={playingSampleId}
               onAddToMyVoices={handleRequestAddToMyVoices}
               onRemoveFromMyVoices={handleRemoveFromMyVoices}
               addingToMyVoices={addingToMyVoices}
               removingFromMyVoices={removingFromMyVoices}
-              showTitle={!search.trim()}
-              currentUserId={currentUser?._id}
+              showActions={false}
+              onEdit={undefined}
+              onDelete={undefined}
+              deletingId={null}
             />
           )}
 

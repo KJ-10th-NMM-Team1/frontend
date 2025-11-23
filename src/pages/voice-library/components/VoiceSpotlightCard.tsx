@@ -13,7 +13,10 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui/Dropdown'
 import { Spinner } from '@/shared/ui/Spinner'
-import { DEFAULT_AVATAR, getPresetAvatarUrl } from '@/features/voice-samples/components/voiceSampleFieldUtils'
+import {
+  DEFAULT_AVATAR,
+  getPresetAvatarUrl,
+} from '@/features/voice-samples/components/voiceSampleFieldUtils'
 
 const COUNTRY_DISPLAY_MAP: Record<string, { code: string; label: string }> = {
   ko: { code: 'KR', label: '한국어' },
@@ -115,9 +118,7 @@ export function VoiceSpotlightCard({
   }
   const licenseBadgeLabel = sample.canCommercialUse === false ? '비상업 전용' : '상업 사용 가능'
   const licenseBadgeClass =
-    sample.canCommercialUse === false
-      ? 'bg-warning/20 text-warning'
-      : 'bg-primary/10 text-primary'
+    sample.canCommercialUse === false ? 'bg-warning/20 text-warning' : 'bg-primary/10 text-primary'
 
   /* 🔹 일레븐랩스 스타일: 리스트 row 용 */
   if (isTableRow) {
@@ -159,7 +160,7 @@ export function VoiceSpotlightCard({
         </div>
 
         {/* 2열: Language */}
-        <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
+        <div className="text-muted-foreground flex items-center gap-2 text-[13px]">
           {countryCode && (
             <ReactCountryFlag
               countryCode={countryCode}
@@ -173,21 +174,21 @@ export function VoiceSpotlightCard({
         </div>
 
         {/* 3열: 카테고리 */}
-        <div className="min-w-0 text-[13px] text-muted-foreground">
+        <div className="text-muted-foreground min-w-0 text-[13px]">
           {categoryText ? (
             <span className="block truncate" title={categoryText}>
               {categoryText}
             </span>
           ) : (
-            <span className="text-[11px] text-muted-foreground">카테고리 없음</span>
+            <span className="text-muted-foreground text-[11px]">카테고리 없음</span>
           )}
         </div>
 
         {/* 4열: 태그 */}
-        <div className="flex max-h-10 flex-wrap items-center gap-2 overflow-hidden text-[12px] text-muted-foreground">
+        <div className="text-muted-foreground flex max-h-10 flex-wrap items-center gap-2 overflow-hidden text-[12px]">
           <span
             className={cn(
-              'rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap',
+              'whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold',
               licenseBadgeClass,
             )}
           >
@@ -197,18 +198,18 @@ export function VoiceSpotlightCard({
             sample.tags.slice(0, 4).map((tag) => (
               <span
                 key={tag}
-                className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] text-foreground whitespace-nowrap"
+                className="whitespace-nowrap rounded-full bg-surface-2 px-2 py-0.5 text-[11px] text-foreground"
               >
                 #{tag}
               </span>
             ))
           ) : (
-            <span className="text-[11px] text-muted-foreground">태그 없음</span>
+            <span className="text-muted-foreground text-[11px]">태그 없음</span>
           )}
         </div>
 
         {/* 5열: 사용 수 */}
-        <div className="text-right text-[12px] text-muted-foreground">
+        <div className="text-muted-foreground text-right text-[12px]">
           {`${formatUserCount(sample.addedCount)} 사용`}
         </div>
 
@@ -265,14 +266,17 @@ export function VoiceSpotlightCard({
                 <button
                   type="button"
                   className="rounded-full p-1 text-muted transition-colors hover:bg-surface-2 hover:text-foreground"
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                  }}
                   disabled={isDeleting}
                   title="더보기"
                 >
                   <MoreVertical className="h-4 w-4" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                 {onEdit && (
                   <DropdownMenuItem
                     onClick={(e) => {
@@ -300,11 +304,15 @@ export function VoiceSpotlightCard({
           ) : (
             <button
               type="button"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-2 text-muted-foreground shadow-inner transition hover:bg-surface-3 hover:text-foreground"
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </button>
-            )}
+              onClick={(e) => {
+                e.stopPropagation()
+                e.preventDefault()
+              }}
+              className="text-muted-foreground flex h-9 w-9 items-center justify-center rounded-full bg-surface-2 shadow-inner transition hover:bg-surface-3 hover:text-foreground"
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </button>
+          )}
         </div>
       </div>
     )
@@ -318,27 +326,27 @@ export function VoiceSpotlightCard({
         onPlay(sample)
       }}
     >
-        <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-purple-400 via-pink-400 to-blue-400">
-          <img
-            src={resolvedAvatar ?? DEFAULT_AVATAR}
-            onError={(event) => {
-              event.currentTarget.src = DEFAULT_AVATAR
-            }}
-            alt={sample.name}
-            className="h-full w-full object-cover"
-          />
-          {isProcessing ? (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-              <Spinner size="sm" />
-            </div>
-          ) : null}
-        </div>
+      <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-purple-400 via-pink-400 to-blue-400">
+        <img
+          src={resolvedAvatar ?? DEFAULT_AVATAR}
+          onError={(event) => {
+            event.currentTarget.src = DEFAULT_AVATAR
+          }}
+          alt={sample.name}
+          className="h-full w-full object-cover"
+        />
+        {isProcessing ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+            <Spinner size="sm" />
+          </div>
+        ) : null}
+      </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <h3 className="text-base font-semibold">{sample.name}</h3>
             {sample.description && (
-              <p className="line-clamp-1 text-sm font-medium text-muted-foreground">
+              <p className="text-muted-foreground line-clamp-1 text-sm font-medium">
                 {sample.description}
               </p>
             )}
