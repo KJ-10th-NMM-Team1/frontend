@@ -190,7 +190,7 @@ export function TranslationSummarySection({
   return (
     <>
       <div className="flex h-full flex-col">
-        <div className="scrollbar-thin flex-1 space-y-2 overflow-y-auto rounded-2xl border border-outline/20 bg-surface-1 p-4 shadow-soft">
+        <div className="scrollbar-thin flex-1 space-y-2 overflow-y-auto bg-surface-1 p-3 shadow-soft">
           {allSegments.map((segment) => {
             const isActive = activeSegmentId === segment.id
             const isTranslating = translatingSegments.has(segment.id)
@@ -205,7 +205,7 @@ export function TranslationSummarySection({
                 className={`group flex items-start gap-2 rounded-lg border px-3 py-2 transition ${
                   isActive
                     ? 'border-primary/60 bg-primary/5 shadow-soft'
-                    : 'border-transparent hover:border-outline/30 hover:bg-surface-2'
+                    : 'hover:border-outline/30 border-transparent hover:bg-surface-2'
                 }`}
               >
                 <div className="flex-1">
@@ -219,7 +219,7 @@ export function TranslationSummarySection({
 
                   {/* 번역 텍스트 */}
                   <div className="relative flex items-center gap-1.5">
-                    <span className="text-sm text-muted-foreground">→</span>
+                    <span className="text-muted-foreground text-sm">→</span>
                     <input
                       className="flex-1 border-0 bg-transparent px-0 py-0 text-sm font-medium text-primary focus:outline-none disabled:opacity-50"
                       value={segment.target_text || ''}

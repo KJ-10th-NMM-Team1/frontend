@@ -55,10 +55,10 @@ export function useSaveSegments({ projectId, languageCode }: UseSaveSegmentsOpti
       createVersion(projectId, languageCode, currentSegments, '저장됨')
 
       setSaveStatus('saved')
-      showToast({
-        title: '저장 완료',
-        description: `${data.updated_count}개의 세그먼트가 저장되었습니다.`,
-      })
+      // showToast({
+      //   title: '저장 완료',
+      //   description: `${data.updated_count}개의 세그먼트가 저장되었습니다.`,
+      // })
 
       // Invalidate editor state query to refetch latest data on next page visit
       // This ensures that cached data is updated with the saved changes

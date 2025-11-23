@@ -21,14 +21,14 @@ const STATIC_TRACKS: TrackRow[] = [
   {
     id: 'track-original',
     label: '원본트랙',
-    color: '#725572', // tertiary tone for original track
+    color: '#b5b5b5', // tertiary tone for original track
     type: 'waveform',
     size: 'small',
   },
   {
     id: 'track-fx',
     label: '배경음&효과음',
-    color: '#9CA3AF', // muted gray for less emphasis
+    color: '#ccdcff', // muted gray for less emphasis
     type: 'waveform',
     size: 'small',
   },

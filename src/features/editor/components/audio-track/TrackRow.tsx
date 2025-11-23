@@ -54,13 +54,13 @@ export const TrackRow = memo(
         if (track.id === 'track-original') {
           return {
             background: undefined,
-            className: 'rounded-xl border border-outline/40 bg-surface-2 shadow-inner',
+            className: 'rounded-xl border border-outline/20 bg-surface-2 shadow-inner',
           }
         }
         if (track.id === 'track-fx') {
           return {
             background: undefined,
-            className: 'rounded-xl border border-outline/40 bg-surface-1 shadow-inner',
+            className: 'rounded-xl border border-outline/20 bg-surface-1 shadow-inner',
           }
         }
       }
@@ -76,7 +76,7 @@ export const TrackRow = memo(
     return (
       <div
         ref={ref}
-        className={`relative overflow-visible border-b border-outline/20 ${trackStyle.className} ${track.type === 'waveform' ? 'px-2 py-2' : 'px-4 py-3'}`}
+        className={`border-outline/20 relative overflow-visible border-b ${trackStyle.className} ${track.type === 'waveform' ? 'px-2 py-2' : 'px-4 py-3'}`}
         style={{
           background: trackStyle.background,
           height: `${height}px`,
@@ -108,7 +108,7 @@ export const TrackRow = memo(
             ))}
           </>
         ) : (
-          <div className="text-muted-foreground flex h-full items-center justify-center rounded-xl border border-dashed border-outline/40 text-xs">
+          <div className="text-muted-foreground border-outline/20 flex h-full items-center justify-center rounded-xl border border-dashed text-xs">
             FX Placeholder
           </div>
         )}

@@ -67,9 +67,9 @@ export function AudioTrackWorkspace({
 
         {/* 인라인 로딩 인디케이터 - 타임라인을 언마운트하지 않고 상태만 표시 */}
         {!isInitialLoadComplete && loadingProgress.totalCount > 0 && (
-          <div className="flex items-center gap-2 border-b border-outline/40 bg-surface-2 px-4 py-2">
+          <div className="border-outline/20 flex items-center gap-2 border-b bg-surface-2 px-4 py-2">
             <Spinner size="sm" />
-            <span className="text-xs text-muted-foreground">
+            <span className="text-muted-foreground text-xs">
               오디오 세그먼트 로딩 중... ({loadingProgress.readyCount}/{loadingProgress.totalCount})
             </span>
             <div className="ml-2 h-1.5 flex-1 overflow-hidden rounded-full bg-surface-3">
@@ -86,7 +86,7 @@ export function AudioTrackWorkspace({
         {/* Timeline 영역 - 스크롤 가능 */}
         <div className="timeline-scroll-container grid flex-1 overflow-auto lg:grid-cols-[220px,1fr]">
           {/* Sidebar */}
-          <div className="sticky left-0 z-40 hidden border-r border-outline/40 bg-surface-1 lg:block">
+          <div className="border-outline/80 sticky left-0 z-40 hidden border-r bg-surface-1 lg:block">
             <AudioTrackSidebar trackRows={trackRows} getTrackRowHeight={getTrackRowHeight} />
           </div>
 

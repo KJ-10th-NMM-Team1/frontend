@@ -12,7 +12,6 @@ import { trackEvent } from '@/shared/lib/analytics'
 import { apiGet } from '@/shared/api/client'
 import { Button } from '@/shared/ui/Button'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/shared/ui/Dialog'
-import { Spinner } from '@/shared/ui/Spinner'
 
 const languageCountryMap: Record<string, string> = {
   en: 'US',
@@ -37,9 +36,18 @@ type ExportDialogProps = {
   onOpenChange: (open: boolean) => void
   projectId: string
   languageCode: string
+  onMux: () => Promise<void>
+  isMuxing: boolean
 }
 
-export function ExportDialog({ open, onOpenChange, projectId, languageCode }: ExportDialogProps) {
+export function ExportDialog({
+  open,
+  onOpenChange,
+  projectId,
+  languageCode,
+  onMux,
+  isMuxing,
+}: ExportDialogProps) {
   const { data: project } = useProject(projectId)
   const { data: assets = [], isLoading: assetsLoading } = useAssets(projectId, languageCode)
   const { data: youtubeStatus } = useYoutubeStatus()
@@ -54,12 +62,15 @@ export function ExportDialog({ open, onOpenChange, projectId, languageCode }: Ex
       title={countryCode}
     />
   )
-  const [selectedType, setSelectedType] = useState<'preview_video' | 'subtitle_srt' | 'dubbed_audio'>(
-    'preview_video',
-  )
+  const [selectedType, setSelectedType] = useState<
+    'preview_video' | 'subtitle_srt' | 'dubbed_audio'
+  >('preview_video')
   const canPublish = youtubeStatus?.connected && Boolean(projectId)
 
   const handleDownload = async (asset: AssetEntry) => {
+    // Mux를 먼저 실행
+    await onMux()
+
     trackEvent('asset_download', {
       lang: languageCode,
       type: asset.asset_type,
@@ -73,7 +84,10 @@ export function ExportDialog({ open, onOpenChange, projectId, languageCode }: Ex
     }
   }
 
-  const handlePublishClick = (asset: AssetEntry) => {
+  const handlePublishClick = async (asset: AssetEntry) => {
+    // Mux를 먼저 실행
+    await onMux()
+
     trackEvent('asset_publish_youtube_click', {
       assetId: asset.asset_id,
       lang: languageCode,
@@ -103,7 +117,7 @@ export function ExportDialog({ open, onOpenChange, projectId, languageCode }: Ex
             <DialogDescription>
               더빙 영상 또는 자막을 다운로드하거나 YouTube로 업로드할 수 있습니다.
             </DialogDescription>
-            <div className="bg-surface-2 rounded-3xl p-3">
+            <div className="rounded-3xl bg-surface-2 p-3">
               <div className="grid gap-3 sm:grid-cols-3">
                 {[
                   { type: 'preview_video' as const, label: 'Video', Icon: Play },
@@ -116,14 +130,16 @@ export function ExportDialog({ open, onOpenChange, projectId, languageCode }: Ex
                     <button
                       key={type}
                       type="button"
-                      className={`border rounded-2xl px-4 py-5 text-center text-sm font-semibold transition ${
+                      className={`rounded-2xl border px-4 py-5 text-center text-sm font-semibold transition ${
                         isActive
                           ? 'border-primary bg-primary/5 text-primary'
                           : 'border-surface-3 text-foreground hover:border-primary/50'
                       }`}
                       onClick={() => setSelectedType(type)}
                     >
-                      <Icon className={`mx-auto mb-2 h-5 w-5 ${isActive ? 'text-primary' : 'text-muted'}`} />
+                      <Icon
+                        className={`mx-auto mb-2 h-5 w-5 ${isActive ? 'text-primary' : 'text-muted'}`}
+                      />
                       {label}
                     </button>
                   )
@@ -133,57 +149,63 @@ export function ExportDialog({ open, onOpenChange, projectId, languageCode }: Ex
 
             <div className="space-y-3">
               <div className="rounded-2xl border border-dashed border-surface-3 px-4 py-3 text-sm">
-                <p className="text-foreground font-medium">
+                <p className="font-medium text-foreground">
                   {selectedType === 'preview_video'
                     ? '더빙 영상'
                     : selectedType === 'subtitle_srt'
                       ? '자막 파일'
                       : '오디오 파일'}{' '}
-                  <span className="ml-1 inline-flex items-center align-middle">{languageFlagIcon}</span>
+                  <span className="ml-1 inline-flex items-center align-middle">
+                    {languageFlagIcon}
+                  </span>
                 </p>
                 {assetsLoading ? (
-                  <p className="text-muted text-xs">결과물을 확인하는 중...</p>
+                  <p className="text-xs text-muted">결과물을 확인하는 중...</p>
                 ) : filteredAsset ? (
-                  <p className="text-muted text-xs">{filteredAsset.created_at}</p>
+                  <p className="text-xs text-muted">{filteredAsset.created_at}</p>
                 ) : (
-                  <p className="text-muted text-xs">선택한 형식의 결과물이 없습니다.</p>
+                  <p className="text-xs text-muted">선택한 형식의 결과물이 없습니다.</p>
                 )}
               </div>
               {selectedType === 'preview_video' ? (
                 <div className="flex gap-2">
                   <Button
                     className="flex-1"
-                    disabled={assetsLoading || !filteredAsset}
+                    disabled={assetsLoading || !filteredAsset || isMuxing}
                     onClick={() => {
                       if (filteredAsset) void handleDownload(filteredAsset)
                     }}
                   >
                     <Download className="mr-2 h-4 w-4" />
-                    다운로드
+                    {isMuxing ? 'Mux 중...' : '다운로드'}
                   </Button>
                   <Button
                     type="button"
                     className="flex-1"
                     variant="secondary"
-                    disabled={assetsLoading || !canPublish || !filteredAsset}
-                    title={canPublish ? 'YouTube로 업로드' : '마이페이지에서 유튜브 계정을 먼저 연동하세요.'}
+                    disabled={assetsLoading || !canPublish || !filteredAsset || isMuxing}
+                    title={
+                      canPublish
+                        ? 'YouTube로 업로드'
+                        : '마이페이지에서 유튜브 계정을 먼저 연동하세요.'
+                    }
                     onClick={() => {
-                      if (filteredAsset) handlePublishClick(filteredAsset)
+                      if (filteredAsset) void handlePublishClick(filteredAsset)
                     }}
                   >
-                    YouTube 업로드
+                    {isMuxing ? 'Mux 중...' : 'YouTube 업로드'}
                   </Button>
                 </div>
               ) : (
                 <Button
                   className="w-full"
-                  disabled={assetsLoading || !filteredAsset}
+                  disabled={assetsLoading || !filteredAsset || isMuxing}
                   onClick={() => {
                     if (filteredAsset) void handleDownload(filteredAsset)
                   }}
                 >
                   <Download className="mr-2 h-4 w-4" />
-                  선택한 형식 다운로드
+                  {isMuxing ? 'Mux 중...' : '선택한 형식 다운로드'}
                 </Button>
               )}
             </div>

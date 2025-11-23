@@ -85,19 +85,15 @@ export default function EditorPage() {
                 selectedLanguage={selectedLanguage}
                 saveStatus={saveStatus}
                 hasChanges={hasChanges}
-                isMuxing={isMuxing}
                 isLoading={isLoading}
                 onLanguageChange={setSelectedLanguage}
                 onSaveClick={handleSave}
                 onExportClick={() => setIsExportOpen(true)}
-                onMuxClick={() => {
-                  void handleMux()
-                }}
               />
 
               <div className="flex min-h-0 flex-1 gap-0">
                 {/* Video Preview */}
-                <div className="flex-1 overflow-hidden border border-b-0 border-r-0 border-surface-3 bg-surface-1 shadow-sm">
+                <div className="flex-1 overflow-hidden border border-b-0 border-r-0 border-surface-3 shadow-sm">
                   <StudioVideoPreview
                     activeLanguage={targetLanguage}
                     duration={data.playback.duration}
@@ -147,6 +143,8 @@ export default function EditorPage() {
           onOpenChange={setIsExportOpen}
           projectId={projectId}
           languageCode={selectedLanguage}
+          onMux={handleMux}
+          isMuxing={isMuxing}
         />
       </div>
     </EditorProvider>

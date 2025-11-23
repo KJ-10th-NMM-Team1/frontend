@@ -55,13 +55,13 @@ export function DubbingIssuesSection({ segments }: DubbingIssuesSectionProps) {
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'high':
-        return 'bg-error-container text-destructive border-error-container/70'
+        return 'bg-error-container text-destructive border-error-container/40'
       case 'medium':
-        return 'bg-tertiary-container text-on-primary-container border-tertiary/40'
+        return 'bg-yellow-100 text-on-primary-container border-yellow-300/40'
       case 'low':
-        return 'bg-surface-2 text-muted-foreground border-outline/30'
+        return 'bg-surface-2 text-muted-foreground border-outline/10'
       default:
-        return 'bg-surface-2 text-muted-foreground border-outline/30'
+        return 'bg-surface-2 text-muted-foreground border-outline/10'
     }
   }
 
@@ -164,18 +164,18 @@ export function DubbingIssuesSection({ segments }: DubbingIssuesSectionProps) {
   }
 
   return (
-    <section className="flex h-full flex-col rounded-2xl border border-outline/20 bg-surface-1 p-3 shadow-soft">
+    <section className="rbg-surface-1 flex h-full flex-col p-3 shadow-soft">
       <div className="mb-3 flex items-center justify-between px-2">
         <h3 className="text-sm font-semibold text-foreground">목록</h3>
         {issues.length > 0 && (
-          <span className="text-sm text-muted-foreground">
+          <span className="text-muted-foreground text-sm">
             {issues.filter((i) => !i.resolved).length}/{issues.length}
           </span>
         )}
       </div>
 
       {issues.length === 0 ? (
-        <div className="text-sm text-muted-foreground">
+        <div className="text-muted-foreground text-sm">
           <p>현재 이슈가 없습니다.</p>
         </div>
       ) : (
@@ -183,7 +183,7 @@ export function DubbingIssuesSection({ segments }: DubbingIssuesSectionProps) {
           {issues.map((issue) => (
             <div
               key={`${issue.segmentId}-${issue.id}`}
-              className={`group flex cursor-pointer items-center gap-3 rounded-lg border-outline/20 px-3 py-2 text-xs transition-all hover:border-primary/30 hover:bg-surface-2 ${
+              className={`border-outline/20 group flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-xs transition-all hover:border-primary/30 hover:bg-surface-2 ${
                 issue.resolved ? 'opacity-50' : ''
               }`}
               onClick={(e) => handleIssueClick(issue.segmentId, e)}
@@ -210,7 +210,7 @@ export function DubbingIssuesSection({ segments }: DubbingIssuesSectionProps) {
                 <span className="truncate font-medium text-foreground">
                   {getIssueTypeLabel(issue.issue_type)}
                 </span>
-                <span className="truncate text-muted-foreground">
+                <span className="text-muted-foreground truncate">
                   {getIssueMessage(issue.issue_type, issue.diff)}
                 </span>
 
@@ -228,7 +228,7 @@ export function DubbingIssuesSection({ segments }: DubbingIssuesSectionProps) {
               )}
 
               {/* 타임스탬프 - 강조 */}
-              <span className="shrink-0 rounded-full bg-primary-container px-2 py-1 text-xs font-semibold text-on-primary-container">
+              <span className="bg-primary-container text-on-primary-container shrink-0 rounded-full px-2 py-1 text-xs font-semibold">
                 {formatTime(issue.segmentStart)}
               </span>
             </div>

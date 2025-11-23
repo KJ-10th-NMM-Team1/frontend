@@ -102,10 +102,10 @@ export function VersionListSection({ projectId, languageCode }: VersionListSecti
       <div className="mb-3 flex items-center justify-between px-2">
         <div className="flex items-center gap-2">
           <GitBranch className="h-4 w-4 text-primary" />
-          <h3 className="text-sm font-semibold text-foreground">버전 관리</h3>
+          <h3 className="text-sm font-semibold text-foreground">버전목록</h3>
         </div>
         {versions.length > 0 && (
-          <span className="rounded-full bg-surface-2 px-2.5 py-0.5 text-xs font-medium text-muted">
+          <span className="rounded-full bg-surface-2 px-2.5 py-0.5 text-xs font-medium text-gray-400">
             {versions.length}
           </span>
         )}
@@ -178,7 +178,7 @@ export function VersionListSection({ projectId, languageCode }: VersionListSecti
                     </div>
 
                     {/* 시간 정보 */}
-                    <div className="flex items-center gap-1.5 text-xs text-muted">
+                    <div className="flex items-center gap-1.5 text-xs text-gray-400">
                       <Clock className="h-3 w-3" />
                       <span>{formatDate(version.createdAt)}</span>
                     </div>
