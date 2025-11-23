@@ -6,9 +6,11 @@ import { TabsContent, TabsList, TabsRoot, TabsTrigger } from '@/shared/ui/Tabs'
 import { ProjectInfoSection } from './ProjectInfoSection'
 import { TranslationSummarySection } from './TranslationSummarySection'
 import { DubbingIssuesSection } from './DubbingIssuesSection'
+import { VersionListSection } from './VersionListSection'
 
 interface EditorSummaryPanelProps {
   projectId: string
+  languageCode: string
   segments: Segment[]
   duration: number
   sourceLanguage: string
@@ -17,14 +19,16 @@ interface EditorSummaryPanelProps {
 }
 
 /**
- * 에디터 우측 패널 - 이슈/번역/정보 탭
+ * 에디터 우측 패널 - 이슈/번역/버전/정보 탭
  *
- * - 요약 탭: 세그먼트 요약 더빙
+ * - 이슈 탭: 세그먼트 이슈 목록
  * - 번역 탭: 번역 요약 섹션
+ * - 버전 탭: 버전 관리 섹션
  * - 정보 탭: 프로젝트 정보
  */
 export function EditorSummaryPanel({
   projectId,
+  languageCode,
   segments,
   sourceLanguage,
   targetLanguage,
@@ -51,6 +55,12 @@ export function EditorSummaryPanel({
               번역
             </TabsTrigger>
             <TabsTrigger
+              value="version"
+              className="data-[state=active]:text-balck data-[state=active]:bg-tran rounded-none border-primary px-4 py-2 text-xs font-semibold data-[state=active]:border-b-2"
+            >
+              버전
+            </TabsTrigger>
+            <TabsTrigger
               value="info"
               className="ml-auto rounded-none border-b-2 border-transparent bg-transparent px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground"
             >
@@ -69,6 +79,10 @@ export function EditorSummaryPanel({
             sourceLanguage={sourceLanguage}
             targetLanguage={targetLanguage}
           />
+        </TabsContent>
+
+        <TabsContent value="version" className="mt-0 flex-1 overflow-hidden">
+          <VersionListSection projectId={projectId} languageCode={languageCode} />
         </TabsContent>
 
         <TabsContent value="info" className="mt-0 flex-1 overflow-hidden">

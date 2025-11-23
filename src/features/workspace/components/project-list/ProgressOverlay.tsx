@@ -87,11 +87,11 @@ export function ProgressOverlay({
                 </div>
 
                 {/* 오른쪽: 상태 뱃지 (호버 시에만 표시) */}
-                <div
+                {/* <div
                   className={`whitespace-nowrap rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white/80 transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'hidden opacity-0'} `}
                 >
                   {message}
-                </div>
+                </div> */}
               </div>
 
               {/* 기본 프로그레스 바 (호버 아닐 때만 표시) */}

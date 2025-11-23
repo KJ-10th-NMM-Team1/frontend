@@ -1,10 +1,9 @@
-import { Upload, Video } from 'lucide-react'
+import { AlertCircle, Check, Loader2, Save, Upload, Video } from 'lucide-react'
 
 import { Breadcrumbs } from '@/shared/ui/Breadcrumbs'
 import { Button } from '@/shared/ui/Button'
 
 import { LanguageSelector } from './LanguageSelector'
-import { SaveIndicator } from './SaveIndicator'
 
 const LogoIcon = () => (
   <svg
@@ -31,6 +30,7 @@ interface EditorHeaderProps {
   isMuxing: boolean
   isLoading: boolean
   onLanguageChange: (languageCode: string) => void
+  onSaveClick: () => void
   onExportClick: () => void
   onMuxClick: () => void
 }
@@ -40,7 +40,7 @@ interface EditorHeaderProps {
  *
  * - Breadcrumbs
  * - Save indicator
- * - Export/Mux 버튼
+ * - Save/Export/Mux 버튼
  * - 언어 선택기
  */
 export function EditorHeader({
@@ -51,6 +51,7 @@ export function EditorHeader({
   isMuxing,
   isLoading,
   onLanguageChange,
+  onSaveClick,
   onExportClick,
   onMuxClick,
 }: EditorHeaderProps) {
@@ -79,29 +80,56 @@ export function EditorHeader({
       </div>
 
       {/* Right: Actions */}
-      <div className="flex items-center gap-4">
-        <SaveIndicator status={saveStatus} hasChanges={hasChanges} />
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            size="sm"
-            onClick={onExportClick}
-            className="h-9 w-[100px] rounded-2xl px-4"
-          >
-            <Upload className="mr-2 h-4 w-4" />
-            내보내기
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={onMuxClick}
-            disabled={isMuxing || isLoading}
-            className="h-9 w-[100px] rounded-2xl px-4"
-          >
-            <Video className="mr-2 h-4 w-4" />
-            {isMuxing ? 'Mux 중...' : 'Mux'}
-          </Button>
-        </div>
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant={saveStatus === 'saved' ? 'primary' : 'secondary'}
+          size="sm"
+          onClick={onSaveClick}
+          disabled={saveStatus === 'saving' || !hasChanges}
+          className="h-9 w-[100px] rounded-2xl px-4"
+        >
+          {saveStatus === 'saving' ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              저장 중...
+            </>
+          ) : saveStatus === 'saved' ? (
+            <>
+              <Check className="mr-2 h-4 w-4" />
+              저장 완료
+            </>
+          ) : saveStatus === 'error' ? (
+            <>
+              <AlertCircle className="mr-2 h-4 w-4" />
+              저장 실패
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              저장하기
+            </>
+          )}
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          onClick={onExportClick}
+          className="h-9 w-[100px] rounded-2xl px-4"
+        >
+          <Upload className="mr-2 h-4 w-4" />
+          내보내기
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={onMuxClick}
+          disabled={isMuxing || isLoading}
+          className="h-9 w-[100px] rounded-2xl px-4"
+        >
+          <Video className="mr-2 h-4 w-4" />
+          {isMuxing ? 'Mux 중...' : 'Mux'}
+        </Button>
       </div>
     </div>
   )

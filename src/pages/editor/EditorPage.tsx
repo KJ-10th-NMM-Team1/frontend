@@ -10,6 +10,7 @@ import { StudioVideoPreview } from '@/features/editor/components/StudioVideoPrev
 import { EditorProvider } from '@/features/editor/context/EditorContext'
 import { useAudioEventSubscription } from '@/features/editor/hooks/useAudioEventSubscription'
 import { useEditorState } from '@/features/editor/hooks/useEditorState'
+import { useEditorVersioning } from '@/features/editor/hooks/useEditorVersioning'
 import { useResizablePanes } from '@/features/editor/hooks/useResizablePanes'
 import { useSaveSegments } from '@/features/editor/hooks/useSaveSegments'
 import { useSelectedLanguage } from '@/features/editor/hooks/useSelectedLanguage'
@@ -52,6 +53,9 @@ export default function EditorPage() {
   // Subscribe to audio generation events via global SSE
   useAudioEventSubscription(projectId, selectedLanguage, !isLoading && !!data)
 
+  // Version management: Initialize version0 for each language
+  useEditorVersioning(projectId, selectedLanguage, data?.segments)
+
   if (isLoading || !data) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-2">
@@ -84,6 +88,7 @@ export default function EditorPage() {
                 isMuxing={isMuxing}
                 isLoading={isLoading}
                 onLanguageChange={setSelectedLanguage}
+                onSaveClick={handleSave}
                 onExportClick={() => setIsExportOpen(true)}
                 onMuxClick={() => {
                   void handleMux()
@@ -107,6 +112,7 @@ export default function EditorPage() {
                 {/* Summary/Translation Panel */}
                 <EditorSummaryPanel
                   projectId={projectId}
+                  languageCode={selectedLanguage}
                   segments={data.segments}
                   duration={data.playback.duration}
                   sourceLanguage={sourceLanguage}
