@@ -62,7 +62,7 @@ export function EditorHeader({
         <Button
           type="button"
           size="sm"
-          variant="secondary"
+          variant="primary"
           onClick={onExportClick}
           className="h-9 w-[110px] rounded-2xl px-4"
         >
@@ -73,6 +73,7 @@ export function EditorHeader({
         <Button
           type="button"
           size="sm"
+          variant="secondary"
           onClick={onSaveClick}
           disabled={saveStatus === 'saving' || !hasChanges}
           className="h-9 w-[110px] rounded-2xl px-4"

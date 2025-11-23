@@ -23,11 +23,11 @@ export function TimeRuler({
 
   return (
     <div
-      className="border-surface-3 cursor-col-resize overflow-hidden border-b"
+      className="cursor-col-resize overflow-hidden border-b border-surface-3"
       onPointerDown={onTimelinePointerDown}
     >
       <div className="relative h-10 bg-white" style={{ width: `${timelineWidth}px` }}>
-        <div className="text-muted relative h-full text-[10px]">
+        <div className="relative h-full text-[10px] text-gray-400">
           {timelineTicks.map((tick) => {
             const tickPosition = timeToPixel(tick, duration, scale)
             return (
@@ -37,7 +37,7 @@ export function TimeRuler({
                 style={{ left: `${tickPosition}px` }}
               >
                 <span>{tick.toFixed(0).padStart(2, '0')}s</span>
-                <span className="bg-surface-3 mt-1 h-4 w-px" />
+                <span className="mt-1 h-4 w-px bg-gray-300" />
               </div>
             )
           })}

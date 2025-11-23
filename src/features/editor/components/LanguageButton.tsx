@@ -28,7 +28,9 @@ export function LanguageButton({ option, isSelected, onClick }: LanguageButtonPr
       disabled={!option.isAvailable}
       className={cn(
         'relative flex items-center justify-center gap-1.5 rounded-full px-3 text-xs font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50',
-        isSelected ? 'bg-primary text-white shadow-sm' : 'opacity-80 hover:bg-primary/20',
+        isSelected
+          ? 'bg-secondary-container text-on-secondary-container shadow-sm'
+          : 'opacity-80 hover:bg-surface-container-high',
         // 원어/타겟 구분 없이 통일된 크기감
         'h-full min-w-[70px]',
       )}

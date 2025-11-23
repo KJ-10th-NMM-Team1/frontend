@@ -17,15 +17,16 @@ type VersionListSectionProps = {
 }
 
 // 트랙 색상 팔레트
+// 따뜻한 톤(오렌지)에서 차가운 톤(블루)으로 자연스럽게 전환
 const TRACK_COLORS = [
-  '#3b82f6', // blue
-  '#ef4444', // red
-  '#10b981', // green
-  '#f59e0b', // amber
-  '#8b5cf6', // violet
-  '#ec4899', // pink
-  '#06b6d4', // cyan
-  '#f97316', // orange
+  '#f97316', // orange-500 - 주황, 활기차고 따뜻함
+  '#8b5cf6', // violet-500 - 보라, tertiary 계열
+  '#10b981', // emerald-500 - 에메랄드 그린, 신선함
+  '#ec4899', // pink-500 - 분홍, 부드러운 강조
+  '#06b6d4', // cyan-500 - 청록, primary와 조화
+  '#a855f7', // purple-500 - 밝은 보라, 우아함
+  '#f59e0b', // amber-500 - 호박색, 따뜻한 골드 톤
+  '#3b82f6', // blue-500 - 파란색, primary와 유사
 ]
 
 export function VersionListSection({ projectId, languageCode }: VersionListSectionProps) {
@@ -114,11 +115,11 @@ export function VersionListSection({ projectId, languageCode }: VersionListSecti
       {versions.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
           <div className="rounded-full bg-surface-2 p-3">
-            <GitBranch className="h-5 w-5 text-muted" />
+            <GitBranch className="h-5 w-5 text-gray-400" />
           </div>
           <div className="space-y-1">
             <p className="text-sm font-medium text-foreground">버전이 없습니다</p>
-            <p className="text-xs text-muted">작업 내용을 저장하면 버전이 생성됩니다</p>
+            {/* <p className="text-xs text-muted">작업 내용을 저장하면 버전이 생성됩니다</p> */}
           </div>
         </div>
       ) : (

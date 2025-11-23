@@ -11,15 +11,16 @@ export function convertSegmentsToTracks(segments: Segment[]): TrackRow[] {
   if (segments.length === 0) return []
 
   // 색상 팔레트 (VersionListSection과 동일)
+  // 따뜻한 톤(오렌지)에서 차가운 톤(블루)으로 자연스럽게 전환
   const palette = [
-    '#3b82f6', // blue
-    '#ef4444', // red
-    '#10b981', // green
-    '#f59e0b', // amber
-    '#8b5cf6', // violet
-    '#ec4899', // pink
-    '#06b6d4', // cyan
-    '#f97316', // orange
+    '#f97316', // orange-500 - 주황, 활기차고 따뜻함
+    '#8b5cf6', // violet-500 - 보라, tertiary 계열
+    '#10b981', // emerald-500 - 에메랄드 그린, 신선함
+    '#ec4899', // pink-500 - 분홍, 부드러운 강조
+    '#06b6d4', // cyan-500 - 청록, primary와 조화
+    '#a855f7', // purple-500 - 밝은 보라, 우아함
+    '#f59e0b', // amber-500 - 호박색, 따뜻한 골드 톤
+    '#3b82f6', // blue-500 - 파란색, primary와 유사
   ]
 
   // speaker_tag 기준으로 그룹화
