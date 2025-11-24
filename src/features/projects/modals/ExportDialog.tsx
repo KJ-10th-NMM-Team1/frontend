@@ -138,7 +138,7 @@ export function ExportDialog({
                       onClick={() => setSelectedType(type)}
                     >
                       <Icon
-                        className={`mx-auto mb-2 h-5 w-5 ${isActive ? 'text-primary' : 'text-muted'}`}
+                        className={`mx-auto mb-2 h-5 w-5 ${isActive ? 'text-primary' : 'text-gray-400'}`}
                       />
                       {label}
                     </button>
@@ -160,11 +160,11 @@ export function ExportDialog({
                   </span>
                 </p>
                 {assetsLoading ? (
-                  <p className="text-xs text-muted">결과물을 확인하는 중...</p>
+                  <p className="text-xs text-gray-400">결과물을 확인하는 중...</p>
                 ) : filteredAsset ? (
-                  <p className="text-xs text-muted">{filteredAsset.created_at}</p>
+                  <p className="text-xs text-gray-400">{filteredAsset.created_at}</p>
                 ) : (
-                  <p className="text-xs text-muted">선택한 형식의 결과물이 없습니다.</p>
+                  <p className="text-xs text-gray-400">선택한 형식의 결과물이 없습니다.</p>
                 )}
               </div>
               {selectedType === 'preview_video' ? (
