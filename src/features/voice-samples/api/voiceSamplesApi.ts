@@ -24,7 +24,8 @@ function transformVoiceSample(apiSample: VoiceSampleApiResponse): VoiceSample {
       : undefined
   const isBuiltin =
     apiSample.is_builtin ?? (apiSample as unknown as { is_default?: boolean }).is_default ?? false
-  const avatarPreset = (apiSample as unknown as { avatar_preset?: string }).avatar_preset ?? undefined
+  const avatarPreset =
+    (apiSample as unknown as { avatar_preset?: string }).avatar_preset ?? undefined
   const presetUrl = getPresetAvatarUrl(avatarPreset)
 
   return {
@@ -50,7 +51,8 @@ function transformVoiceSample(apiSample: VoiceSampleApiResponse): VoiceSample {
     accent: apiSample.accent ?? undefined,
     tags: apiSample.tags ?? undefined,
     licenseCode: (apiSample as unknown as { license_code?: string }).license_code ?? undefined,
-    canCommercialUse: (apiSample as unknown as { can_commercial_use?: boolean }).can_commercial_use ?? undefined,
+    canCommercialUse:
+      (apiSample as unknown as { can_commercial_use?: boolean }).can_commercial_use ?? undefined,
     isDeletable: (apiSample as unknown as { is_deletable?: boolean }).is_deletable ?? undefined,
   }
 }
@@ -64,6 +66,8 @@ export async function fetchVoiceSamples(options?: {
   languages?: string[]
   tags?: string[]
   q?: string
+  page?: number
+  limit?: number
 }): Promise<VoiceSamplesResponse> {
   const params = new URLSearchParams()
   if (options?.myVoicesOnly) {
@@ -93,6 +97,12 @@ export async function fetchVoiceSamples(options?: {
   }
   if (options?.q) {
     params.append('q', options.q)
+  }
+  if (options?.page) {
+    params.append('page', String(options.page))
+  }
+  if (options?.limit) {
+    params.append('limit', String(options.limit))
   }
 
   const queryString = params.toString()

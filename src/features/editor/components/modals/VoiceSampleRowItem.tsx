@@ -1,4 +1,4 @@
-import { Check } from 'lucide-react'
+import { Check, Sparkles } from 'lucide-react'
 
 import type { VoiceSample } from '@/entities/voice-sample/types'
 import { VOICE_CATEGORY_MAP } from '@/shared/constants/voiceCategories'
@@ -13,6 +13,7 @@ type VoiceSampleRowItemProps = {
   isSelected: boolean
   isPlaying: boolean
   canPlay: boolean
+  isRecommended?: boolean
   onSelect: (id: string) => void
   onPlay: (e: React.MouseEvent, sample: VoiceSample) => void
 }
@@ -23,6 +24,7 @@ export function VoiceSampleRowItem({
   isSelected,
   isPlaying,
   canPlay,
+  isRecommended = false,
   onSelect,
   onPlay,
 }: VoiceSampleRowItemProps) {
@@ -76,6 +78,12 @@ export function VoiceSampleRowItem({
           >
             {sample.name}
           </span>
+          {isRecommended && (
+            <span className="flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+              <Sparkles className="h-2.5 w-2.5" />
+              추천
+            </span>
+          )}
         </div>
 
         {sample.id === 'clone' ? (

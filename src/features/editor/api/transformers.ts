@@ -22,6 +22,11 @@ export type SegmentDTO = {
   playback_rate?: number // Server response uses snake_case
   trackId?: string
   issues?: Issue[]
+  voice_replacement?: {
+    voice_sample_id: string
+    similarity?: number
+    sample_key?: string
+  }
 }
 
 /**
@@ -44,5 +49,6 @@ export function transformSegmentFromServer(dto: SegmentDTO): Segment {
     playbackRate: dto.playback_rate, // Convert snake_case to camelCase
     trackId: dto.trackId,
     issues: dto.issues,
+    voiceReplacement: dto.voice_replacement,
   }
 }

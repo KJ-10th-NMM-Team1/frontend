@@ -24,6 +24,11 @@ export interface Segment {
   playbackRate?: number // 재생 속도 배율 (기본값: 1.0)
   trackId?: string // 현재 세그먼트가 속한 트랙 ID (UI 상태용, 트랙 간 이동 시 업데이트)
   issues?: Issue[] // 세그먼트 이슈 목록
+  voiceReplacement?: {
+    voice_sample_id: string
+    similarity?: number
+    sample_key?: string
+  }
 }
 
 export interface EditorPlaybackState {

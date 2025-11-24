@@ -49,6 +49,7 @@ type VoiceSampleSelectModalProps = {
   onSelect: (voiceSampleId: string) => void
   currentVoiceSampleId?: string
   trackLabel: string
+  recommendedVoiceId?: string
 }
 
 const DEFAULT_VOICE_MODEL = 'clone'
@@ -59,6 +60,7 @@ export function VoiceSampleSelectModal({
   onSelect,
   currentVoiceSampleId,
   trackLabel,
+  recommendedVoiceId,
 }: VoiceSampleSelectModalProps) {
   const navigate = useNavigate()
   const [selectedId, setSelectedId] = useState<string | undefined>(
@@ -169,13 +171,15 @@ export function VoiceSampleSelectModal({
 
   useEffect(() => {
     if (open) {
-      setSelectedId(currentVoiceSampleId || DEFAULT_VOICE_MODEL)
+      // 사용자가 이미 선택한 음성이 있으면 그것을 우선 사용
+      // 없으면 추천 음성, 둘 다 없으면 기본값
+      setSelectedId(currentVoiceSampleId || recommendedVoiceId || DEFAULT_VOICE_MODEL)
       setSearchQuery('')
     } else {
       stopAudio()
       setIsFilterOpen(false)
     }
-  }, [open, currentVoiceSampleId])
+  }, [open, currentVoiceSampleId, recommendedVoiceId])
 
   const handleResetFilters = () => {
     setSelectedLanguage(undefined)
@@ -297,6 +301,7 @@ export function VoiceSampleSelectModal({
     const isPlaying = playingSampleId === String(sample.id)
     const canPlay = sample.id !== 'clone'
     const avatarUrl = avatarUrls.get(sample.id) || DEFAULT_AVATAR
+    const isRecommended = recommendedVoiceId === sample.id
 
     return (
       <VoiceSampleRowItem
@@ -306,6 +311,7 @@ export function VoiceSampleSelectModal({
         isSelected={isSelected}
         isPlaying={isPlaying}
         canPlay={canPlay}
+        isRecommended={isRecommended}
         onSelect={handleSelect}
         onPlay={(e, sample) => {
           void handlePlayPreview(e, sample)

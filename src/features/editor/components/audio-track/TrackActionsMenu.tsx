@@ -22,8 +22,14 @@ type TrackActionsMenuProps = {
 
 export function TrackActionsMenu({ trackId, trackLabel, voiceSampleId }: TrackActionsMenuProps) {
   const [showVoiceSampleModal, setShowVoiceSampleModal] = useState(false)
+  const tracks = useTracksStore((state) => state.tracks)
   const updateTrack = useTracksStore((state) => state.updateTrack)
   const removeTrack = useTracksStore((state) => state.removeTrack)
+
+  // 트랙의 세그먼트에서 추천 보이스 찾기
+  const track = tracks.find((t) => t.id === trackId)
+  const segments = track?.type === 'speaker' ? track.segments : []
+  const recommendedVoiceId = segments[0]?.voiceReplacement?.voice_sample_id
 
   const { handleBatchRegenerate, isPending } = useTrackBatchRegenerate({
     trackId,
@@ -93,6 +99,7 @@ export function TrackActionsMenu({ trackId, trackLabel, voiceSampleId }: TrackAc
         onSelect={handleVoiceSampleSelect}
         currentVoiceSampleId={voiceSampleId}
         trackLabel={trackLabel}
+        recommendedVoiceId={recommendedVoiceId}
       />
     </>
   )
