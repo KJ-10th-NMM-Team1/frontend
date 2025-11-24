@@ -130,7 +130,7 @@ export default function VoiceLibraryPage() {
       fetchVoiceSamples({
         q: search.trim() || undefined,
         mySamplesOnly: tab === 'mine',
-        // myVoicesOnly는 제거 - mySamplesOnly만 사용 (자신이 만든 보이스는 자동으로 user_voices에 추가됨)
+        myVoicesOnly: tab === 'mine', // 내 목소리 탭에서 추가한 보이스도 포함
         isBuiltin: undefined,
         languages:
           filters.languages && filters.languages.length > 0 ? filters.languages : undefined,
