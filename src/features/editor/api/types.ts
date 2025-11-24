@@ -53,6 +53,7 @@ export interface SegmentUpdateData {
   playbackRate?: number
   source_text?: string
   target_text?: string
+  segment_audio_url?: string
 }
 
 export interface UpdateSegmentsRequest {

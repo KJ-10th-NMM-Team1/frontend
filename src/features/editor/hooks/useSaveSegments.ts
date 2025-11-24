@@ -111,6 +111,7 @@ export function useSaveSegments({ projectId, languageCode }: UseSaveSegmentsOpti
         playbackRate: seg.playbackRate, // Server accepts camelCase in requests
         source_text: seg.source_text,
         target_text: seg.target_text,
+        segment_audio_url: seg.segment_audio_url, // TTS로 생성된 오디오 URL 유지
       })),
     })
   }, [isSaving, hasChangesFunc, getAllSegments, updateSegments, projectId, languageCode])
