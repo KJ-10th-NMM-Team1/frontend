@@ -1,18 +1,18 @@
 import { useEffect, useMemo, useCallback, useState } from 'react'
 
-import { Plus, X } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import type { ProjectSummary } from '@/entities/project/types'
 import { useLanguage } from '@/features/languages/hooks/useLanguage'
 import { ExportDialog } from '@/features/projects/modals/ExportDialog'
 import { useProjects, useDeleteProjectMutation } from '@/features/projects/hooks/useProjects'
+import { useMux } from '@/features/editor/hooks/useMux'
+import { useEditorState } from '@/features/editor/hooks/useEditorState'
 import { ProjectList } from '@/features/workspace/components/project-list/ProjectList'
 import { WorkspaceFilters } from '@/features/workspace/components/WorkspaceFilters'
 import { UploadCard } from '@/features/workspace/components/upload-card/UploadCard'
 import { useAuthStore } from '@/shared/store/useAuthStore'
 import { useUiStore } from '@/shared/store/useUiStore'
-import { Button } from '@/shared/ui/Button'
 import { Spinner } from '@/shared/ui/Spinner'
 
 const stepMap = {
@@ -105,21 +105,32 @@ export default function WorkspacePage() {
     setWorkspaceSearchTerm,
   ])
 
+  const handleExportProject = useCallback(
+    (project: ProjectSummary) => {
+      const targetLang = project.targets?.[0]?.language_code
+      if (targetLang) {
+        setExportProjectId(project.id)
+        setExportLanguageCode(targetLang)
+        setIsExportOpen(true)
+      } else {
+        showToast({
+          title: '내보내기 실패',
+          description: '번역 언어가 설정되지 않은 에피소드입니다.',
+          variant: 'error',
+        })
+      }
+    },
+    [showToast],
+  )
 
-  const handleExportProject = useCallback((project: ProjectSummary) => {
-    const targetLang = project.targets?.[0]?.language_code
-    if (targetLang) {
-      setExportProjectId(project.id)
-      setExportLanguageCode(targetLang)
-      setIsExportOpen(true)
-    } else {
-      showToast({
-        title: '내보내기 실패',
-        description: '번역 언어가 설정되지 않은 에피소드입니다.',
-        variant: 'error',
-      })
-    }
-  }, [showToast])
+  // Editor data for mux (only fetch when export dialog is open)
+  const { data: editorData } = useEditorState(exportProjectId || '', exportLanguageCode || '')
+
+  // Mux functionality
+  const { handleMux, isMuxing } = useMux({
+    projectId: exportProjectId || '',
+    editorData,
+  })
 
   const handleDeleteProject = useCallback(
     (project: ProjectSummary) => {
@@ -234,8 +245,8 @@ export default function WorkspacePage() {
         {/* Header */}
         <div className="flex flex-col gap-4 pt-1 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-on-primary-container text-2xl font-bold tracking-tight">더빙</h1>
-            <p className="text-muted-foreground mt-1 text-sm">
+            <h1 className="text-2xl font-bold tracking-tight text-on-primary-container">더빙</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
               에피소드를 검색하고 언어 필터를 적용해 관리하세요.
             </p>
           </div>
@@ -286,6 +297,8 @@ export default function WorkspacePage() {
           onOpenChange={setIsExportOpen}
           projectId={exportProjectId}
           languageCode={exportLanguageCode}
+          onMux={handleMux}
+          isMuxing={isMuxing}
         />
       )}
     </div>

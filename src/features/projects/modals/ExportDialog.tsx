@@ -36,7 +36,7 @@ type ExportDialogProps = {
   onOpenChange: (open: boolean) => void
   projectId: string
   languageCode: string
-  onMux: () => Promise<void>
+  onMux: () => Promise<string | undefined> // result_key 반환
   isMuxing: boolean
 }
 
@@ -68,8 +68,8 @@ export function ExportDialog({
   const canPublish = youtubeStatus?.connected && Boolean(projectId)
 
   const handleDownload = async (asset: AssetEntry) => {
-    // Mux를 먼저 실행
-    await onMux()
+    // Mux를 먼저 실행하고 result_key 받기
+    const resultKey = await onMux()
 
     trackEvent('asset_download', {
       lang: languageCode,
@@ -77,7 +77,9 @@ export function ExportDialog({
       assetId: asset.asset_id,
     })
     try {
-      const response = await apiGet<{ url: string }>(`api/storage/media/${asset.file_path}`)
+      // result_key가 있으면 이걸 사용 (가장 최신), 없으면 기존 asset.file_path 사용
+      const filePath = resultKey || asset.file_path
+      const response = await apiGet<{ url: string }>(`api/storage/media/${filePath}`)
       window.open(response.url, '_blank', 'noopener,noreferrer')
     } catch (error) {
       console.error('Failed to download asset', error)
@@ -85,14 +87,16 @@ export function ExportDialog({
   }
 
   const handlePublishClick = async (asset: AssetEntry) => {
-    // Mux를 먼저 실행
-    await onMux()
+    // Mux를 먼저 실행하고 result_key 받기
+    const resultKey = await onMux()
 
     trackEvent('asset_publish_youtube_click', {
       assetId: asset.asset_id,
       lang: languageCode,
     })
-    setSelectedAsset(asset)
+    // result_key가 있으면 업데이트된 asset 정보 사용
+    const updatedAsset = resultKey ? { ...asset, file_path: resultKey } : asset
+    setSelectedAsset(updatedAsset)
     setPublishOpen(true)
   }
 

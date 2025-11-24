@@ -19,6 +19,7 @@ type TracksState = {
   tracks: TrackRow[]
   originalTracks: TrackRow[] // 서버에서 불러온 원본 데이터
   nextSpeakerNumber: number // 다음 스피커 번호
+  _hasChanges: boolean // 내부 변경 추적 플래그
 
   // Track Actions
   setTracks: (tracks: TrackRow[]) => void
@@ -27,11 +28,17 @@ type TracksState = {
   updateTrack: (id: string, updates: Record<string, unknown>) => void
   resetTracks: () => void
   hasChanges: () => boolean
+  setHasChanges: (value: boolean) => void
 
   // Segment Actions (operate on segments within tracks)
   updateSegment: (segmentId: string, updates: Partial<Segment>) => void
   updateSegmentPosition: (segmentId: string, start: number, end: number) => void
-  updateSegmentSize: (segmentId: string, start: number, end: number, originalDuration: number) => void
+  updateSegmentSize: (
+    segmentId: string,
+    start: number,
+    end: number,
+    originalDuration: number,
+  ) => void
   moveSegmentToTrack: (segmentId: string, targetTrackId: string) => void
   replaceSegment: (segmentId: string, newSegments: Segment[]) => void
   replaceMultipleSegments: (segmentIds: string[], newSegment: Segment) => void
@@ -56,6 +63,7 @@ export const useTracksStore = create<TracksState>()(
     tracks: [],
     originalTracks: [],
     nextSpeakerNumber: 1,
+    _hasChanges: false,
 
     // Actions
     setTracks: (tracks) => {
@@ -87,6 +95,7 @@ export const useTracksStore = create<TracksState>()(
           tracks: sortedTracks,
           originalTracks: sortedTracks,
           nextSpeakerNumber: maxSpeakerNumber + 1,
+          _hasChanges: false, // 새로운 트랙 로드 시 변경 없음으로 초기화
         },
         false,
         { type: 'tracks/setTracks', payload: tracks },
@@ -113,6 +122,7 @@ export const useTracksStore = create<TracksState>()(
         (state) => ({
           tracks: [...state.tracks, newTrack],
           nextSpeakerNumber: state.nextSpeakerNumber + 1,
+          _hasChanges: true, // 변경 사항 발생
         }),
         false,
         { type: 'tracks/addSpeakerTrack', payload: newTrack },
@@ -123,6 +133,7 @@ export const useTracksStore = create<TracksState>()(
       set(
         (state) => ({
           tracks: state.tracks.filter((track) => track.id !== id),
+          _hasChanges: true, // 변경 사항 발생
         }),
         false,
         { type: 'tracks/removeTrack', payload: id },
@@ -148,6 +159,7 @@ export const useTracksStore = create<TracksState>()(
 
             return { ...track, ...updates } as TrackRow
           }),
+          _hasChanges: true, // 변경 사항 발생
         }),
         false,
         { type: 'tracks/updateTrack', payload: { id, updates } },
@@ -157,6 +169,7 @@ export const useTracksStore = create<TracksState>()(
       set(
         (state) => ({
           tracks: [...state.originalTracks],
+          _hasChanges: false, // 원본으로 복원 시 변경 없음
         }),
         false,
         { type: 'tracks/resetTracks' },
@@ -164,8 +177,11 @@ export const useTracksStore = create<TracksState>()(
 
     hasChanges: () => {
       const state = get()
-      return JSON.stringify(state.tracks) !== JSON.stringify(state.originalTracks)
+      return state._hasChanges
     },
+
+    setHasChanges: (value) =>
+      set({ _hasChanges: value }, false, { type: 'tracks/setHasChanges', payload: value }),
 
     // Segment Actions - operate on segments within tracks
     updateSegment: (segmentId, updates) =>
@@ -180,6 +196,7 @@ export const useTracksStore = create<TracksState>()(
               ),
             }
           }),
+          _hasChanges: true, // 변경 사항 발생
         }),
         false,
         { type: 'tracks/updateSegment', payload: { segmentId, updates } },
@@ -197,6 +214,7 @@ export const useTracksStore = create<TracksState>()(
               ),
             }
           }),
+          _hasChanges: true, // 변경 사항 발생
         }),
         false,
         { type: 'tracks/updateSegmentPosition', payload: { segmentId, start, end } },
@@ -224,6 +242,7 @@ export const useTracksStore = create<TracksState>()(
               ),
             }
           }),
+          _hasChanges: true, // 변경 사항 발생
         }),
         false,
         {
@@ -255,7 +274,9 @@ export const useTracksStore = create<TracksState>()(
           }
 
           // Find target track to get its label (for speaker_tag update)
-          const targetTrack = state.tracks.find((t) => t.id === targetTrackId && t.type === 'speaker')
+          const targetTrack = state.tracks.find(
+            (t) => t.id === targetTrackId && t.type === 'speaker',
+          )
           if (!targetTrack) {
             return state // Target track not found
           }
@@ -289,6 +310,7 @@ export const useTracksStore = create<TracksState>()(
 
               return track
             }),
+            _hasChanges: true, // 변경 사항 발생
           }
         },
         false,
@@ -313,6 +335,7 @@ export const useTracksStore = create<TracksState>()(
                 .sort((a, b) => a.start - b.start),
             }
           }),
+          _hasChanges: true, // 변경 사항 발생
         }),
         false,
         { type: 'tracks/replaceSegment', payload: { segmentId, newSegments } },
@@ -336,6 +359,7 @@ export const useTracksStore = create<TracksState>()(
               segments: [...filteredSegments, newSegment].sort((a, b) => a.start - b.start),
             }
           }),
+          _hasChanges: true, // 변경 사항 발생
         }),
         false,
         { type: 'tracks/replaceMultipleSegments', payload: { segmentIds, newSegment } },
@@ -344,7 +368,9 @@ export const useTracksStore = create<TracksState>()(
     getAllSegments: () => {
       const state = get()
       return state.tracks
-        .filter((track): track is Extract<TrackRow, { type: 'speaker' }> => track.type === 'speaker')
+        .filter(
+          (track): track is Extract<TrackRow, { type: 'speaker' }> => track.type === 'speaker',
+        )
         .flatMap((track) => track.segments)
     },
   })),

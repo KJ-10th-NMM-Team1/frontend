@@ -29,27 +29,23 @@ export function useSaveSegments({ projectId, languageCode }: UseSaveSegmentsOpti
   const queryClient = useQueryClient()
   const getAllSegments = useTracksStore((state) => state.getAllSegments)
   const hasChangesFunc = useTracksStore((state) => state.hasChanges)
-  const setTracks = useTracksStore((state) => state.setTracks)
+  const setHasChanges = useTracksStore((state) => state.setHasChanges)
   const showToast = useUiStore((state) => state.showToast)
   const createVersion = useVersionStore((state) => state.createVersion)
 
-  // Subscribe to hasChanges as a computed value that updates reactively
-  const hasChanges = useTracksStore((state) => {
-    return JSON.stringify(state.tracks) !== JSON.stringify(state.originalTracks)
-  })
+  // Subscribe to hasChanges as a reactive boolean value (no more JSON.stringify!)
+  const hasChanges = useTracksStore((state) => state._hasChanges)
 
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
 
   // Save mutation
   const { mutate: updateSegments, isPending: isSaving } = useUpdateSegments({
     onSuccess: (data) => {
-      // Get current segments before updating originalTracks
+      // Get current segments for version history
       const currentSegments = getAllSegments()
 
-      // Update originalTracks to reflect saved state
-      // This ensures hasChanges() returns false after save
-      const tracks = useTracksStore.getState().tracks
-      setTracks(tracks)
+      // Mark as no changes after successful save
+      setHasChanges(false)
 
       // Create a new version with the saved state
       createVersion(projectId, languageCode, currentSegments, '저장됨')
