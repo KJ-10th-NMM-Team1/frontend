@@ -7,7 +7,10 @@ import { useAuthStore } from '../../shared/store/useAuthStore'
 import WorkspacePage from '../workspace/WorkspacePage'
 
 import { HomeHeroSection } from './components/HomeHeroSection'
-import { HomeAudioComparisonSection, type AudioScript } from './components/HomeAudioComparisonSection'
+import {
+  HomeAudioComparisonSection,
+  type AudioScript,
+} from './components/HomeAudioComparisonSection'
 import { HomeEditorFeaturesSection, type FeatureItem } from './components/HomeEditorFeaturesSection'
 import { HomeCommunitySection } from './components/HomeCommunitySection'
 
@@ -45,21 +48,14 @@ const LANDING_CONTENT = {
             name: '민지',
             language: 'ko',
             avatarColor: '#FF6B6B',
-            audioSrc: '/media/welcom/korean_audio.mp3', // 실제 화자별 오디오 파일로 교체 필요
+            audioSrc: '/media/examplevoices/tts_ko_woman.wav', // 실제 화자별 오디오 파일로 교체 필요
           },
           {
             id: 'ko-2',
             name: '준호',
             language: 'ko',
             avatarColor: '#4ECDC4',
-            audioSrc: '/media/welcom/korean_audio.mp3',
-          },
-          {
-            id: 'ko-3',
-            name: '서연',
-            language: 'ko',
-            avatarColor: '#FFE66D',
-            audioSrc: '/media/welcom/korean_audio.mp3',
+            audioSrc: '/media/examplevoices/tts_ko_man.wav',
           },
         ],
       },
@@ -73,14 +69,14 @@ const LANDING_CONTENT = {
             name: 'Sarah',
             language: 'en',
             avatarColor: '#1A535C',
-            audioSrc: '/media/welcom/english_audio.mp3',
+            audioSrc: '/media/examplevoices/tts_en_woman.wav',
           },
           {
             id: 'en-2',
             name: 'James',
             language: 'en',
             avatarColor: '#FF6B6B',
-            audioSrc: '/media/welcom/english_audio.mp3',
+            audioSrc: '/media/examplevoices/tts_en_man.wav',
           },
         ],
       },
@@ -94,7 +90,14 @@ const LANDING_CONTENT = {
             name: 'Sakura',
             language: 'ja',
             avatarColor: '#FF9F1C',
-            audioSrc: '/media/welcom/korean_audio.mp3', // 임시 경로
+            audioSrc: '/media/examplevoices/tts_ja_woman.wav', // 임시 경로
+          },
+          {
+            id: 'ja-2',
+            name: 'Kisabe',
+            language: 'ja',
+            avatarColor: '#FFE66D',
+            audioSrc: '/media/examplevoices/tts_ja_man.wav', // 임시 경로
           },
         ],
       },
