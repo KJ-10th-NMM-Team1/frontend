@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react'
 
 import { motion, useScroll, useTransform, type MotionValue } from 'framer-motion'
+
 import { TextReveal } from '@/shared/ui/TextReveal'
 
 import { EditorFeaturesBackground } from './EditorFeaturesBackground'

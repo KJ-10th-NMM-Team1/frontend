@@ -1,4 +1,5 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react'
+
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 
@@ -165,7 +166,7 @@ const Particles = ({ isHovered }: ParticlesProps) => {
     // ----------------------------------------------------------
     // [1] 테두리 좌석 수집 (SVG 벡터)
     // ----------------------------------------------------------
-    let borderSeats: {x: number, y: number}[] = [];
+    const borderSeats: {x: number, y: number}[] = [];
     const pathEl = document.createElementNS("http://www.w3.org/2000/svg", "path");
     pathEl.setAttribute("d", GITHUB_PATH);
     const totalLength = pathEl.getTotalLength();
@@ -186,7 +187,7 @@ const Particles = ({ isHovered }: ParticlesProps) => {
     // ----------------------------------------------------------
     // [2] 초기 위치 생성
     // ----------------------------------------------------------
-    let tempInitialPositions: {x:number, y:number, z:number}[] = [];
+    const tempInitialPositions: {x:number, y:number, z:number}[] = [];
     for (let i = 0; i < count; i++) {
       const col = i % cols; const row = Math.floor(i / cols);
       const x = (col / cols - 0.5) * width + (Math.random()-0.5)*0.2;
@@ -217,7 +218,7 @@ const Particles = ({ isHovered }: ParticlesProps) => {
     // ----------------------------------------------------------
     // [4] 타겟 할당
     // ----------------------------------------------------------
-    let usedIndices = new Set<number>();
+    const usedIndices = new Set<number>();
 
     // (A) 내부 점 고정
     if (ctx) {
@@ -292,7 +293,7 @@ const Particles = ({ isHovered }: ParticlesProps) => {
     geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
 
     return { initialPosTexture: initTex, targetDataTexture: targetTex, geometry: geo };
-  }, []) 
+  }, [count]) 
 
   useMemo(() => {
       uniforms.uInitialPosTexture.value = initialPosTexture;

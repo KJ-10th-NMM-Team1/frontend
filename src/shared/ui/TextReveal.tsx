@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
-// @ts-ignore
+
 import anime from 'animejs/lib/anime.es.js'
+
 import { cn } from '@/shared/lib/utils'
 
 interface TextRevealProps {
@@ -72,7 +73,9 @@ export function TextReveal({
     }
 
     // Calculate delay based on staggerMode
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let delayValue: any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let exitDelayValue: any
 
     switch (staggerMode) {
@@ -85,8 +88,10 @@ export function TextReveal({
         exitDelayValue = () => Math.random() * (finalStaggerDuration * 5)
         break
       case 'oddEven':
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         delayValue = (_el: any, i: number) => delay + (i % 2) * finalStaggerDuration * 2
         // Reverse oddEven: Odds disappear first (0 delay), Evens later
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         exitDelayValue = (_el: any, i: number) => ((i + 1) % 2) * finalStaggerDuration * 2
         break
       case 'linear':
@@ -109,6 +114,7 @@ export function TextReveal({
           scale: 1,
           easing: 'easeOutExpo',
           duration: duration,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           delay: delayValue,
         })
       }
@@ -126,6 +132,7 @@ export function TextReveal({
           scale: 0.9,
           easing: 'easeInQuad',
           duration: duration * 0.6,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           delay: exitDelayValue,
         })
       }

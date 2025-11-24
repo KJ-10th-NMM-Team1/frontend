@@ -1,6 +1,8 @@
 // HomeCommunitySection.tsx
 import { useState } from 'react'
+
 import { Github } from 'lucide-react'
+
 import { MorphingBackground } from './MorphingBackground'
 
 interface HomeCommunitySectionProps {
