@@ -17,6 +17,7 @@ type UseSegmentResizeOptions = {
   duration: number
   scale: number
   edge: ResizeEdge
+  trackSegments: Segment[]  // 같은 트랙 내의 세그먼트만
   onResizeStart?: () => void
   onResizeEnd?: () => void
 }
@@ -35,11 +36,11 @@ export function useSegmentResize({
   duration,
   scale,
   edge,
+  trackSegments,
   onResizeStart,
   onResizeEnd,
 }: UseSegmentResizeOptions) {
   const updateSegmentSize = useTracksStore((state) => state.updateSegmentSize)
-  const segments = useTracksStore((state) => state.getAllSegments())
   const [isResizing, setIsResizing] = useState(false)
 
   const resizeStateRef = useRef<{
@@ -49,15 +50,15 @@ export function useSegmentResize({
     originalDuration: number // 원본 세그먼트 길이 (변경 전)
   } | null>(null)
 
-  // 인접 세그먼트를 ref로 저장
+  // 인접 세그먼트를 ref로 저장 (같은 트랙 내에서만)
   const adjacentSegmentsRef = useRef<{
     previous: Segment | null
     next: Segment | null
   }>({ previous: null, next: null })
 
   useMemo(() => {
-    adjacentSegmentsRef.current = findAdjacentSegments(segments, segment.id)
-  }, [segments, segment.id])
+    adjacentSegmentsRef.current = findAdjacentSegments(trackSegments, segment.id)
+  }, [trackSegments, segment.id])
 
   const onPointerDown = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {

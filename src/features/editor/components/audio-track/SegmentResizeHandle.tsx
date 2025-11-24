@@ -8,6 +8,7 @@ type SegmentResizeHandleProps = {
   scale: number
   edge: 'start' | 'end'
   color: string
+  trackSegments: Segment[]
 }
 
 /**
@@ -24,12 +25,14 @@ export function SegmentResizeHandle({
   scale,
   edge,
   color,
+  trackSegments,
 }: SegmentResizeHandleProps) {
   const { onPointerDown, isResizing } = useSegmentResize({
     segment,
     duration,
     scale,
     edge,
+    trackSegments,
   })
 
   return (
