@@ -13,7 +13,7 @@ type UseMuxOptions = {
 }
 
 type UseMuxReturn = {
-  handleMux: () => Promise<void>
+  handleMux: () => Promise<string | undefined>  // result_key 반환
   isMuxing: boolean
 }
 
@@ -112,6 +112,7 @@ export function useMux({ projectId, editorData }: UseMuxOptions): UseMuxReturn {
           autoDismiss: 5000,
         })
         console.log('Mux 결과:', result)
+        return result.result_key  // result_key 반환
       } else {
         throw new Error(result.message || 'Mux 실패')
       }
@@ -123,6 +124,7 @@ export function useMux({ projectId, editorData }: UseMuxOptions): UseMuxReturn {
         description: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.',
         autoDismiss: 5000,
       })
+      return undefined  // 실패 시 undefined 반환
     } finally {
       setIsMuxing(false)
     }

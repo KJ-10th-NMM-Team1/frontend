@@ -165,6 +165,7 @@ export function SpeakerSegment({
           scale={scale}
           edge="start"
           color={color}
+          trackSegments={trackSegments}
         />
 
         {/* Waveform visualization */}
@@ -188,6 +189,7 @@ export function SpeakerSegment({
           scale={scale}
           edge="end"
           color={color}
+          trackSegments={trackSegments}
         />
 
         {/* Merge button - show only when there's a touching next segment */}

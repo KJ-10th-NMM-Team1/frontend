@@ -97,10 +97,17 @@ export function useAudioTimeline(
   }, [languageCode])
 
   useEffect(() => {
-    if (segments.length === 0 || isInitializedRef.current) return
+    // 이미 초기화되었고 segments가 변하지 않았으면 스킵
+    if (isInitializedRef.current) return
 
-    const initialTracks = convertSegmentsToTracks(segments)
-    setTracks(initialTracks)
+    // segments가 비어있어도 tracks를 초기화해야 함 (이전 언어의 데이터 제거)
+    if (segments.length === 0) {
+      setTracks([])
+    } else {
+      const initialTracks = convertSegmentsToTracks(segments)
+      setTracks(initialTracks)
+    }
+
     isInitializedRef.current = true
   }, [segments, setTracks])
 

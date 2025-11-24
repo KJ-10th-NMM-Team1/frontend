@@ -11,10 +11,7 @@ import {
   useDeleteVoiceSample,
   useRemoveFromMyVoices,
 } from '@/features/voice-samples/hooks/useVoiceSamples'
-import {
-  useCreditBalance,
-  usePurchaseVoiceWithCredits,
-} from '@/features/credits/hooks/useCredits'
+import { useCreditBalance, usePurchaseVoiceWithCredits } from '@/features/credits/hooks/useCredits'
 import { CREDIT_COST_PER_VOICE_ADD } from '@/shared/constants/credits'
 import { useUiStore } from '@/shared/store/useUiStore'
 import { useAuthStore } from '@/shared/store/useAuthStore'
@@ -35,11 +32,11 @@ import { VoiceSearchBar } from './components/VoiceSearchBar'
 import type { VoiceFilters } from './hooks/useVoiceLibraryFilters'
 import { VoiceFiltersModal } from './components/VoiceFiltersModal'
 import { useVoiceLibraryFilters } from './hooks/useVoiceLibraryFilters'
-import { CharacterVoicesSection } from './sections/CharacterVoicesSection'
 import { TrendingVoicesSection } from './sections/TrendingVoicesSection'
 import { UseCaseCarouselSection } from './sections/UseCaseCarouselSection'
 import { VoiceListSection } from './sections/VoiceListSection'
 import { VoicePurchaseModal } from './components/VoicePurchaseModal'
+import { LanguageQuickFilter } from './components/LanguageQuickFilter'
 
 type LibraryTab = 'library' | 'mine'
 
@@ -58,11 +55,11 @@ const getPresignedUrl = async (path: string): Promise<string | undefined> => {
     }
     const data = (await response.json()) as { url: string }
     return data.url
-    } catch (error: unknown) {
-      console.error('Presigned URL 가져오기 실패:', error)
-      return undefined
-    }
+  } catch (error: unknown) {
+    console.error('Presigned URL 가져오기 실패:', error)
+    return undefined
   }
+}
 
 export default function VoiceLibraryPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -107,7 +104,9 @@ export default function VoiceLibraryPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const selectedCategoryLabel = useMemo(() => {
     if (!selectedCategory) return null
-    return VOICE_CATEGORY_MAP[selectedCategory as keyof typeof VOICE_CATEGORY_MAP] ?? selectedCategory
+    return (
+      VOICE_CATEGORY_MAP[selectedCategory as keyof typeof VOICE_CATEGORY_MAP] ?? selectedCategory
+    )
   }, [selectedCategory])
 
   useEffect(() => {
@@ -131,7 +130,7 @@ export default function VoiceLibraryPage() {
       fetchVoiceSamples({
         q: search.trim() || undefined,
         mySamplesOnly: tab === 'mine',
-        // myVoicesOnly는 제거 - mySamplesOnly만 사용 (자신이 만든 보이스는 자동으로 user_voices에 추가됨)
+        myVoicesOnly: tab === 'mine', // 내 목소리 탭에서 추가한 보이스도 포함
         isBuiltin: undefined,
         languages:
           filters.languages && filters.languages.length > 0 ? filters.languages : undefined,
@@ -240,7 +239,8 @@ export default function VoiceLibraryPage() {
           stopPlayback()
         })
 
-        audio.play()
+        audio
+          .play()
           .then(() => {
             setPlayerSample(sample)
             setPlayerLoading(false)
@@ -324,7 +324,6 @@ export default function VoiceLibraryPage() {
   const normalizedSearch = useMemo(() => search.trim().toLowerCase(), [search])
   const hasFilters = useMemo(() => {
     return Boolean(
-
       (filters.languages && filters.languages.length > 0) ||
         (filters.category && filters.category.length > 0) ||
         (filters.tags && filters.tags.length > 0) ||
@@ -463,14 +462,6 @@ export default function VoiceLibraryPage() {
       .slice(0, 6)
   }, [sortedSamples])
 
-  // Character voices (캐릭터 보이스) - 캐릭터 카테고리로 명확히 필터링
-  const characterVoices = useMemo(() => {
-    return sortedSamples
-      .filter((sample) => sample.category?.includes('character'))
-      .sort((a, b) => (b.addedCount ?? 0) - (a.addedCount ?? 0))
-      .slice(0, 6)
-  }, [sortedSamples])
-
   // Add to my voices 핸들러 (크레딧 차감 모달)
   const handleRequestAddToMyVoices = useCallback(
     (sample: VoiceSample) => {
@@ -576,6 +567,31 @@ export default function VoiceLibraryPage() {
     }
   }, [searchParams, tab])
 
+  // 언어 토글 핸들러 (단일 선택만 가능)
+  const handleToggleLanguage = useCallback(
+    (languageCode: string | null) => {
+      if (languageCode === null) {
+        // 전체 선택 (필터 해제)
+        setFilters((prev) => ({
+          ...prev,
+          languages: undefined,
+        }))
+        return
+      }
+
+      const normalizedCode = languageCode.toLowerCase()
+      const currentLanguages = filters.languages ?? []
+      const isSelected = currentLanguages.some((lang) => lang.toLowerCase() === normalizedCode)
+
+      setFilters((prev) => ({
+        ...prev,
+        // 이미 선택된 언어를 클릭하면 해제, 다른 언어를 클릭하면 기존 선택 해제하고 새로 선택
+        languages: isSelected ? undefined : [normalizedCode],
+      }))
+    },
+    [filters.languages, setFilters],
+  )
+
   if (!isAuthenticated) {
     return null
   }
@@ -594,138 +610,195 @@ export default function VoiceLibraryPage() {
         </div>
 
         {/* 검색 및 필터 */}
-        <div className="flex items-center gap-4">
-          <VoiceSearchBar
-            value={search}
-            onChange={setSearch}
-            chips={chips}
-            onResetChips={() => {
-              resetFilters()
-              setSelectedCategory(null)
-            }}
-          />
-          <div className="flex items-center gap-2 text-xs">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="secondary"
-                  className="h-10 gap-2 rounded-full border-outline/30 bg-primary-container px-3 py-1.5 text-sm font-medium text-on-primary-container shadow-soft hover:bg-primary-container/90"
-                >
-                  {sort === 'trending' && (
-                    <>
-                      인기순 <ArrowDown className="h-3 w-3 text-on-primary-container" />
-                    </>
-                  )}
-                  {sort === 'added-desc' && (
-                    <>
-                      인기순 <ArrowDown className="h-3 w-3 text-on-primary-container" />
-                    </>
-                  )}
-                  {sort === 'added-asc' && (
-                    <>
-                      인기순 <ArrowUp className="h-3 w-3 text-on-primary-container" />
-                    </>
-                  )}
-                  {sort === 'created-desc' && (
-                    <>
-                      최신순 <ArrowDown className="h-3 w-3 text-on-primary-container" />
-                    </>
-                  )}
-                  {sort === 'created-asc' && (
-                    <>
-                      오래된순 <ArrowUp className="h-3 w-3 text-on-primary-container" />
-                    </>
-                  )}
-                  <ChevronDown className="h-3 w-3 text-on-primary-container" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                <DropdownMenuItem onClick={() => setSort('added-desc')}>
-                  <div className="flex items-center gap-1">
-                    인기순 <ArrowDown className="h-3 w-3" />
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSort('added-asc')}>
-                  <div className="flex items-center gap-1">
-                    인기순 <ArrowUp className="h-3 w-3" />
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSort('created-desc')}>
-                  <div className="flex items-center gap-1">
-                    최신순 <ArrowDown className="h-3 w-3" />
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSort('created-asc')}>
-                  <div className="flex items-center gap-1">
-                    오래된순 <ArrowUp className="h-3 w-3" />
-                  </div>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button
-              variant="secondary"
-              onClick={() => setIsFiltersModalOpen(true)}
-              className="h-10 gap-2 rounded-full border-outline/30 bg-primary-container px-3 py-1.5 text-sm font-medium text-on-primary-container shadow-soft hover:bg-primary-container/90"
-            >
-              <Filter className="h-4 w-4" />
-              필터
-            </Button>
-          </div>
-        </div>
-
-      {/* Trending voices 섹션 */}
-      {tab === 'library' &&
-        trendingVoices.length > 0 &&
-        !search.trim() &&
-        !hasFilters &&
-        !selectedCategory && (
-        <TrendingVoicesSection
-          voices={trendingVoices}
-          onPlay={handlePlaySample}
-          playingSampleId={playingSampleId}
-          onAddToMyVoices={handleRequestAddToMyVoices}
-          onRemoveFromMyVoices={handleRemoveFromMyVoices}
-          addingToMyVoices={addingToMyVoices}
-          removingFromMyVoices={removingFromMyVoices}
-          onSortChange={() => {
-            // 드롭다운이 열리도록 하려면 별도 처리가 필요하지만,
-            // 일단 trending으로 설정
-            setSort('trending')
-          }}
-          currentUserId={currentUser?._id}
-        />
-      )}
-
-      {/* Handpicked for your use case 캐러셀 */}
-      {tab === 'library' && !search.trim() && !hasFilters && !selectedCategory && (
-        <UseCaseCarouselSection
-          onCategoryClick={(category) => {
-            setSelectedCategory(category)
-            setFilters({ ...filters, category: [category] })
-          }}
-        />
-      )}
-
-      {/* 카테고리 필터링된 결과 */}
-      {tab === 'library' && selectedCategory && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedCategory(null)
-                  setFilters({ ...filters, category: undefined })
-                }}
-                className="text-sm text-muted hover:text-foreground"
+        <div className="space-y-3">
+          <div className="flex items-center gap-4">
+            <VoiceSearchBar
+              value={search}
+              onChange={setSearch}
+              chips={chips}
+              onResetChips={() => {
+                resetFilters()
+                setSelectedCategory(null)
+              }}
+            />
+            <div className="flex items-center gap-2 text-xs">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="secondary"
+                    className="border-outline/30 bg-primary-container text-on-primary-container hover:bg-primary-container/90 h-10 gap-2 rounded-full px-3 py-1.5 text-sm font-medium shadow-soft"
+                  >
+                    {sort === 'trending' && (
+                      <>
+                        인기순 <ArrowDown className="text-on-primary-container h-3 w-3" />
+                      </>
+                    )}
+                    {sort === 'added-desc' && (
+                      <>
+                        인기순 <ArrowDown className="text-on-primary-container h-3 w-3" />
+                      </>
+                    )}
+                    {sort === 'added-asc' && (
+                      <>
+                        인기순 <ArrowUp className="text-on-primary-container h-3 w-3" />
+                      </>
+                    )}
+                    {sort === 'created-desc' && (
+                      <>
+                        최신순 <ArrowDown className="text-on-primary-container h-3 w-3" />
+                      </>
+                    )}
+                    {sort === 'created-asc' && (
+                      <>
+                        오래된순 <ArrowUp className="text-on-primary-container h-3 w-3" />
+                      </>
+                    )}
+                    <ChevronDown className="text-on-primary-container h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuItem onClick={() => setSort('added-desc')}>
+                    <div className="flex items-center gap-1">
+                      인기순 <ArrowDown className="h-3 w-3" />
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSort('added-asc')}>
+                    <div className="flex items-center gap-1">
+                      인기순 <ArrowUp className="h-3 w-3" />
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSort('created-desc')}>
+                    <div className="flex items-center gap-1">
+                      최신순 <ArrowDown className="h-3 w-3" />
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSort('created-asc')}>
+                    <div className="flex items-center gap-1">
+                      오래된순 <ArrowUp className="h-3 w-3" />
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button
+                variant="secondary"
+                onClick={() => setIsFiltersModalOpen(true)}
+                className="border-outline/30 bg-primary-container text-on-primary-container hover:bg-primary-container/90 h-10 gap-2 rounded-full px-3 py-1.5 text-sm font-medium shadow-soft"
               >
-                ← Back
-              </button>
-              <h2 className="text-lg font-semibold">{selectedCategoryLabel}</h2>
+                <Filter className="h-4 w-4" />
+                필터
+              </Button>
             </div>
           </div>
+
+          {/* 언어 빠른 필터 */}
+          {tab === 'library' && languageOptions.length > 0 && (
+            <LanguageQuickFilter
+              languages={languageOptions.map((lang) => ({
+                code: lang.code,
+                label: lang.label,
+              }))}
+              selectedLanguages={filters.languages ?? []}
+              onToggleLanguage={handleToggleLanguage}
+            />
+          )}
+        </div>
+
+        {/* Trending voices 섹션 */}
+        {tab === 'library' &&
+          trendingVoices.length > 0 &&
+          !search.trim() &&
+          !hasFilters &&
+          !selectedCategory && (
+            <TrendingVoicesSection
+              voices={trendingVoices}
+              onPlay={handlePlaySample}
+              playingSampleId={playingSampleId}
+              onAddToMyVoices={handleRequestAddToMyVoices}
+              onRemoveFromMyVoices={handleRemoveFromMyVoices}
+              addingToMyVoices={addingToMyVoices}
+              removingFromMyVoices={removingFromMyVoices}
+              onSortChange={() => {
+                // 드롭다운이 열리도록 하려면 별도 처리가 필요하지만,
+                // 일단 trending으로 설정
+                setSort('trending')
+              }}
+              currentUserId={currentUser?._id}
+            />
+          )}
+
+        {/* Handpicked for your use case 캐러셀 */}
+        {tab === 'library' && !search.trim() && !hasFilters && !selectedCategory && (
+          <UseCaseCarouselSection
+            onCategoryClick={(category) => {
+              setSelectedCategory(category)
+              setFilters({ ...filters, category: [category] })
+            }}
+          />
+        )}
+
+        {/* 카테고리 필터링된 결과 */}
+        {tab === 'library' && selectedCategory && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategory(null)
+                    setFilters({ ...filters, category: undefined })
+                  }}
+                  className="text-sm text-muted hover:text-foreground"
+                >
+                  ← Back
+                </button>
+                <h2 className="text-lg font-semibold">{selectedCategoryLabel}</h2>
+              </div>
+            </div>
+            <VoiceListSection
+              title=""
+              samples={sortedSamples}
+              isLoading={voiceQuery.isLoading}
+              onPlay={handlePlaySample}
+              playingSampleId={playingSampleId}
+              onAddToMyVoices={handleRequestAddToMyVoices}
+              onRemoveFromMyVoices={handleRemoveFromMyVoices}
+              addingToMyVoices={addingToMyVoices}
+              removingFromMyVoices={removingFromMyVoices}
+              showActions={false}
+              onEdit={undefined}
+              onDelete={undefined}
+              deletingId={null}
+            />
+          </div>
+        )}
+
+        {/* 모든 목소리 섹션 */}
+        {tab === 'library' &&
+          sortedSamples.length > 0 &&
+          !selectedCategory &&
+          !normalizedSearch &&
+          !hasFilters && (
+            <VoiceListSection
+              title="모든 목소리"
+              samples={sortedSamples}
+              isLoading={voiceQuery.isLoading}
+              onPlay={handlePlaySample}
+              playingSampleId={playingSampleId}
+              onAddToMyVoices={handleRequestAddToMyVoices}
+              onRemoveFromMyVoices={handleRemoveFromMyVoices}
+              addingToMyVoices={addingToMyVoices}
+              removingFromMyVoices={removingFromMyVoices}
+              showActions={false}
+              onEdit={undefined}
+              onDelete={undefined}
+              deletingId={null}
+            />
+          )}
+
+        {/* 검색/필터 결과 전용 섹션 */}
+        {tab === 'library' && !selectedCategory && (normalizedSearch || hasFilters) && (
           <VoiceListSection
-            title=""
+            title="검색 결과"
             samples={sortedSamples}
             isLoading={voiceQuery.isLoading}
             onPlay={handlePlaySample}
@@ -739,66 +812,27 @@ export default function VoiceLibraryPage() {
             onDelete={undefined}
             deletingId={null}
           />
-        </div>
-      )}
+        )}
 
-      {/* Character voices 섹션 */}
-      {tab === 'library' &&
-        characterVoices.length > 0 &&
-        !selectedCategory &&
-        !normalizedSearch &&
-        !hasFilters && (
-        <CharacterVoicesSection
-          voices={characterVoices}
-          onPlay={handlePlaySample}
-          playingSampleId={playingSampleId}
-          onAddToMyVoices={handleRequestAddToMyVoices}
-          onRemoveFromMyVoices={handleRemoveFromMyVoices}
-          addingToMyVoices={addingToMyVoices}
-          removingFromMyVoices={removingFromMyVoices}
-          showTitle={!search.trim()}
-          currentUserId={currentUser?._id}
-        />
-      )}
-
-      {/* 검색/필터 결과 전용 섹션 */}
-      {tab === 'library' && !selectedCategory && (normalizedSearch || hasFilters) && (
-        <VoiceListSection
-          title="검색 결과"
-          samples={sortedSamples}
-          isLoading={voiceQuery.isLoading}
-          onPlay={handlePlaySample}
-          playingSampleId={playingSampleId}
-          onAddToMyVoices={handleRequestAddToMyVoices}
-          onRemoveFromMyVoices={handleRemoveFromMyVoices}
-          addingToMyVoices={addingToMyVoices}
-          removingFromMyVoices={removingFromMyVoices}
-          showActions={false}
-          onEdit={undefined}
-          onDelete={undefined}
-          deletingId={null}
-        />
-      )}
-
-      {/* 내 보이스 목록 */}
-      {tab === 'mine' && (
-        <VoiceListSection
-          title="내 목소리"
-          samples={sortedSamples}
-          isLoading={voiceQuery.isLoading}
-          onPlay={handlePlaySample}
-          playingSampleId={playingSampleId}
-          onAddToMyVoices={handleRequestAddToMyVoices}
-          onRemoveFromMyVoices={handleRemoveFromMyVoices}
-          addingToMyVoices={addingToMyVoices}
-          removingFromMyVoices={removingFromMyVoices}
-          showActions={isMyTab}
-          onEdit={handleEditSample}
-          onDelete={handleDeleteSample}
-          deletingId={deletingId}
-          currentUserId={currentUser?._id}
-        />
-      )}
+        {/* 내 보이스 목록 */}
+        {tab === 'mine' && (
+          <VoiceListSection
+            title="내 목소리"
+            samples={sortedSamples}
+            isLoading={voiceQuery.isLoading}
+            onPlay={handlePlaySample}
+            playingSampleId={playingSampleId}
+            onAddToMyVoices={handleRequestAddToMyVoices}
+            onRemoveFromMyVoices={handleRemoveFromMyVoices}
+            addingToMyVoices={addingToMyVoices}
+            removingFromMyVoices={removingFromMyVoices}
+            showActions={isMyTab}
+            onEdit={handleEditSample}
+            onDelete={handleDeleteSample}
+            deletingId={deletingId}
+            currentUserId={currentUser?._id}
+          />
+        )}
 
         <VoiceFiltersModal
           open={isFiltersModalOpen}
@@ -845,11 +879,11 @@ export default function VoiceLibraryPage() {
 
 function VoiceLibraryEmptyState({ onCreate }: { onCreate: () => void }) {
   return (
-    <div className="bg-surface-1 border-surface-4/80 text-center rounded-3xl border p-10 shadow-soft">
+    <div className="rounded-3xl border border-surface-4/80 bg-surface-1 p-10 text-center shadow-soft">
       <div className="mx-auto mb-6 h-40 w-40 max-w-[260px]">
         <EmptyStateIllustration />
       </div>
-      <h3 className="text-foreground text-xl font-semibold">보이스 샘플이 없습니다</h3>
+      <h3 className="text-xl font-semibold text-foreground">보이스 샘플이 없습니다</h3>
       <p className="text-muted-foreground mt-2 text-sm">
         새로운 보이스를 클로닝하거나 업로드해 보이스 마켓을 시작해 보세요.
       </p>
@@ -915,7 +949,7 @@ function FloatingVoiceButton({ onClick }: { onClick: () => void }) {
   return (
     <Button
       type="button"
-      className="bg-primary text-primary-foreground fixed right-[max(1rem,calc((100vw-80rem)/2+1rem))] bottom-16 z-40 flex h-16 w-16 items-center justify-center rounded-full shadow-xl shadow-black/20 transition hover:bg-primary-hover focus-visible:ring-2 focus-visible:ring-offset-2"
+      className="fixed bottom-16 right-[max(1rem,calc((100vw-80rem)/2+1rem))] z-40 flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl shadow-black/20 transition hover:bg-primary-hover focus-visible:ring-2 focus-visible:ring-offset-2"
       onClick={onClick}
       aria-label="내 목소리 만들기"
     >

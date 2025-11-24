@@ -190,7 +190,7 @@ export function TranslationSummarySection({
   return (
     <>
       <div className="flex h-full flex-col">
-        <div className="scrollbar-thin flex-1 space-y-2 overflow-y-auto bg-surface-1 p-3 shadow-soft">
+        <div className="scrollbar-thin flex-1 space-y-2 overflow-y-auto bg-white p-3 shadow-soft">
           {allSegments.map((segment) => {
             const isActive = activeSegmentId === segment.id
             const isTranslating = translatingSegments.has(segment.id)

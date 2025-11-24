@@ -164,18 +164,18 @@ export function DubbingIssuesSection({ segments }: DubbingIssuesSectionProps) {
   }
 
   return (
-    <section className="rbg-surface-1 flex h-full flex-col p-3 shadow-soft">
+    <section className="rbg-surface-1 flex h-full flex-col bg-white p-3 shadow-soft">
       <div className="mb-3 flex items-center justify-between px-2">
         <h3 className="text-sm font-semibold text-foreground">목록</h3>
         {issues.length > 0 && (
-          <span className="text-muted-foreground text-sm">
+          <span className="text-sm text-muted-foreground">
             {issues.filter((i) => !i.resolved).length}/{issues.length}
           </span>
         )}
       </div>
 
       {issues.length === 0 ? (
-        <div className="text-muted-foreground text-sm">
+        <div className="text-sm text-muted-foreground">
           <p>현재 이슈가 없습니다.</p>
         </div>
       ) : (
@@ -183,7 +183,7 @@ export function DubbingIssuesSection({ segments }: DubbingIssuesSectionProps) {
           {issues.map((issue) => (
             <div
               key={`${issue.segmentId}-${issue.id}`}
-              className={`border-outline/20 group flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-xs transition-all hover:border-primary/30 hover:bg-surface-2 ${
+              className={`group flex cursor-pointer items-center gap-3 rounded-lg border-outline/20 px-3 py-2 text-xs transition-all hover:border-primary/30 hover:bg-surface-2 ${
                 issue.resolved ? 'opacity-50' : ''
               }`}
               onClick={(e) => handleIssueClick(issue.segmentId, e)}
@@ -210,7 +210,7 @@ export function DubbingIssuesSection({ segments }: DubbingIssuesSectionProps) {
                 <span className="truncate font-medium text-foreground">
                   {getIssueTypeLabel(issue.issue_type)}
                 </span>
-                <span className="text-muted-foreground truncate">
+                <span className="truncate text-muted-foreground">
                   {getIssueMessage(issue.issue_type, issue.diff)}
                 </span>
 
@@ -228,7 +228,7 @@ export function DubbingIssuesSection({ segments }: DubbingIssuesSectionProps) {
               )}
 
               {/* 타임스탬프 - 강조 */}
-              <span className="bg-primary-container text-on-primary-container shrink-0 rounded-full px-2 py-1 text-xs font-semibold">
+              <span className="shrink-0 rounded-full bg-primary-container px-2 py-1 text-xs font-semibold text-on-primary-container">
                 {formatTime(issue.segmentStart)}
               </span>
             </div>

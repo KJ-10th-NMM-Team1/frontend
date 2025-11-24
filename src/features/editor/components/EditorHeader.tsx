@@ -34,10 +34,10 @@ export function EditorHeader({
   onExportClick,
 }: EditorHeaderProps) {
   return (
-    <div className="border-outline/20 relative flex items-center justify-between border-b bg-background/90 px-4 py-3 backdrop-blur">
+    <div className="relative flex items-center justify-between border-b border-outline/20 bg-background/90 px-4 py-3 backdrop-blur">
       {/* Left: Logo + Breadcrumbs */}
       <div className="flex items-center gap-3">
-        <div className="border-outline/30 rounded-full border bg-surface-1 px-3 py-1.5 text-xs shadow-soft">
+        <div className="rounded-full border border-outline/30 bg-surface-1 px-3 py-1.5 text-xs shadow-soft">
           <Breadcrumbs
             items={[
               { label: '홈', href: '/' },
