@@ -25,9 +25,14 @@ export function useEditorVersioning(
 
   useEffect(() => {
     if (segments && segments.length > 0) {
-      // 현재 언어의 버전이 없으면 version0 생성
-      // initializeVersion0 내부에서 이미 존재하는지 체크하므로 중복 생성 방지
-      initializeVersion0(projectId, languageCode, segments)
+      // segments의 언어가 현재 선택된 언어와 일치하는지 확인
+      // (keepPreviousData로 인해 이전 언어 데이터가 남아있을 수 있음)
+      const segmentLanguage = segments[0]?.language_code
+      if (segmentLanguage === languageCode) {
+        // 현재 언어의 버전이 없으면 version0 생성
+        // initializeVersion0 내부에서 이미 존재하는지 체크하므로 중복 생성 방지
+        initializeVersion0(projectId, languageCode, segments)
+      }
     }
   }, [projectId, languageCode, segments, initializeVersion0])
 
