@@ -23,7 +23,7 @@ export function HomeCommunitySection({ title, description, githubUrl }: HomeComm
       <MorphingBackground isHovered={isHovered} />
 
       {/* 3. 컨텐츠 (z-index: 10) */}
-      <div className="relative z-10 mx-auto max-w-7xl px-6">
+      <div className="relative z-10 mx-auto max-w-7xl translate-y-10 px-6 lg:translate-y-14">
         <div className="mb-16 text-center">
           <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">{title}</h2>
           <p className="mt-4 text-lg text-gray-500">{description}</p>
@@ -47,7 +47,8 @@ export function HomeCommunitySection({ title, description, githubUrl }: HomeComm
 
             <h3 className="mb-2 text-xl font-bold text-gray-900">KJ-10th-NMM-Team1</h3>
             <p className="mb-8 text-gray-500">
-              영상의 말투·감정·타이밍을 유지한 채<br /> 여러 언어로 자연스럽게 재해석해주는<br /> AI 기반 더빙 플랫폼입니다
+              영상의 말투·감정·타이밍을 유지한 채<br /> 여러 언어로 자연스럽게 재해석해주는
+              <br /> AI 기반 더빙 플랫폼입니다
             </p>
 
             <div className="mt-auto flex items-center text-sm font-semibold text-gray-900">

@@ -25,11 +25,11 @@ const LANDING_CONTENT = {
     title: 'AI 기반 자동 더빙으로 글로벌 콘텐츠를 만드세요',
     description:
       '원본 영상을 선택한 언어로 자동 더빙하여 전 세계 시청자에게 전달하세요.\n자연스러운 음성과 정확한 타이밍의 영상을 만들어 드립니다.',
-    videoSrc: '/media/welcom/preview.mp4',
+    videoSrc: '/media/welcom/preview_new.mp4',
     videoPoster: '', // 썸네일 이미지 경로 (옵션)
     samples: {
-      ko: { label: '한국어', audioSrc: '/media/welcom/korean_audio.mp3' },
-      en: { label: 'English', audioSrc: '/media/welcom/english_audio.mp3' },
+      ko: { label: '한국어', audioSrc: '/media/welcom/korean_audio.wav' },
+      en: { label: 'English', audioSrc: '/media/welcom/english_audio.wav' },
     },
   },
 
