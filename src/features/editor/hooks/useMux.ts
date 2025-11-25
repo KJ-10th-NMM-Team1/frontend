@@ -34,7 +34,7 @@ type UseMuxReturn = {
  * </Button>
  * ```
  */
-export function useMux({ projectId, editorData, job_id }: UseMuxOptions): UseMuxReturn {
+export function useMux({ projectId, editorData }: UseMuxOptions): UseMuxReturn {
   const getAllSegments = useTracksStore((state) => state.getAllSegments)
   const showToast = useUiStore((state) => state.showToast)
   const [isMuxing, setIsMuxing] = useState(false)
@@ -96,11 +96,10 @@ export function useMux({ projectId, editorData, job_id }: UseMuxOptions): UseMux
 
       const result = await createMux({
         project_id: projectId,
-        job_id: job_id,
         video_key: editorData.playback.video_source, // S3 키
         background_audio_key: editorData.playback.background_audio_source, // S3 키
         segments: muxSegments,
-        output_prefix: `projects/${projectId}/outputs/${job_id}`,
+        output_prefix: `projects/${projectId}/outputs`,
       })
 
       if (result.success) {
