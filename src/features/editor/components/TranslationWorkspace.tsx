@@ -304,7 +304,7 @@ export function TranslationWorkspace({
     <>
       <section className="flex h-full flex-col p-3">
         <header className="flex flex-wrap items-center justify-between gap-2 pb-3">
-          <div className="text-muted flex items-center gap-2 text-sm font-medium">
+          <div className="flex items-center gap-2 text-sm font-medium text-muted">
             <span>{sourceLanguage}</span>
             <ArrowRight className="h-4 w-4" />
             <span>{languageNameMap[targetLanguage]}</span>

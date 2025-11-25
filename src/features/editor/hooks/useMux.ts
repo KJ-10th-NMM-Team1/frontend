@@ -9,7 +9,6 @@ import type { EditorState } from './useEditorState'
 
 type UseMuxOptions = {
   projectId: string
-  job_id: string
   editorData: EditorState | undefined
 }
 

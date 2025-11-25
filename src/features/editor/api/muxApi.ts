@@ -2,7 +2,6 @@ import { apiPost } from '@/shared/api/client'
 
 export type MuxRequest = {
   project_id: string
-  job_id: string
   video_key: string
   background_audio_key: string
   segments: Array<{
