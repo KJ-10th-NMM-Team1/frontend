@@ -8,7 +8,10 @@ import { env } from '@/shared/config/env'
 import { cn } from '@/shared/lib/utils'
 import { Spinner } from '@/shared/ui/Spinner'
 import { VOICE_CATEGORY_MAP } from '@/shared/constants/voiceCategories'
-import { DEFAULT_AVATAR, getPresetAvatarUrl } from '@/features/voice-samples/components/voiceSampleFieldUtils'
+import {
+  DEFAULT_AVATAR,
+  getPresetAvatarUrl,
+} from '@/features/voice-samples/components/voiceSampleFieldUtils'
 
 const getPresignedUrl = async (path: string): Promise<string | undefined> => {
   try {
@@ -124,9 +127,7 @@ export function VoiceHighlightChip({
 
   const licenseBadgeLabel = sample.canCommercialUse === false ? '비상업 전용' : '상업 사용 가능'
   const licenseBadgeClass =
-    sample.canCommercialUse === false
-      ? 'bg-warning/20 text-warning'
-      : 'bg-primary/10 text-primary'
+    sample.canCommercialUse === false ? 'bg-warning/20 text-warning' : 'bg-primary/10 text-primary'
   const isCommercialAllowed = sample.canCommercialUse !== false
   const isPublicVoice = sample.isPublic !== false
   const addDisabled =
@@ -152,7 +153,6 @@ export function VoiceHighlightChip({
 
   const displayName = sample.name || 'Unknown'
   const initials = displayName[0]?.toUpperCase() || 'V'
-
 
   return (
     <button
@@ -196,55 +196,54 @@ export function VoiceHighlightChip({
         )}
       </div>
 
-        {/* 텍스트 영역 */}
-        <div className="min-w-0 flex-1 text-left">
-          {/* 이름 + 라이선스 뱃지 */}
-          <div className="flex items-start gap-2">
-            <div className="truncate text-sm font-semibold text-foreground">{displayName}</div>
-            <span
-              className={cn(
-                'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold shadow-sm',
-                licenseBadgeClass,
-              )}
-            >
-              {licenseBadgeLabel}
-            </span>
-          </div>
-          {/* 두 번째 줄: 언어/국기 및 사용 수 */}
-          <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
-            {countryCode && (
-              <ReactCountryFlag
-                countryCode={countryCode}
-                svg
-                style={{ width: '0.8em', height: '0.8em' }}
-              />
+      {/* 텍스트 영역 */}
+      <div className="min-w-0 flex-1 text-left">
+        {/* 이름 + 라이선스 뱃지 */}
+        <div className="flex items-start gap-2">
+          <div className="truncate text-sm font-semibold text-foreground">{displayName}</div>
+          <span
+            className={cn(
+              'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold shadow-sm',
+              licenseBadgeClass,
             )}
-            <span className="truncate">
-              {(COUNTRY_DISPLAY_MAP[sample.country?.toLowerCase() ?? '']?.label ??
-                sample.country) ||
-                '언어 미상'}
-            </span>
-            <span className="text-muted-foreground">•</span>
-            <span className="truncate text-foreground">{`${formatUserCount(sample.addedCount)} 사용`}</span>
-          </div>          
-          {/* 세 번째 줄: 카테고리 + 태그 한 줄 */}
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
-            <span className="rounded-full bg-surface-2 px-2 py-0.5 text-foreground">
-              {sample.category?.length
-                ? VOICE_CATEGORY_MAP[sample.category[0] as keyof typeof VOICE_CATEGORY_MAP] ??
-                  sample.category[0]
-                : '카테고리 미지정'}
-            </span>
-            {sample.tags?.slice(0, 3).map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] text-foreground"
-              >
-                #{tag}
-              </span>
-            ))}
-          </div>
+          >
+            {licenseBadgeLabel}
+          </span>
         </div>
+        {/* 두 번째 줄: 언어/국기 및 사용 수 */}
+        <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
+          {countryCode && (
+            <ReactCountryFlag
+              countryCode={countryCode}
+              svg
+              style={{ width: '0.8em', height: '0.8em' }}
+            />
+          )}
+          <span className="truncate">
+            {(COUNTRY_DISPLAY_MAP[sample.country?.toLowerCase() ?? '']?.label ?? sample.country) ||
+              '언어 미상'}
+          </span>
+          <span className="text-muted-foreground">•</span>
+          <span className="truncate text-foreground">{`${formatUserCount(sample.addedCount)} 사용`}</span>
+        </div>
+        {/* 세 번째 줄: 카테고리 + 태그 한 줄 */}
+        <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+          <span className="rounded-full bg-surface-2 px-2 py-0.5 text-foreground">
+            {sample.category?.length
+              ? (VOICE_CATEGORY_MAP[sample.category[0] as keyof typeof VOICE_CATEGORY_MAP] ??
+                sample.category[0])
+              : '카테고리 미지정'}
+          </span>
+          {sample.tags?.slice(0, 3).map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] text-foreground"
+            >
+              #{tag}
+            </span>
+          ))}
+        </div>
+      </div>
 
       {/* 액션 버튼들 */}
       <div className="flex items-center gap-1">
@@ -281,9 +280,7 @@ export function VoiceHighlightChip({
               }
             }}
             disabled={addDisabled}
-            title={
-              addDisabledReason ?? (isInMyVoices ? '내 목소리에서 제거' : '내 목소리에 추가')
-            }
+            title={addDisabledReason ?? (isInMyVoices ? '내 목소리에서 제거' : '내 목소리에 추가')}
             className={cn(
               'flex-shrink-0 rounded-full p-1.5 transition-colors',
               isInMyVoices
