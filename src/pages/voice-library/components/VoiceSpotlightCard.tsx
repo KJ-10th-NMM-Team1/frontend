@@ -81,6 +81,7 @@ export function VoiceSpotlightCard({
   onDelete,
   isDeleting = false,
   isOwner = false,
+  avatarImageUrl = string,
 }: VoiceSpotlightCardProps) {
   const [resolvedAvatar, setResolvedAvatar] = useState<string>(
     getPresetAvatarUrl(sample.avatarPreset || 'default') ?? DEFAULT_AVATAR,
@@ -218,7 +219,7 @@ export function VoiceSpotlightCard({
         </div>
 
         {/* 2열: Language */}
-        <div className="text-muted-foreground flex items-center gap-2 text-[13px]">
+        <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
           {countryCode && (
             <ReactCountryFlag
               countryCode={countryCode}
@@ -232,18 +233,18 @@ export function VoiceSpotlightCard({
         </div>
 
         {/* 3열: 카테고리 */}
-        <div className="text-muted-foreground min-w-0 text-[13px]">
+        <div className="min-w-0 text-[13px] text-muted-foreground">
           {categoryText ? (
             <span className="block truncate" title={categoryText}>
               {categoryText}
             </span>
           ) : (
-            <span className="text-muted-foreground text-[11px]">카테고리 없음</span>
+            <span className="text-[11px] text-muted-foreground">카테고리 없음</span>
           )}
         </div>
 
         {/* 4열: 태그 */}
-        <div className="text-muted-foreground flex max-h-10 flex-wrap items-center gap-2 overflow-hidden text-[12px]">
+        <div className="flex max-h-10 flex-wrap items-center gap-2 overflow-hidden text-[12px] text-muted-foreground">
           <span
             className={cn(
               'whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold',
@@ -262,12 +263,12 @@ export function VoiceSpotlightCard({
               </span>
             ))
           ) : (
-            <span className="text-muted-foreground text-[11px]">태그 없음</span>
+            <span className="text-[11px] text-muted-foreground">태그 없음</span>
           )}
         </div>
 
         {/* 5열: 사용 수 */}
-        <div className="text-muted-foreground text-right text-[12px]">
+        <div className="text-right text-[12px] text-muted-foreground">
           {`${formatUserCount(sample.addedCount)} 사용`}
         </div>
 
@@ -366,7 +367,7 @@ export function VoiceSpotlightCard({
                 e.stopPropagation()
                 e.preventDefault()
               }}
-              className="text-muted-foreground flex h-9 w-9 items-center justify-center rounded-full bg-surface-2 shadow-inner transition hover:bg-surface-3 hover:text-foreground"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-2 text-muted-foreground shadow-inner transition hover:bg-surface-3 hover:text-foreground"
             >
               <MoreHorizontal className="h-4 w-4" />
             </button>
@@ -404,7 +405,7 @@ export function VoiceSpotlightCard({
           <div className="min-w-0 flex-1">
             <h3 className="text-base font-semibold">{sample.name}</h3>
             {sample.description && (
-              <p className="text-muted-foreground line-clamp-1 text-sm font-medium">
+              <p className="line-clamp-1 text-sm font-medium text-muted-foreground">
                 {sample.description}
               </p>
             )}
