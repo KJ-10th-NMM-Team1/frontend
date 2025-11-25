@@ -22,6 +22,7 @@ type EditorUiState = {
 
   // UI modes
   splitMode: boolean
+  isScrubbing: boolean // Timeline scrubbing state
 
   // Loading states
   loadingSegments: Set<string> // Segments currently generating audio
@@ -39,6 +40,7 @@ type EditorUiState = {
   setSegmentLoading: (segmentId: string, isLoading: boolean) => void
   isSegmentLoading: (segmentId: string) => boolean
   setAudioPlaybackMode: (mode: AudioPlaybackMode) => void
+  setIsScrubbing: (isScrubbing: boolean) => void
   reset: () => void
 }
 
@@ -56,6 +58,7 @@ export const useEditorStore = create<EditorUiState>()(
     segmentEnd: null,
     activeSegmentId: null,
     splitMode: false,
+    isScrubbing: false,
     loadingSegments: new Set(),
     audioPlaybackMode: 'original', // Default to original audio
 
@@ -113,6 +116,12 @@ export const useEditorStore = create<EditorUiState>()(
         payload: mode,
       }),
 
+    setIsScrubbing: (isScrubbing) =>
+      set({ isScrubbing }, false, {
+        type: 'editor/setIsScrubbing',
+        payload: isScrubbing,
+      }),
+
     reset: () =>
       set(
         {
@@ -124,6 +133,7 @@ export const useEditorStore = create<EditorUiState>()(
           segmentEnd: null,
           activeSegmentId: null,
           splitMode: false,
+          isScrubbing: false,
           loadingSegments: new Set(),
           // audioPlaybackMode는 언어 변경 시 별도로 설정되므로 초기화하지 않음
         },

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useMemo } from 'react'
 
 import { useQuery } from '@tanstack/react-query'
 import { Pause, Play } from 'lucide-react'
@@ -8,6 +8,8 @@ import { apiGet } from '@/shared/api/client'
 import { queryKeys } from '@/shared/config/queryKeys'
 import { useEditorStore } from '@/shared/store/useEditorStore'
 import { Button } from '@/shared/ui/Button'
+import { throttle } from '@/shared/lib/utils/throttle'
+import { getKeyframeTime, VIDEO_SEEK_CONFIG } from '@/features/editor/utils/video-keyframe'
 
 type StudioVideoPreviewProps = {
   activeLanguage: string
@@ -38,18 +40,63 @@ export function StudioVideoPreview({
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const lastSyncedPlayheadRef = useRef<number>(0)
-  const { playhead, isPlaying, setPlayhead, setPlaying } = useEditorStore(
+  const seekingTimeoutRef = useRef<number>()
+  const isFastSeekingRef = useRef<boolean>(false)
+
+  const { playhead, isPlaying, isScrubbing, setPlayhead, setPlaying } = useEditorStore(
     (state) => ({
       playhead: state.playhead,
       isPlaying: state.isPlaying,
+      isScrubbing: state.isScrubbing,
       setPlayhead: state.setPlayhead,
       setPlaying: state.setPlaying,
     }),
     shallow,
   )
 
+  // Throttled video seeking function (100ms)
+  // playhead는 즉시 업데이트되지만, 실제 비디오 시킹은 throttle 적용
+  const seekVideo = useMemo(
+    () =>
+      throttle((video: HTMLVideoElement, targetTime: number, scrubbing: boolean) => {
+        if (scrubbing) {
+          // 스크러빙 중: 키프레임 기반 시킹 (빠른 시킹)
+          const timeDiff = Math.abs(video.currentTime - targetTime)
+
+          if (timeDiff > VIDEO_SEEK_CONFIG.FINE_SEEK_THRESHOLD) {
+            // 큰 점프: 키프레임으로 이동
+            const keyframeTime = getKeyframeTime(targetTime, VIDEO_SEEK_CONFIG.GOP_SIZE)
+
+            // fastSeek API 사용 (지원하는 브라우저만)
+            if ('fastSeek' in video && typeof (video as HTMLVideoElement & { fastSeek?: (time: number) => void }).fastSeek === 'function') {
+              isFastSeekingRef.current = true
+              const videoWithFastSeek = video as HTMLVideoElement & { fastSeek: (time: number) => void }
+              videoWithFastSeek.fastSeek(keyframeTime)
+            } else {
+              video.currentTime = keyframeTime
+            }
+          } else {
+            // 미세 조정: 정확한 프레임으로 이동
+            video.currentTime = targetTime
+          }
+        } else {
+          // 일반 시킹: 정확한 위치로 이동
+          video.currentTime = targetTime
+        }
+
+        // Timeout으로 시킹 완료 대기
+        if (seekingTimeoutRef.current) {
+          clearTimeout(seekingTimeoutRef.current)
+        }
+        seekingTimeoutRef.current = window.setTimeout(() => {
+          isFastSeekingRef.current = false
+        }, VIDEO_SEEK_CONFIG.SEEK_TIMEOUT)
+      }, VIDEO_SEEK_CONFIG.SCRUB_THROTTLE),
+    [],
+  )
+
   // playhead와 비디오 currentTime 동기화 (playhead -> video)
-  // 최적화: 재생 중이 아닐 때만 동기화 (재생 중에는 비디오가 자체적으로 재생)
+  // 최적화: 재생 중이 아닐 때만 동기화, 스크러빙 시 throttle 적용
   useEffect(() => {
     const video = videoRef.current
     if (!video) return
@@ -64,15 +111,15 @@ export function StudioVideoPreview({
     }
 
     // 일시정지 상태에서만 동기화
-    // 수동 탐색(seek)이나 외부에서 playhead 변경 시에만 비디오 위치 업데이트
     const timeDiff = Math.abs(video.currentTime - playhead)
     const playheadChanged = Math.abs(playhead - lastSyncedPlayheadRef.current) > 0.01
 
     if (playheadChanged && timeDiff > 0.05) {
-      video.currentTime = playhead
+      // Throttled seeking (스크러빙 중에만 throttle, 일반 시킹은 즉시 반영)
+      seekVideo(video, playhead, isScrubbing)
       lastSyncedPlayheadRef.current = playhead
     }
-  }, [playhead, isPlaying])
+  }, [playhead, isPlaying, isScrubbing, seekVideo])
 
   // 비디오의 play/pause 이벤트로 isPlaying 상태 동기화
   useEffect(() => {

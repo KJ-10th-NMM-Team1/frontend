@@ -190,7 +190,13 @@ export function useSegmentAudioPlayer({
 
   // Effect 2: activeSegments 변경 시 새 오디오 재생 및 비활성 오디오 정지
   useEffect(() => {
-    if (!isPlayingRef.current && !isScrubbing) return
+    // 🎯 스크러빙 중에는 오디오 업데이트 스킵 (비디오만 업데이트)
+    if (isScrubbing) {
+      console.debug('[MultiAudio] Skipping audio update during scrubbing')
+      return
+    }
+
+    if (!isPlayingRef.current) return
 
     const newActiveIds = new Set(activeSegmentsData.map((s) => s.id))
     const audios = audioRefsMap.current
@@ -240,23 +246,20 @@ export function useSegmentAudioPlayer({
     }
   }, [activeSegmentsData])
 
-  // Effect 4: scrubbing 시 모든 활성 오디오의 offset 동기화
+  // Effect 4: 스크러빙 중 오디오는 pause 상태로 유지
   useEffect(() => {
     if (!isScrubbing) return
 
     const audios = audioRefsMap.current
 
-    for (const segmentData of activeSegmentsData) {
-      const audio = audios.get(segmentData.id)
-      if (!audio) continue
-
-      // playhead가 현재 세그먼트 범위 내에 있을 때만 offset 업데이트
-      if (playhead >= segmentData.start && playhead < segmentData.end) {
-        const expectedOffset = playhead - segmentData.start
-        audio.currentTime = expectedOffset
+    // 🎯 스크러빙 중에는 모든 오디오를 pause 상태로 유지
+    // 비디오만 업데이트하여 성능 개선
+    for (const audio of audios.values()) {
+      if (!audio.paused) {
+        audio.pause()
       }
     }
-  }, [playhead, isScrubbing, activeSegmentsData])
+  }, [isScrubbing])
 
   // Effect 5: playhead 점프 시 offset 동기화 (키보드 단축키 등)
   useEffect(() => {
@@ -336,6 +339,38 @@ export function useSegmentAudioPlayer({
 
     activeSegmentIdsRef.current = new Set(activeSegmentsData.map((s) => s.id))
   }, [languageCode, activeSegmentsData, audioObjects])
+
+  // Effect 7: 스크러빙 종료 시 오디오 재동기화
+  const prevScrubbingRef = useRef(isScrubbing)
+  useEffect(() => {
+    const wasScrubbing = prevScrubbingRef.current
+    prevScrubbingRef.current = isScrubbing
+
+    // 스크러빙 종료: true → false (드랍 시점)
+    if (wasScrubbing && !isScrubbing) {
+      console.debug('[MultiAudio] Scrubbing ended - resyncing audio')
+
+      const audios = audioRefsMap.current
+
+      // 모든 활성 오디오를 현재 playhead에 동기화
+      for (const segmentData of activeSegmentsData) {
+        const audio = audios.get(segmentData.id)
+        if (!audio) continue
+
+        if (playhead >= segmentData.start && playhead < segmentData.end) {
+          const expectedOffset = playhead - segmentData.start
+          audio.currentTime = expectedOffset
+
+          // 재생 중이었으면 다시 재생
+          if (isPlayingRef.current) {
+            void audio.play().catch((error) => {
+              console.error(`[MultiAudio] Resume after scrub failed:`, error)
+            })
+          }
+        }
+      }
+    }
+  }, [isScrubbing, activeSegmentsData, playhead])
 
   // Cleanup on unmount
   useEffect(() => {

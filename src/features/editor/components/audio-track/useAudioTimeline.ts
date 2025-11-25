@@ -1,5 +1,5 @@
 import type { PointerEvent as ReactPointerEvent } from 'react'
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
+import { useEffect, useMemo, useRef, useCallback } from 'react'
 
 import { shallow } from 'zustand/shallow'
 
@@ -67,6 +67,8 @@ export function useAudioTimeline(
     segmentEnd,
     scale,
     audioPlaybackMode,
+    isScrubbing,
+    setIsScrubbing,
   } = useEditorStore(
     (state) => ({
       playbackRate: state.playbackRate,
@@ -80,6 +82,8 @@ export function useAudioTimeline(
       segmentEnd: state.segmentEnd,
       scale: state.scale,
       audioPlaybackMode: state.audioPlaybackMode,
+      isScrubbing: state.isScrubbing,
+      setIsScrubbing: state.setIsScrubbing,
     }),
     shallow,
   )
@@ -131,8 +135,6 @@ export function useAudioTimeline(
   const { audioUrls, audioObjects, readyAudioIds, isInitialLoadComplete } =
     usePreloadSegmentAudios(allSegments)
 
-  const [isScrubbing, setIsScrubbing] = useState(false)
-
   useEffect(() => {
     playheadRef.current = playhead
   }, [playhead])
@@ -176,6 +178,8 @@ export function useAudioTimeline(
     [isPlaying, setPlaying, setPlayhead, duration],
   )
 
+  // Scrub function: playhead는 즉시 업데이트 (부드러운 움직임)
+  // 실제 비디오/오디오 동기화는 각 컴포넌트에서 throttle 처리
   const scrub = useCallback(
     (clientX: number) => {
       const node = timelineRef.current
@@ -186,6 +190,7 @@ export function useAudioTimeline(
       // Convert pixel position to time using utility function
       const pixelPosition = clientX - rect.left + scrollLeft
       const time = pixelToTime(pixelPosition, duration, scale)
+      // playhead는 throttle 없이 즉시 업데이트 (시각적 부드러움)
       movePlayhead(time)
     },
     [duration, scale, movePlayhead],
