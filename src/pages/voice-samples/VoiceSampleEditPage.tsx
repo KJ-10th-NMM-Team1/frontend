@@ -13,7 +13,12 @@ import {
   VoiceTagsField,
   VoiceVisibilityAndLicense,
 } from '@/features/voice-samples/components'
-import { fetchVoiceSample, updateVoiceSample } from '@/features/voice-samples/api/voiceSamplesApi'
+import {
+  fetchVoiceSample,
+  updateVoiceSample,
+  prepareVoiceSampleAvatarUpload,
+  finalizeVoiceSampleAvatarUpload,
+} from '@/features/voice-samples/api/voiceSamplesApi'
 import { useLanguage } from '@/features/languages/hooks/useLanguage'
 import { getPresetAvatarUrl } from '@/features/voice-samples/components/voiceSampleFieldUtils'
 import { VoiceCloningLayout } from '@/pages/voice-cloning/components/VoiceCloningLayout'
@@ -48,6 +53,7 @@ export default function VoiceSampleEditPage() {
   const [tags, setTags] = useState<string[]>([])
   const [avatarPreset, setAvatarPreset] = useState<string | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [avatarImageFile, setAvatarImageFile] = useState<File | null>(null)
   const [isPublic, setIsPublic] = useState(false)
   const [licenseCode, setLicenseCode] = useState<string>('commercial')
   const [canCommercialUse, setCanCommercialUse] = useState(true)
@@ -96,6 +102,53 @@ export default function VoiceSampleEditPage() {
     }
   }
 
+  const handleAvatarImageFileChange = (file: File | null) => {
+    setAvatarImageFile(file)
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+      setAvatarPreset(null)
+    } else {
+      // 파일이 없으면 기존 이미지나 프리셋으로 복원
+      if (sample) {
+        const nextPreset = sample.avatarPreset ?? 'default'
+        setAvatarPreset(nextPreset)
+        setAvatarPreview(getPresetAvatarUrl(nextPreset) ?? sample.avatarImageUrl ?? null)
+      }
+    }
+  }
+
+  const uploadFileWithProgress = async ({
+    uploadUrl,
+    fields,
+    file,
+  }: {
+    uploadUrl: string
+    fields?: Record<string, string>
+    file: File
+  }) => {
+    const formData = new FormData()
+
+    if (fields) {
+      Object.entries(fields).forEach(([key, value]) => {
+        formData.append(key, value)
+      })
+    }
+    formData.append('file', file)
+
+    const response = await fetch(uploadUrl, {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (!response.ok) {
+      throw new Error(`Upload failed: ${response.status}`)
+    }
+  }
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     if (!id || !name.trim()) return
@@ -112,6 +165,31 @@ export default function VoiceSampleEditPage() {
         can_commercial_use: canCommercialUse,
         is_public: isPublic,
       })
+
+      // 이미지 파일이 있으면 업로드
+      if (avatarImageFile) {
+        try {
+          const { upload_url, fields, object_key: avatarObjectKey } =
+            await prepareVoiceSampleAvatarUpload(id, {
+              filename: avatarImageFile.name,
+              content_type: avatarImageFile.type || 'image/png',
+            })
+
+          await uploadFileWithProgress({
+            uploadUrl: upload_url,
+            fields,
+            file: avatarImageFile,
+          })
+
+          await finalizeVoiceSampleAvatarUpload(id, {
+            object_key: avatarObjectKey,
+          })
+        } catch (error) {
+          console.error('아바타 이미지 업로드 실패:', error)
+          // 이미지 업로드 실패해도 수정은 성공한 것으로 처리
+        }
+      }
+
       void queryClient.invalidateQueries({ queryKey: ['voice-library'], exact: false })
       queryClient.setQueryData(queryKeys.voiceSamples.detail(id), (prev: VoiceSample | undefined) =>
         prev
@@ -123,7 +201,9 @@ export default function VoiceSampleEditPage() {
               category: categories.length > 0 ? categories : undefined,
               tags: tags.length > 0 ? tags : undefined,
               avatarPreset: avatarPreset ?? undefined,
-              avatarImageUrl: getPresetAvatarUrl(avatarPreset) ?? prev.avatarImageUrl,
+              avatarImageUrl: avatarImageFile
+                ? avatarPreview
+                : getPresetAvatarUrl(avatarPreset) ?? prev.avatarImageUrl,
               licenseCode,
               canCommercialUse,
               isPublic,
@@ -185,7 +265,9 @@ export default function VoiceSampleEditPage() {
           onPresetChange={(preset) => {
             setAvatarPreset(preset)
             setAvatarPreview(getPresetAvatarUrl(preset) ?? null)
+            setAvatarImageFile(null)
           }}
+          onImageFileChange={handleAvatarImageFileChange}
           disabled={isSubmitting}
           helperText="512x512 이하 PNG/JPG 권장, 미선택 시 기존 또는 기본 이미지가 사용됩니다."
         />

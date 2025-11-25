@@ -13,6 +13,10 @@ import { Button } from '@/shared/ui/Button'
 import { Label } from '@/shared/ui/Label'
 
 import { useFinishUploadMutation, usePrepareUploadMutation } from '../hooks/useVoiceSampleStorage'
+import {
+  prepareVoiceSampleAvatarUpload,
+  finalizeVoiceSampleAvatarUpload,
+} from '../api/voiceSamplesApi'
 
 import { getPresetAvatarUrl } from './voiceSampleFieldUtils'
 
@@ -46,6 +50,7 @@ export function VoiceSampleForm({
   const [audioFile, setAudioFile] = useState<File | null>(initialFile)
   const [avatarPreset, setAvatarPreset] = useState<string | null>('default')
   const [avatarPreview, setAvatarPreview] = useState<string | null>(getPresetAvatarUrl('default') ?? null)
+  const [avatarImageFile, setAvatarImageFile] = useState<File | null>(null)
   const [notes, setNotes] = useState('')
   const [isPublic, setIsPublic] = useState(false)
   const [licenseCode, setLicenseCode] = useState<string>('commercial')
@@ -90,11 +95,30 @@ export function VoiceSampleForm({
 
   useEffect(() => {
     if (!avatarPreset) {
-      setAvatarPreview(null)
+      if (!avatarImageFile) {
+        setAvatarPreview(null)
+      }
       return
     }
-    setAvatarPreview(getPresetAvatarUrl(avatarPreset) ?? null)
-  }, [avatarPreset])
+    if (!avatarImageFile) {
+      setAvatarPreview(getPresetAvatarUrl(avatarPreset) ?? null)
+    }
+  }, [avatarPreset, avatarImageFile])
+
+  const handleAvatarImageFileChange = (file: File | null) => {
+    setAvatarImageFile(file)
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+      setAvatarPreset(null)
+    } else {
+      setAvatarPreview(getPresetAvatarUrl('default') ?? null)
+      setAvatarPreset('default')
+    }
+  }
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -166,6 +190,34 @@ export function VoiceSampleForm({
         license_code: licenseCode,
         can_commercial_use: canCommercialUse,
       })
+
+      // 이미지 파일이 있으면 업로드
+      if (avatarImageFile && createdSample.id) {
+        try {
+          setUploadProgress(90)
+          const { upload_url, fields, object_key: avatarObjectKey } =
+            await prepareVoiceSampleAvatarUpload(createdSample.id, {
+              filename: avatarImageFile.name,
+              content_type: avatarImageFile.type || 'image/png',
+            })
+
+          await uploadFileWithProgress({
+            uploadUrl: upload_url,
+            fields,
+            file: avatarImageFile,
+            onProgress: (percent) => {
+              setUploadProgress(90 + percent * 0.05)
+            },
+          })
+
+          await finalizeVoiceSampleAvatarUpload(createdSample.id, {
+            object_key: avatarObjectKey,
+          })
+        } catch (error) {
+          console.error('아바타 이미지 업로드 실패:', error)
+          // 이미지 업로드 실패해도 보이스샘플 생성은 성공한 것으로 처리
+        }
+      }
 
       setUploadProgress(100)
       showToast({
@@ -290,6 +342,7 @@ export function VoiceSampleForm({
     setTags([])
     setAvatarPreset('default')
     setAvatarPreview(getPresetAvatarUrl('default') ?? null)
+    setAvatarImageFile(null)
     setUploadStage('idle')
     setUploadProgress(0)
     setNotes('')
@@ -354,8 +407,9 @@ export function VoiceSampleForm({
         avatarPreview={avatarPreview}
         selectedPreset={avatarPreset}
         onPresetChange={setAvatarPreset}
+        onImageFileChange={handleAvatarImageFileChange}
         disabled={isUploading}
-        helperText="기본 아바타 중 하나를 선택하세요."
+        helperText="기본 아바타 중 하나를 선택하거나 직접 이미지를 업로드하세요."
       />
 
       <VoiceVisibilityAndLicense
