@@ -71,8 +71,46 @@ export function VoiceHighlightChip({
   const isProcessing = !hasAudioUrl
 
   useEffect(() => {
-    setResolvedAvatar(getPresetAvatarUrl(sample.avatarPreset || 'default') ?? DEFAULT_AVATAR)
-  }, [sample.avatarImageUrl, sample.avatarPreset])
+    let active = true
+
+    // 우선순위: avatarImagePath > avatarImageUrl > avatarPreset > 기본 아바타
+    const resolveAvatar = async () => {
+      // 1. avatarImagePath가 있으면 presigned URL 가져오기
+      if (sample.avatarImagePath && !sample.avatarImagePath.startsWith('http')) {
+        const url = await getPresignedUrl(sample.avatarImagePath)
+        if (url && active) {
+          setResolvedAvatar(url)
+          return
+        }
+      }
+
+      // 2. avatarImageUrl이 http로 시작하면 그대로 사용
+      if (sample.avatarImageUrl && sample.avatarImageUrl.startsWith('http') && active) {
+        setResolvedAvatar(sample.avatarImageUrl)
+        return
+      }
+
+      // 3. avatarPreset이 있으면 프리셋 URL 사용
+      if (sample.avatarPreset && active) {
+        const presetUrl = getPresetAvatarUrl(sample.avatarPreset)
+        if (presetUrl) {
+          setResolvedAvatar(presetUrl)
+          return
+        }
+      }
+
+      // 4. 기본 아바타
+      if (active) {
+        setResolvedAvatar(DEFAULT_AVATAR)
+      }
+    }
+
+    void resolveAvatar()
+
+    return () => {
+      active = false
+    }
+  }, [sample.avatarImagePath, sample.avatarImageUrl, sample.avatarPreset])
 
   const formatUserCount = (count?: number) => {
     const safeCount = count ?? 0
