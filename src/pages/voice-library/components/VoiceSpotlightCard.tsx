@@ -88,15 +88,12 @@ export function VoiceSpotlightCard({
   const isProcessing = !sample.audio_sample_url
   const isCommercialAllowed = sample.canCommercialUse !== false
   const isPublicVoice = sample.isPublic !== false
-  const addDisabled =
-    isOwner || !isCommercialAllowed || !isPublicVoice || isInMyVoices || isAdding || isRemoving
-  const addDisabledReason = isInMyVoices
-    ? '이미 내 목소리에 있습니다.'
-    : !isPublicVoice
-      ? '비공개 보이스는 추가할 수 없습니다.'
-      : !isCommercialAllowed
-        ? '비상업용 보이스는 추가할 수 없습니다.'
-        : undefined
+  const addDisabled = isOwner || !isCommercialAllowed || !isPublicVoice || isAdding || isRemoving
+  const addDisabledReason = !isPublicVoice
+    ? '비공개 보이스는 추가할 수 없습니다.'
+    : !isCommercialAllowed
+      ? '비상업용 보이스는 추가할 수 없습니다.'
+      : undefined
 
   useEffect(() => {
     let active = true

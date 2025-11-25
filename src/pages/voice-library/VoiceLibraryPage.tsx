@@ -601,8 +601,8 @@ export default function VoiceLibraryPage() {
       <div className="mx-auto max-w-7xl space-y-8 px-6 py-6 pb-28">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-1">
-            <h1 className="text-on-primary-container text-2xl font-bold">보이스 마켓</h1>
-            <p className="text-muted-foreground text-sm">
+            <h1 className="text-2xl font-bold text-on-primary-container">보이스 마켓</h1>
+            <p className="text-sm text-muted-foreground">
               원하는 목소리를 검색하고 필터로 빠르게 찾아보세요.
             </p>
           </div>
@@ -626,34 +626,34 @@ export default function VoiceLibraryPage() {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="secondary"
-                    className="border-outline/30 bg-primary-container text-on-primary-container hover:bg-primary-container/90 h-10 gap-2 rounded-full px-3 py-1.5 text-sm font-medium shadow-soft"
+                    className="h-10 gap-2 rounded-full border-outline/30 bg-primary-container px-3 py-1.5 text-sm font-medium text-on-primary-container shadow-soft hover:bg-primary-container/90"
                   >
                     {sort === 'trending' && (
                       <>
-                        인기순 <ArrowDown className="text-on-primary-container h-3 w-3" />
+                        인기순 <ArrowDown className="h-3 w-3 text-on-primary-container" />
                       </>
                     )}
                     {sort === 'added-desc' && (
                       <>
-                        인기순 <ArrowDown className="text-on-primary-container h-3 w-3" />
+                        인기순 <ArrowDown className="h-3 w-3 text-on-primary-container" />
                       </>
                     )}
                     {sort === 'added-asc' && (
                       <>
-                        인기순 <ArrowUp className="text-on-primary-container h-3 w-3" />
+                        인기순 <ArrowUp className="h-3 w-3 text-on-primary-container" />
                       </>
                     )}
                     {sort === 'created-desc' && (
                       <>
-                        최신순 <ArrowDown className="text-on-primary-container h-3 w-3" />
+                        최신순 <ArrowDown className="h-3 w-3 text-on-primary-container" />
                       </>
                     )}
                     {sort === 'created-asc' && (
                       <>
-                        오래된순 <ArrowUp className="text-on-primary-container h-3 w-3" />
+                        오래된순 <ArrowUp className="h-3 w-3 text-on-primary-container" />
                       </>
                     )}
-                    <ChevronDown className="text-on-primary-container h-3 w-3" />
+                    <ChevronDown className="h-3 w-3 text-on-primary-container" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
@@ -682,7 +682,7 @@ export default function VoiceLibraryPage() {
               <Button
                 variant="secondary"
                 onClick={() => setIsFiltersModalOpen(true)}
-                className="border-outline/30 bg-primary-container text-on-primary-container hover:bg-primary-container/90 h-10 gap-2 rounded-full px-3 py-1.5 text-sm font-medium shadow-soft"
+                className="h-10 gap-2 rounded-full border-outline/30 bg-primary-container px-3 py-1.5 text-sm font-medium text-on-primary-container shadow-soft hover:bg-primary-container/90"
               >
                 <Filter className="h-4 w-4" />
                 필터
@@ -884,7 +884,7 @@ function VoiceLibraryEmptyState({ onCreate }: { onCreate: () => void }) {
         <EmptyStateIllustration />
       </div>
       <h3 className="text-xl font-semibold text-foreground">보이스 샘플이 없습니다</h3>
-      <p className="text-muted-foreground mt-2 text-sm">
+      <p className="mt-2 text-sm text-muted-foreground">
         새로운 보이스를 클로닝하거나 업로드해 보이스 마켓을 시작해 보세요.
       </p>
       <div className="mt-6 flex justify-center">
