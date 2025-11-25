@@ -1,4 +1,10 @@
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from '@/shared/ui/Dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogTitle,
+} from '@/shared/ui/Dialog'
 import { Button } from '@/shared/ui/Button'
 import { Badge } from '@/shared/ui/Badge'
 import type { VoiceSample } from '@/entities/voice-sample/types'
@@ -35,7 +41,7 @@ export function VoicePurchaseModal({
 
   return (
     <Dialog open={open} onOpenChange={(value) => !value && onClose()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-[63rem]">
         <div className="space-y-3">
           <DialogTitle>내 목소리에 추가</DialogTitle>
           <DialogDescription>
@@ -57,22 +63,31 @@ export function VoicePurchaseModal({
 
             <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
               <div className="rounded-xl bg-white/60 p-3">
-                <p className="text-muted text-xs">현재 크레딧</p>
-                <p className="text-lg font-semibold text-foreground">{creditBalance.toLocaleString()} 크레딧</p>
+                <p className="text-xs text-muted">현재 크레딧</p>
+                <p className="text-lg font-semibold text-foreground">
+                  {creditBalance.toLocaleString()} 크레딧
+                </p>
               </div>
               <div className="rounded-xl bg-white/60 p-3">
-                <p className="text-muted text-xs">차감 크레딧</p>
-                <p className="text-lg font-semibold text-foreground">-{cost.toLocaleString()} 크레딧</p>
-              </div>
-              <div className={cn('rounded-xl p-3', insufficient ? 'bg-amber-100 text-amber-800' : 'bg-surface-2 text-foreground')}>
-                <p className="text-xs text-muted">차감 후 크레딧</p>
-                <p className="text-lg font-semibold">
-                  {remaining.toLocaleString()} 크레딧
+                <p className="text-xs text-muted">차감 크레딧</p>
+                <p className="text-lg font-semibold text-foreground">
+                  -{cost.toLocaleString()} 크레딧
                 </p>
-                {insufficient && <p className="text-[11px]">잔액이 부족합니다. 크레딧을 충전해주세요.</p>}
+              </div>
+              <div
+                className={cn(
+                  'rounded-xl p-3',
+                  insufficient ? 'bg-amber-100 text-amber-800' : 'bg-surface-2 text-foreground',
+                )}
+              >
+                <p className="text-xs text-muted">차감 후 크레딧</p>
+                <p className="text-lg font-semibold">{remaining.toLocaleString()} 크레딧</p>
+                {insufficient && (
+                  <p className="text-[11px]">잔액이 부족합니다. 크레딧을 충전해주세요.</p>
+                )}
               </div>
               <div className="rounded-xl bg-surface-2 p-3">
-                <p className="text-muted text-xs">라이선스 / 기간</p>
+                <p className="text-xs text-muted">라이선스 / 기간</p>
                 <p className="text-sm font-semibold text-foreground">{licenseLabel}</p>
                 <p className="text-xs text-muted">사용 기간: 무제한</p>
                 <p className="text-xs text-muted">

@@ -334,15 +334,15 @@ export function VoiceSampleSelectModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-outline/40 flex h-[700px] max-h-[85vh] max-w-lg flex-col gap-0 overflow-hidden rounded-2xl border bg-surface-1 p-0 shadow-soft md:rounded-3xl">
-        <div className="border-outline/30 z-10 flex flex-col border-b bg-surface-1/90 p-4">
+      <DialogContent className="flex h-[700px] max-h-[85vh] max-w-[48rem] flex-col gap-0 overflow-hidden rounded-2xl border border-outline/40 bg-surface-1 p-0 shadow-soft md:rounded-3xl">
+        <div className="z-10 flex flex-col border-b border-outline/30 bg-surface-1/90 p-4">
           <div className="mb-4 flex items-start justify-between">
             <div>
               <DialogTitle className="text-lg font-bold tracking-tight text-foreground">
                 보이스 선택
               </DialogTitle>
               {trackLabel && (
-                <p className="text-muted-foreground mt-1 text-xs">
+                <p className="mt-1 text-sm text-muted-foreground">
                   <span className="font-semibold text-foreground">{trackLabel}</span> 트랙에 적용할
                   목소리를 선택하세요.
                 </p>
@@ -350,7 +350,7 @@ export function VoiceSampleSelectModal({
             </div>
             <button
               onClick={() => onOpenChange(false)}
-              className="text-muted-foreground rounded-full p-1 hover:bg-surface-2 hover:text-foreground"
+              className="rounded-full p-1 text-muted-foreground hover:bg-surface-2 hover:text-foreground"
             >
               <X className="h-5 w-5" />
             </button>
@@ -358,12 +358,12 @@ export function VoiceSampleSelectModal({
 
           <div className="flex gap-2">
             <div className="group relative flex-1 transition-all">
-              <Search className="text-muted-foreground absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 group-focus-within:text-foreground" />
+              <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground group-focus-within:text-foreground" />
               <Input
                 placeholder="어떤 목소리를 찾고 계신가요?"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="border-outline/50 h-9 rounded-full border bg-surface-1 pl-9 pr-3 text-sm shadow-soft transition-all focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/15"
+                className="h-9 rounded-full border border-outline/50 bg-surface-1 pl-9 pr-3 text-sm shadow-soft transition-all focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/15"
               />
             </div>
 
@@ -373,8 +373,8 @@ export function VoiceSampleSelectModal({
                 className={cn(
                   'flex h-9 items-center gap-1.5 rounded-full border px-3 text-sm font-medium shadow-soft transition-all',
                   hasActiveFilters || isFilterOpen
-                    ? 'bg-primary-container text-on-primary-container border-primary/30'
-                    : 'border-outline/40 hover:border-outline/60 bg-surface-1 text-foreground hover:bg-surface-2',
+                    ? 'border-primary/30 bg-primary-container text-on-primary-container'
+                    : 'border-outline/40 bg-surface-1 text-foreground hover:border-outline/60 hover:bg-surface-2',
                 )}
               >
                 <Filter className="h-3.5 w-3.5" />
@@ -387,10 +387,10 @@ export function VoiceSampleSelectModal({
               {isFilterOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setIsFilterOpen(false)} />
-                  <div className="border-outline/40 absolute right-0 top-full z-20 mt-2 w-72 rounded-2xl border bg-surface-1 p-4 shadow-soft duration-200 animate-in fade-in zoom-in-95">
+                  <div className="absolute right-0 top-full z-20 mt-2 w-72 rounded-2xl border border-outline/40 bg-surface-1 p-4 shadow-soft duration-200 animate-in fade-in zoom-in-95">
                     <div className="space-y-4">
                       <div>
-                        <label className="text-muted-foreground mb-2 block text-xs font-semibold uppercase tracking-wider">
+                        <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                           언어
                         </label>
                         <div className="flex flex-wrap gap-1.5">
@@ -399,7 +399,7 @@ export function VoiceSampleSelectModal({
                             className={cn(
                               'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
                               !selectedLanguage
-                                ? 'bg-primary-container text-on-primary-container border-primary/30'
+                                ? 'border-primary/30 bg-primary-container text-on-primary-container'
                                 : 'border-outline/40 bg-surface-1 text-foreground hover:bg-surface-2',
                             )}
                           >
@@ -414,7 +414,7 @@ export function VoiceSampleSelectModal({
                                 className={cn(
                                   'flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
                                   selectedLanguage === lang.language_code
-                                    ? 'bg-primary-container text-on-primary-container border-primary/30'
+                                    ? 'border-primary/30 bg-primary-container text-on-primary-container'
                                     : 'border-outline/40 bg-surface-1 text-foreground hover:bg-surface-2',
                                 )}
                               >
@@ -432,7 +432,7 @@ export function VoiceSampleSelectModal({
                       </div>
 
                       <div>
-                        <label className="text-muted-foreground mb-2 block text-xs font-semibold uppercase tracking-wider">
+                        <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                           카테고리
                         </label>
                         <div className="flex flex-wrap gap-1.5">
@@ -441,7 +441,7 @@ export function VoiceSampleSelectModal({
                             className={cn(
                               'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
                               !selectedCategory
-                                ? 'bg-primary-container text-on-primary-container border-primary/30'
+                                ? 'border-primary/30 bg-primary-container text-on-primary-container'
                                 : 'border-outline/40 bg-surface-1 text-foreground hover:bg-surface-2',
                             )}
                           >
@@ -454,7 +454,7 @@ export function VoiceSampleSelectModal({
                               className={cn(
                                 'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
                                 selectedCategory === cat.code
-                                  ? 'bg-primary-container text-on-primary-container border-primary/30'
+                                  ? 'border-primary/30 bg-primary-container text-on-primary-container'
                                   : 'border-outline/40 bg-surface-1 text-foreground hover:bg-surface-2',
                               )}
                             >
@@ -464,7 +464,7 @@ export function VoiceSampleSelectModal({
                         </div>
                       </div>
 
-                      <div className="border-outline/30 flex justify-end gap-2 border-t pt-3">
+                      <div className="flex justify-end gap-2 border-t border-outline/30 pt-3">
                         {hasActiveFilters && (
                           <Button
                             variant="outline"
@@ -501,9 +501,9 @@ export function VoiceSampleSelectModal({
               {(!searchQuery || filteredBuiltinSamples.length > 0) && (
                 <div>
                   <div className="mx-2 mb-2 mt-2 flex items-center justify-between rounded-lg bg-surface-2 px-3 py-1.5">
-                    <span className="text-muted-foreground text-xs font-bold">기본 보이스</span>
+                    <span className="text-sm font-bold text-muted-foreground">기본 보이스</span>
                     {!searchQuery && (
-                      <span className="text-muted-foreground text-[10px] font-medium">
+                      <span className="text-[10px] font-medium text-muted-foreground">
                         {filteredBuiltinSamples.length + 1}개
                       </span>
                     )}
@@ -518,8 +518,8 @@ export function VoiceSampleSelectModal({
               {filteredMySamples.length > 0 && (
                 <div>
                   <div className="mx-2 mb-2 mt-4 flex items-center justify-between rounded-lg bg-surface-2 px-3 py-1.5">
-                    <span className="text-muted-foreground text-xs font-bold">내 보이스</span>
-                    <span className="text-muted-foreground text-[10px] font-medium">
+                    <span className="text-sm font-bold text-muted-foreground">내 보이스</span>
+                    <span className="text-[10px] font-medium text-muted-foreground">
                       {filteredMySamples.length}개
                     </span>
                   </div>
@@ -530,8 +530,8 @@ export function VoiceSampleSelectModal({
               {filteredLibrarySamples.length > 0 && (
                 <div>
                   <div className="mx-2 mb-2 mt-4 flex items-center justify-between rounded-lg bg-surface-2 px-3 py-1.5">
-                    <span className="text-muted-foreground text-xs font-bold">라이브러리</span>
-                    <span className="text-muted-foreground text-[10px] font-medium">
+                    <span className="text-xs font-bold text-muted-foreground">라이브러리</span>
+                    <span className="text-[10px] font-medium text-muted-foreground">
                       {filteredLibrarySamples.length}개
                     </span>
                   </div>
@@ -545,7 +545,7 @@ export function VoiceSampleSelectModal({
                     <Search className="h-8 w-8 text-primary" />
                   </div>
                   <h3 className="text-lg font-medium text-foreground">검색 결과가 없습니다</h3>
-                  <p className="text-muted-foreground mt-1 text-sm">
+                  <p className="mt-1 text-sm text-muted-foreground">
                     다른 키워드나 필터로 다시 검색해보세요.
                   </p>
                   <Button variant="secondary" onClick={handleResetFilters} className="mt-2">
@@ -557,9 +557,9 @@ export function VoiceSampleSelectModal({
           )}
         </div>
 
-        <div className="border-outline/30 border-t bg-surface-1 p-3">
+        <div className="border-t border-outline/30 bg-surface-1 p-3">
           <Button
-            className="flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-semibold text-primary-foreground shadow-soft transition-all hover:bg-primary/90"
+            className="flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-primary text-lg font-semibold text-primary-foreground shadow-soft transition-all hover:bg-primary/90"
             onClick={handleNavigateToVoiceLibrary}
           >
             <Plus className="h-3.5 w-3.5" />

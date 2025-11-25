@@ -39,7 +39,7 @@ export function SourceLanguageField({
       <input type="hidden" value="false" />
 
       <div className="space-y-1">
-        <Label className="font-semibold" htmlFor="source-language">
+        <Label className="text-lg font-semibold" htmlFor="source-language">
           원어 선택
         </Label>
         <Select
@@ -67,10 +67,9 @@ export function SourceLanguageField({
             onCheckedChange={(checked) => onReplaceVoiceSamplesChange(Boolean(checked))}
           />
           음성샘플 자동 추천
-        </label>        
+        </label>
       </div>
-      <div className="pt-1">
-      </div>
+      <div className="pt-1"></div>
     </div>
   )
 }

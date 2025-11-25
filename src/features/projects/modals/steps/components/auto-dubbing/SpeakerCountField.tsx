@@ -16,7 +16,7 @@ export function AudioSpeakerCountField({ registration, value, error }: SpeakerCo
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-3">
-        <Label htmlFor="speaker-count" className="font-semibold">
+        <Label htmlFor="speaker-count text-lg" className="text-lg font-semibold">
           화자 수
         </Label>
         <Select

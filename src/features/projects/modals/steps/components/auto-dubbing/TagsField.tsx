@@ -13,7 +13,7 @@ type TagsFieldProps = {
 export function TagsField({ registration, previewTags, error }: TagsFieldProps) {
   return (
     <div className="space-y-1">
-      <Label htmlFor="episode-tags" className="font-semibold">
+      <Label htmlFor="episode-tags" className="text-lg font-semibold">
         태그 (선택)
       </Label>
       <Input

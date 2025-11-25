@@ -17,7 +17,10 @@ export const DialogOverlay = forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
     ref={ref}
-    className={cn('fixed inset-0 bg-black/40 backdrop-blur-sm data-[state=open]:animate-fade-in', className)}
+    className={cn(
+      'fixed inset-0 bg-black/40 backdrop-blur-sm data-[state=open]:animate-fade-in',
+      className,
+    )}
     {...props}
   />
 ))
@@ -33,7 +36,7 @@ export function DialogContent({
       <DialogOverlay className="z-[50]" />
       <DialogPrimitive.Content
         className={cn(
-          'border-surface-3 bg-surface-2 text-foreground fixed left-1/2 top-1/2 z-50 w-[90vw] max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-2xl border p-6 shadow-2xl shadow-black/20 focus:outline-none',
+          'fixed left-1/2 top-1/2 z-50 w-[90vw] max-w-[63rem] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-surface-3 bg-surface-2 p-6 text-lg text-foreground shadow-2xl shadow-black/20 focus:outline-none',
           className,
         )}
         {...props}
@@ -43,7 +46,7 @@ export function DialogContent({
           <Button
             variant="ghost"
             size="icon"
-            className="text-muted-foreground hover:text-foreground absolute right-4 top-4 h-8 w-8 rounded-full"
+            className="absolute right-4 top-4 h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
             aria-label="Close dialog"
           >
             <X className="h-4 w-4" />
@@ -57,7 +60,7 @@ export function DialogContent({
 export function DialogTitle({ className, ...props }: DialogPrimitive.DialogTitleProps) {
   return (
     <DialogPrimitive.Title
-      className={cn('text-foreground text-lg font-semibold', className)}
+      className={cn('text-lg font-semibold text-foreground', className)}
       {...props}
     />
   )
@@ -66,15 +69,12 @@ export function DialogTitle({ className, ...props }: DialogPrimitive.DialogTitle
 export function DialogDescription({ className, ...props }: DialogPrimitive.DialogDescriptionProps) {
   return (
     <DialogPrimitive.Description
-      className={cn('text-muted-foreground text-sm', className)}
+      className={cn('text-sm text-muted-foreground', className)}
       {...props}
     />
   )
 }
 
-export function DialogFooter({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+export function DialogFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return <div className={cn('mt-4 flex flex-col gap-3', className)} {...props} />
 }

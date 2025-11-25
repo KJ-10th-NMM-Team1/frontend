@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Loader2 } from 'lucide-react'
+import { ChevronDown, Loader2 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
@@ -46,6 +46,36 @@ type AutoDubbingSettingsStepProps = {
   uploadProgress: UploadProgressState
   onBack: () => void
   onSubmit: (values: AutoDubbingSettingsValues) => void
+}
+
+type CollapsibleFieldProps = {
+  title: string
+  defaultOpen?: boolean
+  children: ReactNode
+}
+
+function CollapsibleField({ title, defaultOpen = true, children }: CollapsibleFieldProps) {
+  const [open, setOpen] = useState(defaultOpen)
+
+  return (
+    <div className="rounded-2xl border border-surface-4 bg-surface-1/50">
+      <button
+        type="button"
+        className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left font-semibold"
+        onClick={() => setOpen((prev) => !prev)}
+        aria-expanded={open}
+      >
+        <span>{title}</span>
+        <ChevronDown
+          className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`}
+          aria-hidden
+        />
+      </button>
+      <div className={open ? 'space-y-3 border-t border-surface-4 px-4 py-3' : 'hidden'}>
+        {children}
+      </div>
+    </div>
+  )
 }
 
 export function AutoDubbingSettingsStep({
@@ -173,16 +203,14 @@ export function AutoDubbingSettingsStep({
       onSubmit={(event) => {
         void submit(event)
       }}
-      className="space-y-1"
+      className="space-y-3"
       aria-busy={isProcessing}
     >
-      <DialogTitle>2단계 — 자동 더빙 설정</DialogTitle>
-      <DialogDescription className="text-muted-foreground">
+      <DialogTitle className="text-lg">2단계 — 자동 더빙 설정</DialogTitle>
+      <DialogDescription className="text-sm text-muted-foreground">
         제목과 언어, 화자 수를 지정하면 에피소드 자동 번역을 시작합니다.
       </DialogDescription>
-
       <TitleField registration={register('title')} error={errors.title?.message} />
-
       <TargetLanguagesField
         selectedTargets={selectedTargets}
         availableOptions={availableTargetOptions}
@@ -193,41 +221,41 @@ export function AutoDubbingSettingsStep({
         onRemoveTarget={handleRemoveTarget}
         error={errors.targetLanguages?.message}
       />
+      <CollapsibleField title="추가 선택" defaultOpen={false}>
+        <SourceLanguageField
+          detectAutomatically={detectAutomatically}
+          replaceVoiceSamples={replaceVoiceSamples}
+          onDetectChange={handleDetectChange}
+          onReplaceVoiceSamplesChange={handleReplaceVoiceSamplesChange}
+          languages={languageItems}
+          sourceLanguage={sourceLanguage}
+          onSourceLanguageChange={handleSourceLanguageChange}
+          error={errors.sourceLanguage?.message}
+        />
 
-      <SourceLanguageField
-        detectAutomatically={detectAutomatically}
-        replaceVoiceSamples={replaceVoiceSamples}
-        onDetectChange={handleDetectChange}
-        onReplaceVoiceSamplesChange={handleReplaceVoiceSamplesChange}
-        languages={languageItems}
-        sourceLanguage={sourceLanguage}
-        onSourceLanguageChange={handleSourceLanguageChange}
-        error={errors.sourceLanguage?.message}
-      />      
+        <AudioSpeakerCountField
+          registration={register('speakerCount', { valueAsNumber: true })}
+          value={speakerCount}
+          error={errors.speakerCount?.message}
+        />
 
-      <TagsField
-        registration={register('tagsInput')}
-        previewTags={parsedTags}
-        error={errors.tagsInput?.message}
-      />
-
-      <AudioSpeakerCountField
-        registration={register('speakerCount', { valueAsNumber: true })}
-        value={speakerCount}
-        error={errors.speakerCount?.message}
-      />
-
+        <TagsField
+          registration={register('tagsInput')}
+          previewTags={parsedTags}
+          error={errors.tagsInput?.message}
+        />
+      </CollapsibleField>
       {uploadProgress.stage !== 'idle' ? (
-        <div className="border-surface-4 bg-surface-1/50 rounded-3xl border border-dashed p-4">
+        <div className="rounded-3xl border border-dashed border-surface-4 bg-surface-1/50 p-4">
           <Progress value={uploadProgress.progress} label={progressLabel} />
           {uploadProgress.stage === 'error' ? (
-            <p className="text-danger mt-2 text-xs">문제가 지속되면 잠시 후 다시 시도해주세요.</p>
+            <p className="mt-2 text-xs text-danger">문제가 지속되면 잠시 후 다시 시도해주세요.</p>
           ) : null}
         </div>
       ) : null}
-
       <div className="flex justify-between gap-3 pt-2">
         <Button
+          className="text-lg"
           variant="secondary"
           type="button"
           onClick={onBack}
@@ -235,7 +263,7 @@ export function AutoDubbingSettingsStep({
         >
           이전
         </Button>
-        <Button type="submit" disabled={isSubmitting || isProcessing}>
+        <Button className="text-lg" type="submit" disabled={isSubmitting || isProcessing}>
           {isProcessing ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />

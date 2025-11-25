@@ -113,12 +113,12 @@ export function ExportDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-xl p-0">
+        <DialogContent className="max-w-[63rem] p-0">
           <div className="border-b border-surface-3 px-6 py-4">
-            <DialogTitle>결과물 내보내기</DialogTitle>
+            <DialogTitle className="text-lg">결과물 내보내기</DialogTitle>
           </div>
           <div className="space-y-5 px-6 py-5">
-            <DialogDescription>
+            <DialogDescription className="text-lg">
               더빙 영상 또는 자막을 다운로드하거나 YouTube로 업로드할 수 있습니다.
             </DialogDescription>
             <div className="rounded-3xl bg-surface-2 p-3">
@@ -134,7 +134,7 @@ export function ExportDialog({
                     <button
                       key={type}
                       type="button"
-                      className={`rounded-2xl border px-4 py-5 text-center text-sm font-semibold transition ${
+                      className={`rounded-2xl border px-4 py-5 text-center text-lg font-semibold transition ${
                         isActive
                           ? 'border-primary bg-primary/5 text-primary'
                           : 'border-surface-3 text-foreground hover:border-primary/50'
@@ -153,7 +153,7 @@ export function ExportDialog({
 
             <div className="space-y-3">
               <div className="rounded-2xl border border-dashed border-surface-3 px-4 py-3 text-sm">
-                <p className="font-medium text-foreground">
+                <p className="text-lg font-medium text-foreground">
                   {selectedType === 'preview_video'
                     ? '더빙 영상'
                     : selectedType === 'subtitle_srt'
@@ -164,17 +164,17 @@ export function ExportDialog({
                   </span>
                 </p>
                 {assetsLoading ? (
-                  <p className="text-xs text-gray-400">결과물을 확인하는 중...</p>
+                  <p className="text-lg text-gray-400">결과물을 확인하는 중...</p>
                 ) : filteredAsset ? (
-                  <p className="text-xs text-gray-400">{filteredAsset.created_at}</p>
+                  <p className="text-lg text-gray-400">{filteredAsset.created_at}</p>
                 ) : (
-                  <p className="text-xs text-gray-400">선택한 형식의 결과물이 없습니다.</p>
+                  <p className="text-lg text-gray-400">선택한 형식의 결과물이 없습니다.</p>
                 )}
               </div>
               {selectedType === 'preview_video' ? (
                 <div className="flex gap-2">
                   <Button
-                    className="flex-1"
+                    className="flex-1 text-lg"
                     disabled={assetsLoading || !filteredAsset || isMuxing}
                     onClick={() => {
                       if (filteredAsset) void handleDownload(filteredAsset)
@@ -185,7 +185,7 @@ export function ExportDialog({
                   </Button>
                   <Button
                     type="button"
-                    className="flex-1"
+                    className="flex-1 text-lg"
                     variant="secondary"
                     disabled={assetsLoading || !canPublish || !filteredAsset || isMuxing}
                     title={
@@ -202,7 +202,7 @@ export function ExportDialog({
                 </div>
               ) : (
                 <Button
-                  className="w-full"
+                  className="w-full text-lg"
                   disabled={assetsLoading || !filteredAsset || isMuxing}
                   onClick={() => {
                     if (filteredAsset) void handleDownload(filteredAsset)

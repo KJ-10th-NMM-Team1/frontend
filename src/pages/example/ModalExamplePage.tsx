@@ -13,14 +13,14 @@ export default function ModalExamplePage() {
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-6 py-16">
       <header className="space-y-3 text-center">
-        <h1 className="text-foreground text-3xl font-semibold">Modal Template 예제</h1>
-        <p className="text-muted text-sm">
+        <h1 className="text-3xl font-semibold text-foreground">Modal Template 예제</h1>
+        <p className="text-sm text-muted">
           `/src/shared/ui/Modal.tsx`에 정의된 템플릿을 사용하는 페이지입니다. 라우트/전역 상태와
           쉽게 동기화할 수 있도록 `open`, `onOpenChange`, `onClose` 인터페이스를 제공합니다.
         </p>
       </header>
-      <section className="border-surface-4 bg-surface-1 space-y-4 rounded-3xl border border-dashed p-6">
-        <p className="text-muted text-sm">
+      <section className="space-y-4 rounded-3xl border border-dashed border-surface-4 bg-surface-1 p-6">
+        <p className="text-sm text-muted">
           아래 버튼을 클릭하면 모달이 열립니다. 실제 서비스에서는 URL 쿼리나 Zustand 상태와 `open`
           값을 연결하면 라우트-모달 패턴을 구현할 수 있습니다.
         </p>
@@ -71,7 +71,7 @@ export default function ModalExamplePage() {
           <ModalField label="담당자" value={owner || '정보 없음'} />
         </ModalSection>
         <ModalSection className="space-y-2">
-          <p className="text-muted text-sm">
+          <p className="text-sm text-muted">
             이 섹션에는 설명이나 체크리스트 등 원하는 UI를 자유롭게 배치할 수 있습니다.
           </p>
         </ModalSection>

@@ -41,8 +41,8 @@ export function TargetLanguagesField({
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <Label className="font-semibold">번역 언어</Label>
-        <span className="bg-primary-container text-on-primary-container inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold leading-none">
+        <Label className="text-lg font-semibold">번역 언어</Label>
+        <span className="inline-flex items-center rounded-full bg-primary-container px-2 py-0.5 text-[11px] font-semibold leading-none text-on-primary-container">
           필수
         </span>
       </div>
@@ -84,7 +84,7 @@ export function TargetLanguagesField({
             <Button
               type="button"
               variant="primary"
-              className="md:w-40"
+              className="text-lg md:w-40"
               disabled={!pendingTarget}
               onClick={onAddTarget}
             >

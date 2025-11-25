@@ -69,20 +69,17 @@ export function SummaryStep({ draft, uploadProgress, onBack, onSubmit }: Summary
 
   return (
     <div className="space-y-4">
-      <DialogTitle>3단계 — 설정 확인</DialogTitle>
+      <DialogTitle className="text-lg">3단계 — 설정 확인</DialogTitle>
       <DialogDescription>입력한 정보를 확인하고 에피소드 생성을 완료하세요.</DialogDescription>
 
       <div className="rounded-3xl border border-surface-4 bg-surface-2 p-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+        <p className="text-lg font-semibold uppercase tracking-[0.3em] text-muted-foreground">
           설정 요약
         </p>
         <div className="mt-3 space-y-1 text-sm">
           <SummaryRow label="제목" value={draft.title || '제목 미입력'} />
           <SummaryRow label="소스" value={sourceSummary} />
-          <SummaryRow
-            label="원어"
-            value={sourceLanguageDisplay}
-          />
+          <SummaryRow label="원어" value={sourceLanguageDisplay} />
           <SummaryRow label="번역 언어" value={targetLanguagesValue} />
           <SummaryRow
             label="화자 수"
@@ -105,10 +102,16 @@ export function SummaryStep({ draft, uploadProgress, onBack, onSubmit }: Summary
       ) : null}
 
       <div className="flex justify-between gap-3 pt-4">
-        <Button variant="secondary" type="button" onClick={onBack} disabled={isProcessing}>
+        <Button
+          className="text-lg"
+          variant="secondary"
+          type="button"
+          onClick={onBack}
+          disabled={isProcessing}
+        >
           이전
         </Button>
-        <Button type="button" onClick={onSubmit} disabled={isProcessing}>
+        <Button className="text-lg" type="button" onClick={onSubmit} disabled={isProcessing}>
           {isProcessing ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -125,7 +128,7 @@ export function SummaryStep({ draft, uploadProgress, onBack, onSubmit }: Summary
 
 const SummaryRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
   <div className="flex items-center justify-between gap-3 whitespace-nowrap">
-    <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">{label}</span>
+    <span className="text-sm uppercase tracking-[0.2em] text-muted-foreground">{label}</span>
     <span className="overflow-hidden text-ellipsis whitespace-nowrap text-right text-sm font-medium text-foreground">
       {value}
     </span>

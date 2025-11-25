@@ -49,33 +49,33 @@ export function ProjectCreationDialogContent({
           className={`flex items-center gap-2 ${isSourceStep ? 'text-primary' : 'text-muted-foreground'}`}
         >
           <span
-            className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${isSourceStep ? 'bg-primary text-white' : 'text-muted-foreground bg-surface-4'}`}
+            className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${isSourceStep ? 'bg-primary text-white' : 'bg-surface-4 text-muted-foreground'}`}
           >
             1
           </span>
-          <span>영상 업로드</span>
+          <span className="text-lg">영상 업로드</span>
         </div>
         <div className="h-px w-10 flex-shrink-0 bg-surface-4" />
         <div
           className={`flex items-center gap-2 ${isDetailsStep ? 'text-primary' : 'text-muted-foreground'}`}
         >
           <span
-            className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${isDetailsStep ? 'bg-primary text-white' : 'text-muted-foreground bg-surface-4'}`}
+            className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${isDetailsStep ? 'bg-primary text-white' : 'bg-surface-4 text-muted-foreground'}`}
           >
             2
           </span>
-          <span>자동 더빙 설정</span>
+          <span className="text-lg">자동 더빙 설정</span>
         </div>
         <div className="h-px w-10 flex-shrink-0 bg-surface-4" />
         <div
           className={`flex items-center gap-2 ${isSummaryStep ? 'text-primary' : 'text-muted-foreground'}`}
         >
           <span
-            className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${isSummaryStep ? 'bg-primary text-white' : 'text-muted-foreground bg-surface-4'}`}
+            className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${isSummaryStep ? 'bg-primary text-white' : 'bg-surface-4 text-muted-foreground'}`}
           >
             3
           </span>
-          <span>설정 확인</span>
+          <span className="text-lg">설정 확인</span>
         </div>
       </div>
 

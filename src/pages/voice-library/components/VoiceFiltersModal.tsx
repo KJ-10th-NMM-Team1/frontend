@@ -88,8 +88,12 @@ export function VoiceFiltersModal({
     onOpenChange(false)
   }
 
-  const selectedLanguage = languages.find((lang) => lang.language_code === localFilters.languages?.[0])
-  const selectedFlagCode = selectedLanguage ? getCountryCode(selectedLanguage.language_code) : undefined
+  const selectedLanguage = languages.find(
+    (lang) => lang.language_code === localFilters.languages?.[0],
+  )
+  const selectedFlagCode = selectedLanguage
+    ? getCountryCode(selectedLanguage.language_code)
+    : undefined
   const hasSelectedLanguage = Boolean(languageCode)
 
   const filteredTags = useMemo(() => {
@@ -101,12 +105,12 @@ export function VoiceFiltersModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto scrollbar-thin">
+      <DialogContent className="scrollbar-thin max-h-[90vh] max-w-[63rem] overflow-y-auto">
         <div className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
             <Filter className="h-5 w-5" />
           </div>
-          <DialogTitle className="text-foreground text-xl font-semibold">필터</DialogTitle>
+          <DialogTitle className="text-xl font-semibold text-foreground">필터</DialogTitle>
         </div>
 
         <div className="mt-6 space-y-6">
@@ -212,7 +216,7 @@ export function VoiceFiltersModal({
               onChange={(e) => setTagInput(e.target.value)}
               className="h-10"
             />
-            <div className="max-h-40 space-y-2 overflow-y-auto rounded-lg bg-surface-2 p-3 shadow-inner scrollbar-thin">
+            <div className="scrollbar-thin max-h-40 space-y-2 overflow-y-auto rounded-lg bg-surface-2 p-3 shadow-inner">
               {filteredTags.length === 0 ? (
                 <p className="text-xs text-muted-foreground">추가/선택할 태그가 없습니다.</p>
               ) : (

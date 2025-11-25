@@ -54,33 +54,33 @@ export function WorkspaceFilters({
 
         <Input
           placeholder="에피소드 검색..."
-          className="h-8 min-w-[80px] flex-1 border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
+          className="h-8 min-w-[80px] flex-1 border-0 bg-transparent p-0 text-sm shadow-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
           value={workspaceSearchTerm}
           onChange={(e) => setWorkspaceSearchTerm(e.target.value)}
         />
 
         {/* Active Filters inside Search Bar */}
         {workspaceSourceLanguageFilter && (
-          <span className="bg-tertiary-container text-on-tertiary-container inline-flex h-7 items-center gap-1 rounded-full px-2 text-xs font-semibold whitespace-nowrap shadow-soft">
+          <span className="inline-flex h-7 items-center gap-1 whitespace-nowrap rounded-full bg-tertiary-container px-2 text-xs font-semibold text-on-tertiary-container shadow-soft">
             원본:{' '}
             {languages.find((l) => l.language_code === workspaceSourceLanguageFilter)?.name_ko}
             <button
               type="button"
               onClick={() => setWorkspaceSourceLanguageFilter(null)}
-              className="text-on-tertiary-container/80 hover:text-on-tertiary-container ml-0.5"
+              className="ml-0.5 text-on-tertiary-container/80 hover:text-on-tertiary-container"
             >
               <X className="h-3 w-3" />
             </button>
           </span>
         )}
         {workspaceTargetLanguageFilter && (
-          <span className="bg-tertiary-container text-on-tertiary-container inline-flex h-7 items-center gap-1 rounded-full px-2 text-xs font-semibold whitespace-nowrap shadow-soft">
+          <span className="inline-flex h-7 items-center gap-1 whitespace-nowrap rounded-full bg-tertiary-container px-2 text-xs font-semibold text-on-tertiary-container shadow-soft">
             번역:{' '}
             {languages.find((l) => l.language_code === workspaceTargetLanguageFilter)?.name_ko}
             <button
               type="button"
               onClick={() => setWorkspaceTargetLanguageFilter(null)}
-              className="text-on-tertiary-container/80 hover:text-on-tertiary-container ml-0.5"
+              className="ml-0.5 text-on-tertiary-container/80 hover:text-on-tertiary-container"
             >
               <X className="h-3 w-3" />
             </button>
@@ -89,13 +89,13 @@ export function WorkspaceFilters({
         {workspaceSelectedTags.map((tag) => (
           <span
             key={tag}
-            className="bg-tertiary/10 text-tertiary inline-flex h-7 items-center gap-1 rounded-full px-2 text-xs font-medium whitespace-nowrap"
+            className="inline-flex h-7 items-center gap-1 whitespace-nowrap rounded-full bg-tertiary/10 px-2 text-xs font-medium text-tertiary"
           >
             #{tag}
             <button
               type="button"
               onClick={() => toggleTagFilter(tag)}
-              className="hover:text-tertiary/80 ml-0.5"
+              className="ml-0.5 hover:text-tertiary/80"
             >
               <X className="h-3 w-3" />
             </button>
@@ -108,7 +108,7 @@ export function WorkspaceFilters({
           <button
             type="button"
             onClick={clearAllFilters}
-            className="text-muted-foreground hover:text-foreground ml-1 rounded-full p-0.5 transition-colors"
+            className="ml-1 rounded-full p-0.5 text-muted-foreground transition-colors hover:text-foreground"
             aria-label="필터 초기화"
           >
             <X className="h-4 w-4" />
@@ -148,12 +148,11 @@ export function WorkspaceFilters({
                   >
                     <span className="truncate">
                       {workspaceSourceLanguageFilter
-                        ? languages.find(
-                            (l) => l.language_code === workspaceSourceLanguageFilter,
-                          )?.name_ko || '선택됨'
+                        ? languages.find((l) => l.language_code === workspaceSourceLanguageFilter)
+                            ?.name_ko || '선택됨'
                         : '전체'}
                     </span>
-                    <span className="text-muted-foreground ml-2 text-xs">▼</span>
+                    <span className="ml-2 text-xs text-muted-foreground">▼</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="max-h-60 w-48 overflow-y-auto">
@@ -174,7 +173,7 @@ export function WorkspaceFilters({
 
             {/* Target Language Section */}
             <div>
-              <DropdownMenuLabel className="mb-1 px-2 text-xs font-medium text-muted-foreground">
+              <DropdownMenuLabel className="mb-1 px-2 text-lg font-medium text-muted-foreground">
                 번역 언어
               </DropdownMenuLabel>
               <DropdownMenu>
@@ -185,12 +184,11 @@ export function WorkspaceFilters({
                   >
                     <span className="truncate">
                       {workspaceTargetLanguageFilter
-                        ? languages.find(
-                            (l) => l.language_code === workspaceTargetLanguageFilter,
-                          )?.name_ko || '선택됨'
+                        ? languages.find((l) => l.language_code === workspaceTargetLanguageFilter)
+                            ?.name_ko || '선택됨'
                         : '전체'}
                     </span>
-                    <span className="text-muted-foreground ml-2 text-xs">▼</span>
+                    <span className="ml-2 text-xs text-muted-foreground">▼</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="max-h-60 w-48 overflow-y-auto">
@@ -242,7 +240,7 @@ export function WorkspaceFilters({
                       >
                         <div className="flex items-center justify-between">
                           <span>#{tag}</span>
-                          <span className="text-muted-foreground text-xs">{count}</span>
+                          <span className="text-xs text-muted-foreground">{count}</span>
                         </div>
                       </label>
                     </div>
