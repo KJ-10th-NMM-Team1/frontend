@@ -9,6 +9,7 @@
  * const throttledScroll = throttle((e) => console.log(e), 100)
  * window.addEventListener('scroll', throttledScroll)
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function throttle<T extends (...args: any[]) => any>(
   func: T,
   limit: number,
@@ -16,6 +17,7 @@ export function throttle<T extends (...args: any[]) => any>(
   let inThrottle = false
   let lastArgs: Parameters<T> | null = null
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return function (this: any, ...args: Parameters<T>) {
     if (!inThrottle) {
       func.apply(this, args)
@@ -45,12 +47,14 @@ export function throttle<T extends (...args: any[]) => any>(
  * const throttledRender = throttleRAF((data) => render(data))
  * element.addEventListener('pointermove', throttledRender)
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function throttleRAF<T extends (...args: any[]) => any>(
   func: T,
 ): (...args: Parameters<T>) => void {
   let rafId: number | null = null
   let lastArgs: Parameters<T> | null = null
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return function (this: any, ...args: Parameters<T>) {
     lastArgs = args
 
