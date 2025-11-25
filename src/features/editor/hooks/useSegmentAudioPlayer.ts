@@ -190,19 +190,20 @@ export function useSegmentAudioPlayer({
 
   // Effect 2: activeSegments 변경 시 새 오디오 재생 및 비활성 오디오 정지
   useEffect(() => {
-    // 🎯 스크러빙 중에는 오디오 업데이트 스킵 (비디오만 업데이트)
+    const newActiveIds = new Set(activeSegmentsData.map((s) => s.id))
+    const audios = audioRefsMap.current
+
+    // ✅ 비활성 오디오는 항상 정리 (스크러빙 중에도 실행)
+    stopInactiveAudios(newActiveIds, audios)
+
+    // 🎯 스크러빙 중에는 새 오디오 재생만 스킵
     if (isScrubbing) {
-      console.debug('[MultiAudio] Skipping audio update during scrubbing')
+      console.debug('[MultiAudio] Skipping new audio playback during scrubbing')
+      activeSegmentIdsRef.current = newActiveIds
       return
     }
 
     if (!isPlayingRef.current) return
-
-    const newActiveIds = new Set(activeSegmentsData.map((s) => s.id))
-    const audios = audioRefsMap.current
-
-    // 비활성화된 세그먼트들의 오디오 정지
-    stopInactiveAudios(newActiveIds, audios)
 
     // 새로 활성화된 세그먼트들의 오디오 재생
     if (activeSegmentsData.length > 0) {
@@ -351,8 +352,12 @@ export function useSegmentAudioPlayer({
       console.debug('[MultiAudio] Scrubbing ended - resyncing audio')
 
       const audios = audioRefsMap.current
+      const newActiveIds = new Set(activeSegmentsData.map((s) => s.id))
 
-      // 모든 활성 오디오를 현재 playhead에 동기화
+      // ✅ 먼저 비활성 오디오 정리 (스크러빙 중 누적된 불필요한 오디오 제거)
+      stopInactiveAudios(newActiveIds, audios)
+
+      // 활성 오디오를 현재 playhead에 동기화
       for (const segmentData of activeSegmentsData) {
         const audio = audios.get(segmentData.id)
         if (!audio) continue
@@ -369,6 +374,8 @@ export function useSegmentAudioPlayer({
           }
         }
       }
+
+      activeSegmentIdsRef.current = newActiveIds
     }
   }, [isScrubbing, activeSegmentsData, playhead])
 
