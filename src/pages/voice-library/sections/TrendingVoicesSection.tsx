@@ -62,9 +62,7 @@ export function TrendingVoicesSection({
                     ? () => onRemoveFromMyVoices(sample)
                     : undefined
               }
-              isAdding={
-                isOwner ? false : onAddToMyVoices ? addingToMyVoices.has(sample.id) : false
-              }
+              isAdding={isOwner ? false : onAddToMyVoices ? addingToMyVoices.has(sample.id) : false}
               isRemoving={
                 isOwner ? false : onRemoveFromMyVoices ? removingFromMyVoices.has(sample.id) : false
               }

@@ -81,7 +81,6 @@ export function VoiceSpotlightCard({
   onDelete,
   isDeleting = false,
   isOwner = false,
-  avatarImageUrl = string,
 }: VoiceSpotlightCardProps) {
   const [resolvedAvatar, setResolvedAvatar] = useState<string>(
     getPresetAvatarUrl(sample.avatarPreset || 'default') ?? DEFAULT_AVATAR,
