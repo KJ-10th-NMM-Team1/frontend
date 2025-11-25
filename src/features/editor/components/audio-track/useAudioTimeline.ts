@@ -14,6 +14,7 @@ import { findSegmentByPlayhead } from '@/features/editor/utils/segment-search'
 import { useEditorStore } from '@/shared/store/useEditorStore'
 import { useTracksStore } from '@/shared/store/useTracksStore'
 import { usePresignedUrl } from '@/shared/api/hooks'
+import { useEditorContext } from '@/features/editor/context/EditorContext'
 
 import type { TrackRow } from './types'
 
@@ -55,6 +56,9 @@ export function useAudioTimeline(
   const rafRef = useRef<number>()
   const playheadRef = useRef(0)
 
+  // ⭐ EditorContext에서 projectId 가져오기
+  const { projectId } = useEditorContext()
+
   const {
     playbackRate,
     setPlaybackRate,
@@ -95,6 +99,9 @@ export function useAudioTimeline(
   // Initialize tracks from segments only once on first load
   const isInitializedRef = useRef(false)
 
+  // localStorage key: 프로젝트와 언어별로 구분
+  const STORAGE_KEY = `track-order-${projectId}-${languageCode}`
+
   // Reset initialization when language changes
   useEffect(() => {
     isInitializedRef.current = false
@@ -107,13 +114,53 @@ export function useAudioTimeline(
     // segments가 비어있어도 tracks를 초기화해야 함 (이전 언어의 데이터 제거)
     if (segments.length === 0) {
       setTracks([])
+      localStorage.removeItem(STORAGE_KEY)
     } else {
-      const initialTracks = convertSegmentsToTracks(segments)
-      setTracks(initialTracks)
+      const newTracks = convertSegmentsToTracks(segments)
+
+      // ⭐ localStorage에서 저장된 트랙 순서 불러오기
+      const storedOrderJson = localStorage.getItem(STORAGE_KEY)
+
+      if (storedOrderJson) {
+        // 저장된 순서가 있으면 그대로 유지
+        try {
+          const parsed = JSON.parse(storedOrderJson) as unknown
+          // 타입 가드: string 배열인지 검증
+          if (!Array.isArray(parsed) || !parsed.every((item) => typeof item === 'string')) {
+            throw new Error('Invalid stored order format')
+          }
+
+          const storedOrder: string[] = parsed
+          const trackMap = new Map(newTracks.map((t) => [t.id, t]))
+
+          // 1. 저장된 순서대로 트랙 배치
+          const orderedTracks = storedOrder
+            .map((id) => trackMap.get(id))
+            .filter((t): t is TrackRow => t !== undefined)
+
+          // 2. 새로 추가된 트랙은 맨 뒤에
+          const storedOrderSet = new Set(storedOrder)
+          const addedTracks = newTracks.filter((t) => !storedOrderSet.has(t.id))
+
+          const finalTracks = [...orderedTracks, ...addedTracks]
+          setTracks(finalTracks)
+
+          // 업데이트된 순서 저장
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(finalTracks.map((t) => t.id)))
+        } catch (error) {
+          // JSON 파싱 실패 시 새 트랙으로 초기화
+          setTracks(newTracks)
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(newTracks.map((t) => t.id)))
+        }
+      } else {
+        // 최초 로드 시 (localStorage에 저장된 순서가 없음)
+        setTracks(newTracks)
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newTracks.map((t) => t.id)))
+      }
     }
 
     isInitializedRef.current = true
-  }, [segments, setTracks])
+  }, [segments, setTracks, STORAGE_KEY])
 
   // Get all segments from tracks store, sorted by time (for audio preloading and active segment detection)
   const allSegments = useMemo(() => {
@@ -210,7 +257,7 @@ export function useAudioTimeline(
       window.removeEventListener('pointermove', move)
       window.removeEventListener('pointerup', up)
     }
-  }, [isScrubbing, scrub])
+  }, [isScrubbing, scrub, setIsScrubbing])
 
   const onTimelinePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     event.preventDefault()
