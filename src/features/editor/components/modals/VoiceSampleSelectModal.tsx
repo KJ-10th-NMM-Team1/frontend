@@ -70,6 +70,7 @@ export function VoiceSampleSelectModal({
   const [playingSampleId, setPlayingSampleId] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [avatarUrls, setAvatarUrls] = useState<Map<string, string>>(new Map())
+  const avatarUrlsRef = useRef<Map<string, string>>(new Map()) // 캐시용 ref
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [selectedLanguage, setSelectedLanguage] = useState<string | undefined>(undefined)
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined)
@@ -216,37 +217,48 @@ export function VoiceSampleSelectModal({
 
   const resolveAvatarUrl = useCallback(
     async (sample: VoiceSample): Promise<string> => {
-      if (avatarUrls.has(sample.id)) {
-        return avatarUrls.get(sample.id)!
+      // ref를 사용하여 캐시 확인 (무한 루프 방지)
+      if (avatarUrlsRef.current.has(sample.id)) {
+        return avatarUrlsRef.current.get(sample.id)!
       }
+
+      let resolvedUrl: string
+
       if (sample.avatarImagePath) {
         const url = await getPresignedUrl(sample.avatarImagePath)
         if (url) {
-          setAvatarUrls((prev) => new Map(prev).set(sample.id, url))
-          return url
+          resolvedUrl = url
+        } else {
+          resolvedUrl = DEFAULT_AVATAR
         }
+      } else if (sample.avatarImageUrl && sample.avatarImageUrl.startsWith('http')) {
+        resolvedUrl = sample.avatarImageUrl
+      } else if (sample.avatarPreset) {
+        resolvedUrl = getPresetAvatarUrl(sample.avatarPreset) ?? DEFAULT_AVATAR
+      } else {
+        resolvedUrl = DEFAULT_AVATAR
       }
-      if (sample.avatarImageUrl && sample.avatarImageUrl.startsWith('http')) {
-        setAvatarUrls((prev) => new Map(prev).set(sample.id, sample.avatarImageUrl!))
-        return sample.avatarImageUrl
-      }
-      if (sample.avatarPreset) {
-        const presetUrl = getPresetAvatarUrl(sample.avatarPreset)
-        setAvatarUrls((prev) => new Map(prev).set(sample.id, presetUrl))
-        return presetUrl
-      }
-      const defaultUrl = DEFAULT_AVATAR
-      setAvatarUrls((prev) => new Map(prev).set(sample.id, defaultUrl))
-      return defaultUrl
+
+      // ref와 state 모두 업데이트
+      avatarUrlsRef.current.set(sample.id, resolvedUrl)
+      setAvatarUrls((prev) => {
+        const newMap = new Map(prev)
+        newMap.set(sample.id, resolvedUrl)
+        return newMap
+      })
+
+      return resolvedUrl
     },
-    [avatarUrls],
+    [], // 의존성 배열을 비워서 함수가 재생성되지 않도록 함
   )
 
   useEffect(() => {
     const loadAvatars = async () => {
       const allSamples = [...mySamples, ...librarySamples]
+
+      // 로드되지 않은 샘플만 처리 (ref를 사용하여 체크)
       for (const sample of allSamples) {
-        if (!avatarUrls.has(sample.id)) {
+        if (!avatarUrlsRef.current.has(sample.id)) {
           await resolveAvatarUrl(sample)
         }
       }
@@ -255,7 +267,7 @@ export function VoiceSampleSelectModal({
       void loadAvatars()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mySamples.length, librarySamples.length, isLoading, resolveAvatarUrl])
+  }, [mySamples.length, librarySamples.length, isLoading]) // resolveAvatarUrl 제거
 
   const handlePlayPreview = async (e: React.MouseEvent, sample: VoiceSample) => {
     e.stopPropagation()
