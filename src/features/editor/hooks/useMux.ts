@@ -9,11 +9,12 @@ import type { EditorState } from './useEditorState'
 
 type UseMuxOptions = {
   projectId: string
+  job_id: string
   editorData: EditorState | undefined
 }
 
 type UseMuxReturn = {
-  handleMux: () => Promise<string | undefined>  // result_key 반환
+  handleMux: () => Promise<string | undefined> // result_key 반환
   isMuxing: boolean
 }
 
@@ -34,7 +35,7 @@ type UseMuxReturn = {
  * </Button>
  * ```
  */
-export function useMux({ projectId, editorData }: UseMuxOptions): UseMuxReturn {
+export function useMux({ projectId, editorData, job_id }: UseMuxOptions): UseMuxReturn {
   const getAllSegments = useTracksStore((state) => state.getAllSegments)
   const showToast = useUiStore((state) => state.showToast)
   const [isMuxing, setIsMuxing] = useState(false)
@@ -96,10 +97,11 @@ export function useMux({ projectId, editorData }: UseMuxOptions): UseMuxReturn {
 
       const result = await createMux({
         project_id: projectId,
+        job_id: job_id,
         video_key: editorData.playback.video_source, // S3 키
         background_audio_key: editorData.playback.background_audio_source, // S3 키
         segments: muxSegments,
-        output_prefix: `projects/${projectId}/outputs`,
+        output_prefix: `projects/${projectId}/outputs/${job_id}`,
       })
 
       if (result.success) {
@@ -112,7 +114,7 @@ export function useMux({ projectId, editorData }: UseMuxOptions): UseMuxReturn {
           autoDismiss: 5000,
         })
         console.log('Mux 결과:', result)
-        return result.result_key  // result_key 반환
+        return result.result_key // result_key 반환
       } else {
         throw new Error(result.message || 'Mux 실패')
       }
@@ -124,7 +126,7 @@ export function useMux({ projectId, editorData }: UseMuxOptions): UseMuxReturn {
         description: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.',
         autoDismiss: 5000,
       })
-      return undefined  // 실패 시 undefined 반환
+      return undefined // 실패 시 undefined 반환
     } finally {
       setIsMuxing(false)
     }
