@@ -82,9 +82,7 @@ export function VoiceSpotlightCard({
   isDeleting = false,
   isOwner = false,
 }: VoiceSpotlightCardProps) {
-  const [resolvedAvatar, setResolvedAvatar] = useState<string>(
-    getPresetAvatarUrl(sample.avatarPreset || 'default') ?? DEFAULT_AVATAR,
-  )
+  const [resolvedAvatar, setResolvedAvatar] = useState<string>('loading')
   const isProcessing = !sample.audio_sample_url
   const isCommercialAllowed = sample.canCommercialUse !== false
   const isPublicVoice = sample.isPublic !== false
@@ -97,6 +95,8 @@ export function VoiceSpotlightCard({
 
   useEffect(() => {
     let active = true
+
+    setResolvedAvatar('loading')
 
     // 우선순위: avatarImagePath > avatarImageUrl > avatarPreset > 기본 아바타
     const resolveAvatar = async () => {
@@ -136,6 +136,8 @@ export function VoiceSpotlightCard({
       active = false
     }
   }, [sample.avatarImagePath, sample.avatarImageUrl, sample.avatarPreset])
+  const isAvatarLoading = resolvedAvatar === 'loading'
+  const avatarSrc = !isAvatarLoading ? resolvedAvatar || DEFAULT_AVATAR : undefined
 
   const countryCode = useMemo(() => {
     if (!sample.country) return undefined
@@ -188,9 +190,9 @@ export function VoiceSpotlightCard({
         {/* 1열: Voice 정보 */}
         <div className="flex items-center gap-3">
           <div className="relative flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-pink-500 to-orange-400 text-[10px] font-semibold text-white">
-            {resolvedAvatar ? (
+            {avatarSrc ? (
               <img
-                src={resolvedAvatar}
+                src={avatarSrc}
                 onError={(event) => {
                   event.currentTarget.src = DEFAULT_AVATAR
                 }}
@@ -200,7 +202,7 @@ export function VoiceSpotlightCard({
             ) : (
               <span>{initials}</span>
             )}
-            {isProcessing && (
+            {(isProcessing || isAvatarLoading) && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/50">
                 <Spinner size="sm" />
               </div>
@@ -382,15 +384,21 @@ export function VoiceSpotlightCard({
       }}
     >
       <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-purple-400 via-pink-400 to-blue-400">
-        <img
-          src={resolvedAvatar ?? DEFAULT_AVATAR}
-          onError={(event) => {
-            event.currentTarget.src = DEFAULT_AVATAR
-          }}
-          alt={sample.name}
-          className="h-full w-full object-cover"
-        />
-        {isProcessing ? (
+        {avatarSrc ? (
+          <img
+            src={avatarSrc}
+            onError={(event) => {
+              event.currentTarget.src = DEFAULT_AVATAR
+            }}
+            alt={sample.name}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            {!isAvatarLoading && <span className="text-lg font-semibold text-white">{initials}</span>}
+          </div>
+        )}
+        {isProcessing || isAvatarLoading ? (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50">
             <Spinner size="sm" />
           </div>
