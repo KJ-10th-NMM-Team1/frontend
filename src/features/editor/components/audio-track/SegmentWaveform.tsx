@@ -31,6 +31,7 @@ export const SegmentWaveform = memo(function SegmentWaveform({
   segmentDuration,
 }: SegmentWaveformProps) {
   const BAR_WIDTH = 3 // 고정 바 너비 (px)
+  const MIN_BAR_HEIGHT = 1 // 최소 바 높이 (px) - 작은 파형도 보이도록
   const barCount = waveformData.length
 
   // 사용 가능한 너비에서 모든 바의 너비를 뺀 후 간격을 계산
@@ -52,7 +53,7 @@ export const SegmentWaveform = memo(function SegmentWaveform({
         className="relative flex h-full items-center overflow-hidden"
       >
         {waveformData.map((amplitude, index) => {
-          const barHeight = amplitude * height
+          const barHeight = Math.max(amplitude * height, MIN_BAR_HEIGHT)
           const isLast = index === barCount - 1
 
           return (
