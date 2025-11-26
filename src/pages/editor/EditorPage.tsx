@@ -38,7 +38,7 @@ export default function EditorPage() {
 
   // Editor state and data
   const [isExportOpen, setIsExportOpen] = useState(false)
-  const { data, isLoading } = useEditorState(projectId, selectedLanguage)
+  const { data, isLoading, isLanguageChanging } = useEditorState(projectId, selectedLanguage)
   const { handleMux, isMuxing } = useMux({
     projectId,
     editorData: data,
@@ -106,15 +106,24 @@ export default function EditorPage() {
                 <ResizeDivider direction="horizontal" onPointerDown={startHorizontalDrag} />
 
                 {/* Summary/Translation Panel */}
-                <EditorSummaryPanel
-                  projectId={projectId}
-                  languageCode={selectedLanguage}
-                  segments={data.segments}
-                  duration={data.playback.duration}
-                  sourceLanguage={sourceLanguage}
-                  targetLanguage={targetLanguage}
-                  summaryPaneRatio={summaryPaneRatio}
-                />
+                {isLanguageChanging ? (
+                  <div
+                    className="flex items-center justify-center border border-b-0 border-surface-3 bg-surface-1"
+                    style={{ flex: `${summaryPaneRatio} 1 0%` }}
+                  >
+                    <Spinner size="md" />
+                  </div>
+                ) : (
+                  <EditorSummaryPanel
+                    projectId={projectId}
+                    languageCode={selectedLanguage}
+                    segments={data.segments}
+                    duration={data.playback.duration}
+                    sourceLanguage={sourceLanguage}
+                    targetLanguage={targetLanguage}
+                    summaryPaneRatio={summaryPaneRatio}
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -127,14 +136,20 @@ export default function EditorPage() {
             className="z-10 overflow-hidden border border-t-0 border-surface-3 bg-surface-1 shadow-sm"
             style={{ flex: `${audioPaneRatio} 1 0%` }}
           >
-            <AudioTrackWorkspace
-              segments={data.segments}
-              duration={data.playback.duration}
-              originalAudioSrc={data.playback.audio_source ?? data.playback.video_source}
-              backgroundAudioSrc={data.playback.background_audio_source}
-              languageCode={selectedLanguage}
-              onSave={handleSave}
-            />
+            {isLanguageChanging ? (
+              <div className="flex h-full items-center justify-center">
+                <Spinner size="md" />
+              </div>
+            ) : (
+              <AudioTrackWorkspace
+                segments={data.segments}
+                duration={data.playback.duration}
+                originalAudioSrc={data.playback.audio_source ?? data.playback.video_source}
+                backgroundAudioSrc={data.playback.background_audio_source}
+                languageCode={selectedLanguage}
+                onSave={handleSave}
+              />
+            )}
           </div>
         </div>
 

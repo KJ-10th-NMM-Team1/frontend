@@ -46,7 +46,7 @@ export type EditorState = {
 }
 
 export function useEditorState(projectId: string, languageCode: string) {
-  return useQuery<EditorState>({
+  const query = useQuery<EditorState>({
     queryKey: queryKeys.editor.state(projectId, languageCode),
     queryFn: async () => {
       const response = await apiGet<EditorStateDTO>(
@@ -62,4 +62,10 @@ export function useEditorState(projectId: string, languageCode: string) {
     enabled: Boolean(projectId && languageCode),
     placeholderData: keepPreviousData,
   })
+
+  return {
+    ...query,
+    // 언어 변경 시 이전 데이터가 표시되는 중인지 여부
+    isLanguageChanging: query.isPlaceholderData,
+  }
 }
