@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react'
+import { useMemo, useState, useRef, useCallback } from 'react'
 
 import type { Segment } from '@/entities/segment/types'
 import { useAudioWaveform } from '@/features/editor/hooks/useAudioWaveform'
@@ -103,17 +103,23 @@ export function SpeakerSegment({
   })
 
   // Step 2: Generate waveform from audio URL (only when URL is available)
-  // 첫 로딩 시에만 optimalSamples를 계산하고 이후 크기 변경 시에는 고정
+  // 리사이즈 중에는 파형 업데이트 방지 (마우스를 놓았을 때만 업데이트)
+  const [isResizing, setIsResizing] = useState(false)
+  const stableSamplesRef = useRef<number | null>(null)
+
   const BAR_UNIT = 2.5 // 바 하나당 차지하는 공간 (더 촘촘하게)
   const availableWidth = widthPx - 16 // 좌우 padding 8px씩 제외
   const currentOptimalSamples = Math.max(Math.floor(availableWidth / BAR_UNIT), 20) // 최소 20개
 
-  // 첫 로딩 시 샘플 수를 ref에 저장하여 고정
-  const fixedSamplesRef = useRef<number | null>(null)
-  if (fixedSamplesRef.current === null && audioSrc && isVisible) {
-    fixedSamplesRef.current = currentOptimalSamples
+  // 리사이즈 중이 아닐 때만 샘플 수 업데이트
+  if (!isResizing) {
+    stableSamplesRef.current = currentOptimalSamples
   }
-  const samplesForQuery = fixedSamplesRef.current ?? currentOptimalSamples
+  const samplesForQuery = stableSamplesRef.current ?? currentOptimalSamples
+
+  // 리사이즈 콜백
+  const handleResizeStart = useCallback(() => setIsResizing(true), [])
+  const handleResizeEnd = useCallback(() => setIsResizing(false), [])
 
   const { data: waveformData, isLoading: waveformLoading } = useAudioWaveform(
     audioSrc,
@@ -166,11 +172,13 @@ export function SpeakerSegment({
           edge="start"
           color={color}
           trackSegments={trackSegments}
+          onResizeStart={handleResizeStart}
+          onResizeEnd={handleResizeEnd}
         />
 
         {/* Waveform visualization */}
-        {!isVisible ? null : isLoading || isGenerating || !isAudioReady ? ( // 뷰포트 밖: 플레이스홀더 (아무것도 표시 안함)
-          // 로딩 중 또는 오디오 생성 중 또는 오디오 준비 안됨: 스피너
+        {!isVisible ? null : isLoading || isGenerating || !isAudioReady || isResizing ? ( // 뷰포트 밖: 플레이스홀더 (아무것도 표시 안함)
+          // 로딩 중 또는 오디오 생성 중 또는 오디오 준비 안됨 또는 리사이즈 중: 스피너
           <SegmentLoadingSpinner color={color} size="sm" />
         ) : waveformData ? (
           // 로드 완료: 파형 표시
@@ -192,6 +200,8 @@ export function SpeakerSegment({
           edge="end"
           color={color}
           trackSegments={trackSegments}
+          onResizeStart={handleResizeStart}
+          onResizeEnd={handleResizeEnd}
         />
 
         {/* Merge button - show only when there's a touching next segment */}

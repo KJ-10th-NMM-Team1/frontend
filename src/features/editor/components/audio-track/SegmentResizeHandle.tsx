@@ -9,6 +9,8 @@ type SegmentResizeHandleProps = {
   edge: 'start' | 'end'
   color: string
   trackSegments: Segment[]
+  onResizeStart?: () => void
+  onResizeEnd?: () => void
 }
 
 /**
@@ -26,6 +28,8 @@ export function SegmentResizeHandle({
   edge,
   color,
   trackSegments,
+  onResizeStart,
+  onResizeEnd,
 }: SegmentResizeHandleProps) {
   const { onPointerDown, isResizing } = useSegmentResize({
     segment,
@@ -33,6 +37,8 @@ export function SegmentResizeHandle({
     scale,
     edge,
     trackSegments,
+    onResizeStart,
+    onResizeEnd,
   })
 
   return (
