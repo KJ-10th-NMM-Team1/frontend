@@ -19,6 +19,7 @@ type EditorUiState = {
 
   // Selection state
   activeSegmentId: string | null
+  isTextMode: boolean // Toggle between text/waveform view for active segment
 
   // UI modes
   splitMode: boolean
@@ -29,6 +30,8 @@ type EditorUiState = {
 
   // Actions
   setActiveSegment: (id: string | null) => void
+  setTextMode: (isTextMode: boolean) => void
+  toggleTextMode: () => void
   setPlaybackRate: (rate: number) => void
   toggleSplitMode: () => void
   setPlayhead: (time: number) => void
@@ -57,6 +60,7 @@ export const useEditorStore = create<EditorUiState>()(
     playbackRate: 1,
     segmentEnd: null,
     activeSegmentId: null,
+    isTextMode: false,
     splitMode: false,
     isScrubbing: false,
     loadingSegments: new Set(),
@@ -64,7 +68,13 @@ export const useEditorStore = create<EditorUiState>()(
 
     // Actions
     setActiveSegment: (id) =>
-      set({ activeSegmentId: id }, false, { type: 'editor/setActiveSegment', payload: id }),
+      set({ activeSegmentId: id, isTextMode: false }, false, { type: 'editor/setActiveSegment', payload: id }),
+
+    setTextMode: (isTextMode) =>
+      set({ isTextMode }, false, { type: 'editor/setTextMode', payload: isTextMode }),
+
+    toggleTextMode: () =>
+      set((state) => ({ isTextMode: !state.isTextMode }), false, { type: 'editor/toggleTextMode' }),
 
     setPlaybackRate: (rate) =>
       set({ playbackRate: rate }, false, { type: 'editor/setPlaybackRate', payload: rate }),
@@ -132,6 +142,7 @@ export const useEditorStore = create<EditorUiState>()(
           playbackRate: 1,
           segmentEnd: null,
           activeSegmentId: null,
+          isTextMode: false,
           splitMode: false,
           isScrubbing: false,
           loadingSegments: new Set(),

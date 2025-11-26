@@ -1,4 +1,6 @@
-import { forwardRef, memo } from 'react'
+import { forwardRef, memo, useCallback } from 'react'
+
+import { useEditorStore } from '@/shared/store/useEditorStore'
 
 import { SpeakerSegment } from './SpeakerSegment'
 import type { TrackRow as TrackRowType } from './types'
@@ -48,6 +50,19 @@ export const TrackRow = memo(
     },
     ref,
   ) {
+    const setActiveSegment = useEditorStore((state) => state.setActiveSegment)
+
+    // Clear segment focus when clicking empty track area
+    const handleTrackClick = useCallback(
+      (e: React.MouseEvent) => {
+        // Only clear if clicking directly on the track background, not on segments
+        if (e.target === e.currentTarget) {
+          setActiveSegment(null)
+        }
+      },
+      [setActiveSegment],
+    )
+
     // Different styles for each track type
     const getTrackStyle = () => {
       if (track.type === 'waveform') {
@@ -76,6 +91,7 @@ export const TrackRow = memo(
     return (
       <div
         ref={ref}
+        onClick={handleTrackClick}
         className={`border-outline/20 relative overflow-visible border-b ${trackStyle.className} ${track.type === 'waveform' ? 'px-2 py-2' : 'px-4 py-3'}`}
         style={{
           background: trackStyle.background,

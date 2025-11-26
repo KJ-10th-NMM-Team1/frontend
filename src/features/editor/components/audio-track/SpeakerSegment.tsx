@@ -1,4 +1,6 @@
-import { useMemo, useState, useRef, useCallback } from 'react'
+import { useRef, useState, useMemo, useCallback } from 'react'
+
+import { Type, AudioWaveform } from 'lucide-react'
 
 import type { Segment } from '@/entities/segment/types'
 import { useAudioWaveform } from '@/features/editor/hooks/useAudioWaveform'
@@ -11,11 +13,13 @@ import { usePresignedUrl } from '@/shared/api/hooks'
 import { useIntersectionObserverOnce } from '@/shared/lib/hooks/useIntersectionObserver'
 import { cn } from '@/shared/lib/utils'
 import { useEditorStore } from '@/shared/store/useEditorStore'
+import { useTracksStore } from '@/shared/store/useTracksStore'
 
 import { MergeButton } from './MergeButton'
 import { SegmentContextMenu } from './SegmentContextMenu'
 import { SegmentResizeHandle } from './SegmentResizeHandle'
 import { SegmentLoadingSpinner, SegmentWaveform } from './SegmentWaveform'
+import { SegmentTextOverlay } from './SegmentTextOverlay'
 
 type TrackLayout = {
   trackId: string
@@ -46,7 +50,18 @@ export function SpeakerSegment({
   isAudioReady = true,
   trackSegments,
 }: SpeakerSegmentProps) {
-  const isSegmentLoading = useEditorStore((state) => state.isSegmentLoading)
+  const { activeSegmentId, setActiveSegment, isSegmentLoading, isTextMode, toggleTextMode } =
+    useEditorStore((state) => ({
+      activeSegmentId: state.activeSegmentId,
+      setActiveSegment: state.setActiveSegment,
+      isSegmentLoading: state.isSegmentLoading,
+      isTextMode: state.isTextMode,
+      toggleTextMode: state.toggleTextMode,
+    }))
+  const updateSegment = useTracksStore((state) => state.updateSegment)
+
+  const isFocused = activeSegmentId === segment.id
+  const showTextOverlay = isFocused && isTextMode
   const startPx = timeToPixel(segment.start, duration, scale)
   const widthPx = Math.max(timeToPixel(segment.end - segment.start, duration, scale), 64)
 
@@ -140,17 +155,49 @@ export function SpeakerSegment({
 
   const backgroundColor = color.startsWith('#') ? hexToRgba(color, 0.12) : color
 
+  // Handle click to focus segment
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      // Don't focus if we're dragging
+      if (isDragging) return
+      // Prevent focusing on resize handles
+      if ((e.target as HTMLElement).closest('[data-resize-handle]')) return
+
+      setActiveSegment(segment.id)
+    },
+    [isDragging, segment.id, setActiveSegment],
+  )
+
+  // Text change handlers
+  const handleSourceChange = useCallback(
+    (value: string) => {
+      updateSegment(segment.id, { source_text: value })
+    },
+    [segment.id, updateSegment],
+  )
+
+  const handleTargetChange = useCallback(
+    (value: string) => {
+      updateSegment(segment.id, { target_text: value })
+    },
+    [segment.id, updateSegment],
+  )
+
   return (
     <>
       <div
         ref={ref}
         onPointerDown={onPointerDown}
+        onClick={handleClick}
         onContextMenu={handleContextMenu}
         className={cn(
           'group absolute top-3 z-10 flex h-[60px] items-center justify-between rounded-2xl border px-3 text-xs font-semibold',
           (isLoading || isGenerating || !isAudioReady) && 'opacity-60',
           isDragging && 'cursor-grabbing opacity-60 shadow-lg',
-          !isDragging && 'cursor-grab transition-opacity',
+          !isDragging && !isFocused && 'cursor-grab transition-opacity',
+          isFocused && 'ring-2 ring-offset-1',
+          isFocused && !showTextOverlay && 'cursor-grab',
+          showTextOverlay && 'cursor-text',
           !isAudioReady && 'border-dashed',
         )}
         style={{
@@ -162,6 +209,9 @@ export function SpeakerSegment({
           // Y축 드래그 시 마우스를 따라 이동
           transform: verticalOffset !== 0 ? `translateY(${verticalOffset}px)` : undefined,
           transition: verticalOffset !== 0 ? 'none' : undefined,
+          // Focus 시 ring color 설정
+          // @ts-expect-error CSS custom property
+          '--tw-ring-color': isFocused ? color : undefined,
         }}
       >
         {/* Left resize handle */}
@@ -176,21 +226,53 @@ export function SpeakerSegment({
           onResizeEnd={handleResizeEnd}
         />
 
-        {/* Waveform visualization */}
-        {!isVisible ? null : isLoading || isGenerating || !isAudioReady || isResizing ? ( // 뷰포트 밖: 플레이스홀더 (아무것도 표시 안함)
-          // 로딩 중 또는 오디오 생성 중 또는 오디오 준비 안됨 또는 리사이즈 중: 스피너
-          <SegmentLoadingSpinner color={color} size="sm" />
-        ) : waveformData ? (
-          // 로드 완료: 파형 표시
-          <SegmentWaveform
-            waveformData={waveformData.data}
+        {/* Waveform visualization - dimmed when in text mode */}
+        <div
+          className={cn(
+            'pointer-events-none absolute inset-0 transition-opacity duration-150',
+            showTextOverlay && 'opacity-30',
+          )}
+        >
+          {!isVisible ? null : isLoading || isGenerating || !isAudioReady ? (
+            <SegmentLoadingSpinner color={color} size="sm" />
+          ) : waveformData ? (
+            <SegmentWaveform
+              waveformData={waveformData.data}
+              color={color}
+              widthPx={widthPx}
+              height={60}
+              audioDuration={waveformData.duration}
+              segmentDuration={segment.end - segment.start}
+            />
+          ) : null}
+        </div>
+
+        {/* Text overlay when focused and in text mode */}
+        {showTextOverlay && (
+          <SegmentTextOverlay
+            sourceText={segment.source_text || ''}
+            targetText={segment.target_text || ''}
+            onSourceChange={handleSourceChange}
+            onTargetChange={handleTargetChange}
             color={color}
-            widthPx={widthPx}
-            height={60}
-            audioDuration={waveformData.duration}
-            segmentDuration={segment.end - segment.start}
           />
-        ) : null}
+        )}
+
+        {/* Toggle button for text/waveform mode - only show when focused */}
+        {isFocused && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              toggleTextMode()
+            }}
+            className="absolute -top-2 right-2 z-20 flex h-5 w-5 items-center justify-center rounded-full bg-white shadow-md transition-transform hover:scale-110"
+            style={{ color }}
+            title={isTextMode ? '파형 보기' : '텍스트 편집'}
+          >
+            {isTextMode ? <AudioWaveform className="h-3 w-3" /> : <Type className="h-3 w-3" />}
+          </button>
+        )}
 
         {/* Right resize handle */}
         <SegmentResizeHandle
