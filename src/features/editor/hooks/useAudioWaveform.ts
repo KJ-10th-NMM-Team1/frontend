@@ -4,7 +4,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 
-import { generateWaveformData } from '../utils/audio-waveform'
+import { generateWaveformData, type WaveformResult } from '../utils/audio-waveform'
 
 /**
  * Hook to generate and cache waveform data
@@ -12,14 +12,14 @@ import { generateWaveformData } from '../utils/audio-waveform'
  * @param audioUrl - URL of the audio file
  * @param enabled - Whether to enable the query
  * @param samples - Number of waveform samples
- * @returns Query result with waveform data
+ * @returns Query result with waveform data and audio duration
  */
 export function useAudioWaveform(
   audioUrl: string | null | undefined,
   enabled = true,
   samples = 35,
 ) {
-  return useQuery({
+  return useQuery<WaveformResult>({
     queryKey: ['waveform', audioUrl, samples] as const,
     queryFn: async () => {
       if (!audioUrl) throw new Error('No audio URL provided')

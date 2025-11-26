@@ -11,6 +11,8 @@ type SegmentWaveformProps = {
   color: string
   widthPx: number
   height?: number
+  audioDuration?: number // 실제 오디오 길이 (초)
+  segmentDuration?: number // 세그먼트 길이 (초)
 }
 
 /**
@@ -18,27 +20,36 @@ type SegmentWaveformProps = {
  * Memoized to prevent unnecessary re-renders
  *
  * widthPx에 따라 바들의 간격이 자동으로 조정됨
+ * audioDuration이 segmentDuration보다 짧으면 그 비율만큼만 파형 표시
  */
 export const SegmentWaveform = memo(function SegmentWaveform({
   waveformData,
   color,
   widthPx,
   height = 40,
+  audioDuration,
+  segmentDuration,
 }: SegmentWaveformProps) {
   const BAR_WIDTH = 3 // 고정 바 너비 (px)
   const barCount = waveformData.length
 
   // 사용 가능한 너비에서 모든 바의 너비를 뺀 후 간격을 계산
-  const availableWidth = widthPx - 16 // 좌우 padding 제외
+  const totalAvailableWidth = widthPx - 16 // 좌우 padding 제외
+
+  // 오디오가 세그먼트보다 짧으면 그 비율만큼만 파형 표시
+  const waveformRatio =
+    audioDuration && segmentDuration ? Math.min(audioDuration / segmentDuration, 1) : 1
+  const availableWidth = totalAvailableWidth * waveformRatio
+
   const totalBarWidth = BAR_WIDTH * barCount
   const totalGapWidth = availableWidth - totalBarWidth
-  const gapWidth = barCount > 1 ? totalGapWidth / (barCount - 1) : 0
+  const gapWidth = barCount > 1 ? Math.max(totalGapWidth / (barCount - 1), 0) : 0
 
   return (
     <div className="absolute inset-x-0 bottom-1 top-1 flex items-center px-2">
       <div
         style={{ width: `${availableWidth}px` }}
-        className="relative flex h-full items-center"
+        className="relative flex h-full items-center overflow-hidden"
       >
         {waveformData.map((amplitude, index) => {
           const barHeight = amplitude * height

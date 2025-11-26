@@ -59,13 +59,21 @@ function playMultipleAudios(
 
     // 현재 playhead 기준으로 오디오 offset 계산 및 설정
     const offset = playheadRef.current - segmentData.start
-    audio.currentTime = offset
+    // 오디오 길이를 초과하지 않도록 클램프 (오디오가 세그먼트보다 짧은 경우 대응)
+    const clampedOffset = Math.min(Math.max(0, offset), audio.duration || Infinity)
+    audio.currentTime = clampedOffset
     audio.playbackRate = segmentData.playbackRate
     audioRefsMap.set(segmentData.id, audio)
 
     // Race condition 방지: 재생 중이 아니면 재생하지 않음
     if (!isPlayingRef.current) {
       console.debug('[MultiAudio] Skipping playback - not in playing state')
+      continue
+    }
+
+    // offset이 오디오 길이를 초과하면 재생하지 않음 (세그먼트가 오디오보다 긴 경우)
+    if (audio.duration && offset >= audio.duration) {
+      console.debug(`[MultiAudio] Skipping playback - offset ${offset} exceeds audio duration ${audio.duration}`)
       continue
     }
 
@@ -174,6 +182,10 @@ export function useSegmentAudioPlayer({
     if (isPlaying) {
       // Resume all active audios
       for (const audio of audios.values()) {
+        // currentTime이 오디오 길이를 초과하면 재생하지 않음
+        if (audio.duration && audio.currentTime >= audio.duration) {
+          continue
+        }
         if (audio.paused) {
           void audio.play().catch((error) => {
             console.error('[MultiAudio] Resume failed:', error)
@@ -241,7 +253,9 @@ export function useSegmentAudioPlayer({
 
       if (timeSinceLastUpdate >= 500) {
         const expectedOffset = lastPlayheadRef.current - segmentData.start
-        audio.currentTime = expectedOffset
+        // 오디오 길이를 초과하지 않도록 클램프
+        const clampedOffset = Math.min(Math.max(0, expectedOffset), audio.duration || Infinity)
+        audio.currentTime = clampedOffset
         lastOffsetUpdateTimeRef.current = now
       }
     }
@@ -276,11 +290,13 @@ export function useSegmentAudioPlayer({
       // 같은 세그먼트 내에 있는지 확인
       if (playhead >= segmentData.start && playhead < segmentData.end) {
         const expectedOffset = playhead - segmentData.start
+        // 오디오 길이를 초과하지 않도록 클램프
+        const clampedOffset = Math.min(Math.max(0, expectedOffset), audio.duration || Infinity)
         const currentOffset = audio.currentTime
 
         // offset 차이가 0.1초 이상일 때만 업데이트
-        if (Math.abs(currentOffset - expectedOffset) > 0.1) {
-          audio.currentTime = expectedOffset
+        if (Math.abs(currentOffset - clampedOffset) > 0.1) {
+          audio.currentTime = clampedOffset
           lastPlayheadRef.current = playhead
         }
       }
@@ -316,14 +332,15 @@ export function useSegmentAudioPlayer({
 
       hasSetAudio = true
 
-      // offset 계산 및 세팅
+      // offset 계산 및 세팅 (오디오 길이를 초과하지 않도록 클램프)
       const offset = lastPlayheadRef.current - segmentData.start
-      audio.currentTime = Math.max(0, offset)
+      const clampedOffset = Math.min(Math.max(0, offset), audio.duration || Infinity)
+      audio.currentTime = clampedOffset
       audio.playbackRate = segmentData.playbackRate
       audios.set(segmentData.id, audio)
 
-      // 재생 중이면 바로 재생 시작
-      if (isPlayingRef.current) {
+      // 재생 중이고 offset이 오디오 길이 내에 있으면 재생 시작
+      if (isPlayingRef.current && !(audio.duration && offset >= audio.duration)) {
         void audio.play().catch((error) => {
           console.error(
             `[MultiAudio] Language change playback failed for segment ${segmentData.id}:`,
@@ -364,10 +381,12 @@ export function useSegmentAudioPlayer({
 
         if (playhead >= segmentData.start && playhead < segmentData.end) {
           const expectedOffset = playhead - segmentData.start
-          audio.currentTime = expectedOffset
+          // 오디오 길이를 초과하지 않도록 클램프
+          const clampedOffset = Math.min(Math.max(0, expectedOffset), audio.duration || Infinity)
+          audio.currentTime = clampedOffset
 
-          // 재생 중이었으면 다시 재생
-          if (isPlayingRef.current) {
+          // 재생 중이고 offset이 오디오 길이 내에 있으면 다시 재생
+          if (isPlayingRef.current && !(audio.duration && expectedOffset >= audio.duration)) {
             void audio.play().catch((error) => {
               console.error(`[MultiAudio] Resume after scrub failed:`, error)
             })

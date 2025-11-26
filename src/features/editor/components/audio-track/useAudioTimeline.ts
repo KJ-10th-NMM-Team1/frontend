@@ -365,9 +365,9 @@ export function useAudioTimeline(
 
   // Process original waveform data
   const originalWaveformBars = useMemo(() => {
-    if (originalWaveformData) {
+    if (originalWaveformData?.data) {
       // Convert amplitude data (0-1) to height percentage (0-100)
-      return originalWaveformData.map((amplitude, index) => ({
+      return originalWaveformData.data.map((amplitude, index) => ({
         id: index,
         height: amplitude * 350,
       }))
@@ -382,9 +382,9 @@ export function useAudioTimeline(
 
   // Process background waveform data
   const backgroundWaveformBars = useMemo(() => {
-    if (backgroundWaveformData) {
+    if (backgroundWaveformData?.data) {
       // Convert amplitude data (0-1) to height percentage (0-100)
-      return backgroundWaveformData.map((amplitude, index) => ({
+      return backgroundWaveformData.data.map((amplitude, index) => ({
         id: index,
         height: amplitude * 350,
       }))

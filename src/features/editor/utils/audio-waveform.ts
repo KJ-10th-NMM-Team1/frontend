@@ -16,16 +16,24 @@ export function getAudioContext(): AudioContext {
 }
 
 /**
+ * Waveform data with duration information
+ */
+export type WaveformResult = {
+  data: number[]
+  duration: number // 오디오 실제 길이 (초)
+}
+
+/**
  * Generates waveform data from an audio URL
  *
  * @param audioUrl - URL of the audio file
  * @param samples - Number of samples to generate (default: 100)
- * @returns Array of amplitude values between 0 and 1
+ * @returns Waveform data with amplitude values (0-1) and audio duration
  */
 export async function generateWaveformData(
   audioUrl: string,
   samples = 100
-): Promise<number[]> {
+): Promise<WaveformResult> {
   const context = getAudioContext()
 
   try {
@@ -61,7 +69,10 @@ export async function generateWaveformData(
       waveformData.push(Math.min(1, rms * 2)) // Scale up for visibility
     }
 
-    return waveformData
+    return {
+      data: waveformData,
+      duration: audioBuffer.duration, // 실제 오디오 길이 반환
+    }
   } catch (error) {
     console.error('Error generating waveform:', error)
     throw error

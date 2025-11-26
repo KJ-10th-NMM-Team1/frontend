@@ -175,10 +175,12 @@ export function SpeakerSegment({
         ) : waveformData ? (
           // 로드 완료: 파형 표시
           <SegmentWaveform
-            waveformData={waveformData}
+            waveformData={waveformData.data}
             color={color}
             widthPx={widthPx}
             height={60}
+            audioDuration={waveformData.duration}
+            segmentDuration={segment.end - segment.start}
           />
         ) : null}
 
