@@ -52,7 +52,7 @@ export function HomeCommunitySection({ title, description, githubUrl }: HomeComm
             </p>
 
             <div className="mt-auto flex items-center text-sm font-semibold text-gray-900">
-              리포지스토리 방문
+              리포지토리 방문
               <svg
                 className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
                 fill="none"

@@ -114,21 +114,21 @@ const LANDING_CONTENT = {
         description:
           '마음에 들지 않는 목소리가 있나요?\n클릭 한 번으로 다른 성우의 목소리로 변경할 수 있습니다',
         mediaType: 'image', // 영상이 준비되면 'video'로 변경
-        mediaSrc: 'https://placehold.co/600x400/e2e8f0/475569?text=Vocal+Track+Change', // 데모 이미지/영상 경로
+        mediaSrc: '/media/ex/track1.PNG', // 데모 이미지/영상 경로
       },
       {
         title: '재번역 및 재TTS',
         description:
           '번역이 어색하다면 텍스트를 직접 수정하세요\n수정된 텍스트에 맞춰 AI가 즉시 새로운 음성을 생성합니다',
         mediaType: 'image',
-        mediaSrc: 'https://placehold.co/600x400/e2e8f0/475569?text=Re-translation',
+        mediaSrc: '/media/ex/tts.PNG',
       },
       {
         title: '보이스 라이브러리',
         description:
           '수백 가지의 다양한 AI 보이스 중\n내 콘텐츠에 딱 맞는 목소리를 찾아보세요\n즐겨찾기에 추가하여 언제든 사용할 수 있습니다',
         mediaType: 'image',
-        mediaSrc: 'https://placehold.co/600x400/e2e8f0/475569?text=Voice+Library',
+        mediaSrc: '/media/ex/market.PNG',
       },
     ] as FeatureItem[],
   },
