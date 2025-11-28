@@ -42,6 +42,7 @@ export function StudioVideoPreview({
   const lastSyncedPlayheadRef = useRef<number>(0)
   const seekingTimeoutRef = useRef<number>()
   const isFastSeekingRef = useRef<boolean>(false)
+  const prevScrubbingRef = useRef<boolean>(false)
 
   const { playhead, isPlaying, isScrubbing, setPlayhead, setPlaying } = useEditorStore(
     (state) => ({
@@ -120,6 +121,20 @@ export function StudioVideoPreview({
       lastSyncedPlayheadRef.current = playhead
     }
   }, [playhead, isPlaying, isScrubbing, seekVideo])
+
+  // 스크러빙 끝났을 때 정확한 위치로 보정
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    // 스크러빙이 끝났을 때 (true → false)
+    if (prevScrubbingRef.current && !isScrubbing) {
+      // 정확한 위치로 시킹
+      video.currentTime = playhead
+    }
+
+    prevScrubbingRef.current = isScrubbing
+  }, [isScrubbing, playhead])
 
   // 비디오의 play/pause 이벤트로 isPlaying 상태 동기화
   useEffect(() => {
